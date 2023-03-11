@@ -1,11 +1,15 @@
-#####################################################################################################################
-# Code for reproducibility of the results of Section 2.2.3 - Computational comparison of model-specific quantities: #
-#####################################################################################################################
+############################################################################################################################################
+# Code for reproducibility of the results of Section XXXX - Computational comparison of model-specific quantities: 2nd derivatives wrt eta #
+############################################################################################################################################
+library(parallel)
+library(Rcpp)
+library(TMB)
+library(microbenchmark)
+
 library(rstudioapi)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-source("loadPackages.R")
 
-source("idxHess_no0.R") # List of indices to deal the sparsity of the Hessian
+source("idxHess_no0.R") # List of indices to deal with the sparsity of 2nd derivatives
 
 sourceCpp("d2_mcd_eta_row.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving)
 sourceCpp("d2_mcd_eta_row_noalloc.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving: allocation in cpp code)
@@ -24,9 +28,10 @@ dyn.load(dynlib("nll_MCD_TMB"))
 compile("nll_logM_TMB.cpp")
 dyn.load(dynlib("nll_logM_TMB"))
 
+########################################################
+# Main functions for obtaining the computational times #
+########################################################
 
-
-###############################################
 time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm"), TMB=TRUE){
   param <- match.arg( param )
 
@@ -38,10 +43,10 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm"), TMB=
 
     for(jj in 1: length(dgrid)){
       d <- dgrid[jj]
-      q<-d+d*(d+1)/2
+      q <- d + d * (d + 1)/2
 
-      eta<- matrix(rnorm(nobs * q), nobs, q) # eventually set to 0
-      y<- matrix(rnorm(nobs * d), nobs, d) # eventually set to 0
+      eta <- matrix(rnorm(nobs * q), nobs, q) # eventually set to 0
+      y <- matrix(rnorm(nobs * d), nobs, d) # eventually set to 0
 
       # Indices
       z <- w <- t <- rep(0, (d * (d - 1)/2))
@@ -125,9 +130,9 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm"), TMB=
 
 
 
-############################################################
-# Simulation
-############################################################
+####################
+# Evaluation times #
+####################
 nobs<-1000
 dgrid <- seq(5,50,by=5)
 

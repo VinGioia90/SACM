@@ -7,7 +7,10 @@ double d2_mcd_eta_row_noalloc(const arma::rowvec& eta, const arma::rowvec& y,   
   //uint32_t n = y.n_rows;
   uint32_t d = y.n_elem;
   uint32_t q = eta.n_elem;
-  mat d2l (1, q*(q+1)/2, fill::zeros);
+  uint32_t nHel =  d * (d * d + 15 * d + 2)/6;
+  if ( d > 2 ) nHel +=  d * (d - 1) * (d - 2)/3;
+
+  mat d2l (1, nHel, fill::zeros);
 
   double ee_s;
   double ee;
