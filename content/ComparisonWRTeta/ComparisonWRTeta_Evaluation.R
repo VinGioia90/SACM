@@ -3,24 +3,15 @@
 #####################################################################################################################
 library(rstudioapi)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
 source("loadPackages.R")
-
-
-
-#rm(list = ls())
-#setwd("C:/Users/Gioia/Desktop/ScalableAdditiveCovarianceMatrixModels")
-#setwd("C:/Users/Gioia/Desktop/ScalableAdditiveCovarianceMatrixModels/ComparisonWRTeta")
 
 source("idxHess_no0.R") # List of indices to deal the sparsity of the Hessian
 
-sourceCpp("d2_mcd_eta.cpp") # 2nd derivatives MCD (Software version)
 sourceCpp("d2_mcd_eta_row.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving)
-sourceCpp("d2_mcd_eta_row_noalloc.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving)
+sourceCpp("d2_mcd_eta_row_noalloc.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving: allocation in cpp code)
 
-sourceCpp("d2_logm_eta.cpp") # 2nd derivatives logM  (Software version)
 sourceCpp("d2_logm_eta_row.cpp") # 2nd derivatives logM (removed for loop over i and final for loop for saving)
-sourceCpp("d2_logm_eta_row_noalloc.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving)
+sourceCpp("d2_logm_eta_row_noalloc.cpp") # 2nd derivatives MCD (removed for loop over i and final for loop for saving: allocation in cpp code)
 
 sourceCpp("idx_zwGt.cpp") # Indices z,w,G
 
@@ -30,9 +21,6 @@ sourceCpp("idx_zwGt.cpp") # Indices z,w,G
 compile("nll_MCD_TMB.cpp")
 dyn.load(dynlib("nll_MCD_TMB"))
 
-##############
-# TMB - logM #
-##############
 compile("nll_logM_TMB.cpp")
 dyn.load(dynlib("nll_logM_TMB"))
 
@@ -42,11 +30,11 @@ dyn.load(dynlib("nll_logM_TMB"))
 time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm"), TMB=TRUE){
   param <- match.arg( param )
 
-  time <- mclapply(1:nrun, function(ii){
+  time <- mclapply(1 : nrun, function(ii){
     out <- list()
-    out$tD2_eff<-rep(0,length(dgrid))
-    out$tD2_eff_noalloc<-rep(0,length(dgrid))
-    out$tD2_TMB<-rep(0,length(dgrid))
+    out$tD2_eff <- rep(0, length(dgrid))
+    out$tD2_eff_noalloc <-rep(0, length(dgrid))
+    out$tD2_TMB <- rep(0,length(dgrid))
 
     for(jj in 1: length(dgrid)){
       d <- dgrid[jj]
@@ -141,7 +129,7 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm"), TMB=
 # Simulation
 ############################################################
 nobs<-1000
-dgrid <- seq(5,50,ny=5)
+dgrid <- seq(5,50,by=5)
 
 nrun <- 1  # Set the number of runs
 ncores <- 1 # Set the number of cores
