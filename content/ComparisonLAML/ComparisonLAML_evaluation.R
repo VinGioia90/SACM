@@ -112,7 +112,7 @@ time_d3_eta_dh_drho <- function(nobs, dgrid,  nrun, ncores, ncoef = 10){
 }
 
 nobs <- 1000
-dgrid <- c(2,3,5,10,15,20)
+dgrid <- c(2,3,5)#,10,15,20)
 nrun <- 1 # to set
 ncores <- 1 # to set
 
