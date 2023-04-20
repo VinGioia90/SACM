@@ -73,17 +73,15 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed=123){
   idx_jk <- idxHess_no0(no_eta, z, w, param)
   idx_aux <- aux_idx_new(jj, idx_jk, no_eta, block)
 
-  check.size <- (object.size(matrix(0, nobs %/% nb, nHel - idx_aux$llls))/1e9 < 1)
+  check.size <- ((nobs %/% nb) * (nHel - idx_aux$llls) * 8/1e9) < 1
   while(check.size == FALSE){
-    nb <- nb*2
-    check.size <- (object.size(matrix(0, nobs %/% nb, nHel - idx_aux$llls))/1e9 < 1)
+    nb <- nb+1
+    check.size <- ((nobs %/% nb) * (nHel - idx_aux$llls) * 8/1e9) < 1
   }
   if(check.size==FALSE) print(nb)
 
   nlast <- nobs %% nb
   nset <- nobs %/% nb
-
-
 
   # Derivatives w.r.t. eta initialization
   if(nb > 1){
@@ -104,7 +102,6 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed=123){
   }
   l2_l <- matrix(0, nobs_b, nHel - idx_aux$llls)
   idx_b <- c(-1, idx_b_seq, nobs - 1)
-
 
   K <- length(jj) # no_eta
   lpi <- lapply(jj, function(x) x - 1) # trick to allow the use of the c++functions
@@ -136,8 +133,7 @@ time_hessian_beta <- function(nobs, dgrid,  nrun,ncores, pint=c("dm05","dm1","dm
       seed <- sample(1:nobs,1)
       getq1 <- get_quantity(d = d, pint=pint_function(d), nobs=nobs, ncoef=ncoef,nb=nb,param=param,block=TRUE,seed=seed) # via intercept blocks
       getq2 <- get_quantity(d = d, pint=pint_function(d), nobs=nobs, ncoef=ncoef,nb=nb,param=param, block=FALSE,seed=seed) #
-      out$nb1 <- getq1$nb
-      out$nb1 <- getq1$nb
+      attr(out, "nb1") <- getq1$nb
       p <- ncol(getq1$X)
       lbb <- matrix(0, p, p)
 
@@ -186,10 +182,10 @@ get_time_results <- function(nobs, dgrid,  nrun,ncores, pint = NULL ,ncoef=10, n
 
 ############################################################
 nobs <- 1000
-dgrid <- c(2,3,5,10,15,20)
+dgrid <- c(5, seq(10, 100, by = 10))
 ncoef <- 10
-nrun <- 1 #to set
-ncores <- 1 #to set
+nrun <- 12 #to set
+ncores <- 3 #to set
 pint_type <- c("dm05","dm1", "dm2","const")
 
 TIME_MCD_beta <- get_time_results(nobs, dgrid,  nrun,ncores, pint = pint_type, ncoef=ncoef, nb=1, param=1, pint_value=0.99)
@@ -198,12 +194,17 @@ save(TIME_MCD_beta, file="TIME_mcd_beta.RData")
 TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores, pint = pint_type, ncoef=ncoef, nb=1, param=2, pint_value=0.99)
 save(TIME_logM_beta, file="TIME_logM_beta.RData")
 
-dgrid <- c(25,50,75)
-TIME_MCD_beta <- get_time_results(nobs, dgrid,  nrun,ncores, pint = pint_type, ncoef=ncoef, nb=1, param=1, pint_value=0.99)
-save(TIME_MCD_beta, file="TIME_mcd_beta_large.RData")
+time_logM_inte <- sapply(TIME_logM_beta, function(x) rowMeans(sapply(x, function(y) y$time$thessian_block)))
+colnames(time_logM_inte) <- pint_type
+rownames(time_logM_inte) <- dgrid
+time_logM_inte / 1e9
 
-TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores, pint = pint_type, ncoef=ncoef, nb=2, param=2, pint_value=0.99)
-save(TIME_logM_beta, file="TIME_logM_beta_large.RData")
+time_logM_NOinte <- sapply(TIME_logM_beta, function(x) rowMeans(sapply(x, function(y) y$time$thessian_noblock)))
+colnames(time_logM_NOinte) <- pint_type
+rownames(time_logM_NOinte) <- dgrid
+time_logM_NOinte / 1e9
+
+
 
 
 
