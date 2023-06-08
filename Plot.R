@@ -401,8 +401,9 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_tim
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
-pl_Hbeta
 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section4/Results")
 ggsave("plot_rel_TIME_hessian_beta_logM.eps", pl_Hbeta, width = 15, height = 15, units = "cm")
 ggsave("plot_rel_TIME_hessian_beta_logM.pdf", pl_Hbeta, width = 15, height = 15, units = "cm")
 
