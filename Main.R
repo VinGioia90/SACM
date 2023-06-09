@@ -45,7 +45,7 @@ setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Evaluation_Overall_Fit.R")
 
 
-dgrid <- c(2,5)#,10,15,20)
+dgrid <- c(2,5,10,15,20)
 nobs <- 10000
 sg <- FALSE # This avoids saving the gam objkect
 
