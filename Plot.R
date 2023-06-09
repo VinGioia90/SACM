@@ -10,8 +10,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("loadPackages.R")
 instload_packages()
 
-nrun <- 2  # Set the number of runs
-ncores <- 1 # Set the number of cores
+nrun <- 10  # Set the number of runs
+ncores <- 5 # Set the number of cores
 
 ###############
 # SECTION 3.3 #
@@ -38,8 +38,6 @@ load(file = paste0("TIME_logm_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
 source("Functions_Plots_Hessian_eta.R")
-
-
 
 # MCD
 time_hessian_mcd <- time_hessian(obj = TIME_MCD_D2eta, param = "mcd",
@@ -88,7 +86,7 @@ all_time_hessian$param<-factor(all_time_hessian$param,
 
 dg_sel <- dgrid #To select a subset of the dgrid elements
 all_time_hessian <- all_time_hessian[which(all_time_hessian$d %in% dg_sel),]
-mean_time_hessian <- mean_time_hessian[which(mean_time_hessian$d %in% dg_sel),]
+summary_time_hessian <- summary_time_hessian[which(summary_time_hessian$d %in% dg_sel),]
 
 lab_time_logM <- with(summary_time_hessian,
                       c(min(mean_time[param == "logM" & Type == "EFF"]),
@@ -403,7 +401,7 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_tim
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section4/Results")
+setwd("content/Section4/Plots")
 ggsave("plot_rel_TIME_hessian_beta_logM.eps", pl_Hbeta, width = 15, height = 15, units = "cm")
 ggsave("plot_rel_TIME_hessian_beta_logM.pdf", pl_Hbeta, width = 15, height = 15, units = "cm")
 
