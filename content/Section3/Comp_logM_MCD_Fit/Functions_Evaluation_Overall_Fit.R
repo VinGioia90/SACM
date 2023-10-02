@@ -61,8 +61,6 @@ datagen <- function(d = 2, n = 1000, pint = 0, seed = 13, param = c("mcd", "logm
     for(j in 1 : d) mu[[i]][j] <- f1m(x$x1[i], m1[j]) + f2m(x$x2[i], m2[j]) +  f3m(x$x3[i], m3[j], m4[j], m5[j], m6[j])
 
     Theta[[i]] <- matrix(0, d, d)
-
-    Theta[[i]] <- matrix(0, d, d)
     count <- d + 1
     for(j in 1 : d){
       Theta[[i]][j, j] <- fvc(x$x1[i], x$x2[i], vc0[j], vc1[j], vc2[j], vc3[j], vc4[j], vc5[j], vc6[j], intercepts[j])
