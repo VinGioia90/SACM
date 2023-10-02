@@ -2,8 +2,8 @@
 # Code for reproducing the results of the paper:    #
 # "Scalable Additive Covariance Matrix Models       #
 #####################################################
-#library(rstudioapi)
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+library(rstudioapi)
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 # Load the needed packages
 # (it might be required to do something manually)
@@ -17,17 +17,18 @@ ncores <- 5 # Set the number of cores
 # SECTION 3.3 #
 ###############
 
+
 #######################################################################
 # Evaluation of the second-order derivatives w.r.t. linear predictors #
 #######################################################################
-# setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
-# source("Functions_Evaluation_Hessian_eta.R")
+ setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
+ source("Functions_Evaluation_Hessian_eta.R")
+
+ nobs <- 1000
+ dgrid <- seq(5, 50, by = 5)
 #
-# nobs <- 1000
-# dgrid <- seq(5, 50, by = 5)
-#
-# TIME_MCD_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "mcd")
-# TIME_logM_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "logm")
+TIME_MCD_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "mcd")
+TIME_logM_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "logm")
 #
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # setwd("content/Section3/Results")
@@ -43,26 +44,26 @@ ncores <- 5 # Set the number of cores
 #######################################
 # Evaluation of the overall model fit #
 #######################################
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-#setwd("content/Section3/Comp_logM_MCD_Fit")
-#source("Functions_Evaluation_Overall_Fit.R")
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Comp_logM_MCD_Fit")
+source("Functions_Evaluation_Overall_Fit.R")
 
 
-#dgrid <- c(2,5,10,15,20)
-#nobs <- 10000
-#sg <- FALSE # This avoids saving the gam objkect
+dgrid <- c(2,5,10,15,20)
+nobs <- 10000
+sg <- FALSE # This avoids saving the gam objkect
 
-#setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-#setwd("content/Section3/Results")
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Results")
 
 # Generation from MCD
 # Fit with MCD
-#sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
-#                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
-#save(sim_mcdG_mcdF,
-#     file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#rm("sim_mcdG_mcdF")
-#gc()
+sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
+                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+save(sim_mcdG_mcdF,
+     file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+rm("sim_mcdG_mcdF")
+gc()
 
 # Fit with logM
 # sim_mcdG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "logm", save.gam = sg,
@@ -74,12 +75,12 @@ ncores <- 5 # Set the number of cores
 #
 # Generation from logM
 # Fit with MCD
-#sim_logmG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "mcd", save.gam = sg,
-#                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
-# save(sim_logmG_mcdF,
-#      file = paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-# rm("sim_logmG_mcdF")
-# gc()
+sim_logmG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "mcd", save.gam = sg,
+                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+ save(sim_logmG_mcdF,
+      file = paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+ rm("sim_logmG_mcdF")
+ gc()
 #
 # # Fit with logM
 # sim_logmG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "logm", save.gam = sg,
@@ -121,3 +122,30 @@ save(TIME_MCD_beta, file = paste0("TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_
 
  rm("TIME_logM_beta")
  gc()
+
+
+#############
+# SECTION 6 #
+#############
+# Performance Comparison inside the MCD parametrisation (FS, BFGS, )
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section6")
+source("Functions_Evaluation_Overall_Fit_mcd.R")
+
+dgrid <- c(2,5,10)
+nobs <- 10000
+sg <- FALSE # This avoids saving the gam objkect
+
+
+
+sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs, dgrid,  nrun, ncores, param = "mcd",
+                                    expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+
+#save(sim_mcd_fit,
+#     file = paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+#rm("sim_mcd_fit")
+#gc()
+
+
+
+
