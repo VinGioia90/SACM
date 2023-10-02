@@ -86,3 +86,4 @@ log_Score <- function(obj, nrun, dgrid, nobs, param = c("logm","mcd"), ncov = NU
   }
   return(out)
 }
+
