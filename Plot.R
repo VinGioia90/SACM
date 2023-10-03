@@ -38,7 +38,6 @@ dgrid <- seq(5, 50, by = 5)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Results")
 
-
 ###############################################
 # Code for reproducing Figure 1 - SECTION 3.3 #
 ###############################################
@@ -127,9 +126,9 @@ pl_Heta <- ggplot(all_time_hessian, aes(x = as.factor(d), y = time)) +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines")) +
   ggh4x::facetted_pos_scales(y = list(
-    param == "logM" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
+    param == "logM" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                          sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_logM)),
-    param == "MCD" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
+    param == "MCD" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_MCD))
   ))
 
@@ -145,7 +144,7 @@ ggsave("plot_TIME_hessian_eta.pdf", pl_Heta, width = 30, height = 15, units = "c
 # Code for reproducing Figure 2 - SECTION 3.3 #
 ###############################################
 dgrid <- c(2,5,10,15,20)
-nrun <-  1
+nrun <-  10
 nobs <- 10000
 sg <- FALSE
 
@@ -196,7 +195,7 @@ data_hline <- data.frame(Type2 = c("Time","Iterations"),  # Create data for line
 data_hline$Type2 <- factor(data_hline$Type2, levels=c("Time", "Iterations"))
 
 
-dgrid_sel <- dgrid[-1] # To select a subset f dgrid
+dgrid_sel <- dgrid # To select a subset f dgrid
 data_time_iter <- data_time_iter[which(data_time_iter$d %in% dgrid_sel),]
 data_time_iter_sum <- data_time_iter_sum[which(data_time_iter_sum$d %in% dgrid_sel),]
 
@@ -299,9 +298,10 @@ ggsave("plot_TIME_ITER_origscale.pdf", pl_Fit_Time_Iter2, width = 30, height = 1
 
 ggsave("plot_TIME_ITER_sqrtscale.eps", pl_Fit_Time_Iter3, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_ITER_sqrtscale.pdf", pl_Fit_Time_Iter3, width = 30, height = 15, units = "cm")
-#################################################################################################
-# SUPPLEMENTARY MATERIAL decide if insert in the paper the results for the logM parametrisation #
-#################################################################################################
+
+#############################################################################################
+# SUPPLEMENTARY MATERIAL decide whether  including the results for the logM parametrisation #
+#############################################################################################
 # setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 # setwd("content/Section3/Results")
 #
@@ -388,105 +388,106 @@ ggsave("plot_TIME_ITER_sqrtscale.pdf", pl_Fit_Time_Iter3, width = 30, height = 1
 
 
 ###############################################################
-# Code for reproducing the Figure 5 - SUPPLEMENTARY MATERIALS #
+# Code for reproducing the Figure 6 - SUPPLEMENTARY MATERIALS #
 ###############################################################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section3/Comp_logM_MCD_Fit")
-source("Functions_Plots_Overall_Fit.R")
-
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section3/Results")
-
-load(paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-load(paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-
-logS_mcdG_mcdF <- log_Score(obj=sim_mcdG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
-logS_mcdG_logmF <- log_Score(sim_mcdG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
-
-rm("sim_mcdG_mcdF", "sim_mcdG_logmF")
-
-
-logS_mcd <- data.frame(logS_gen = c(logS_mcdG_mcdF[,3], logS_mcdG_mcdF[,4], logS_mcdG_mcdF[,5]),
-                       logS_nogen = c(logS_mcdG_logmF[,3], logS_mcdG_logmF[,4], logS_mcdG_logmF[,5]))
-
-
-
-logS_mcd <- cbind(logS_mcd, d = c(rep(c("10","15","20"), each = 10)))
-logS_mcd <- cbind(logS_mcd, Type2 = rep("MCD - Generation"))
-
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section3/Results")
-
-load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-
-logS_logmG_mcdF <- log_Score(obj=sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
-logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
-
-rm("sim_logmG_mcdF", "sim_logmG_logmF")
-
-
-logS_logm <- data.frame(logS_gen = c(logS_logmG_logmF[,3], logS_logmG_logmF[,4], logS_logmG_logmF[,5]),
-                        logS_nogen = c(logS_logmG_mcdF[,3], logS_logmG_mcdF[,4], logS_logmG_mcdF[,5]))
-
-
-
-logS_logm <- cbind(logS_logm, d = c(rep(c("10","15","20"), each = 10)))
-logS_logm <- cbind(logS_logm, Type2 = rep("logM - Generation"))
-
-logS <- rbind(logS_mcd,logS_logm)
-
-logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generation"), labels = c("MCD - Generation", "logM - Generation"))
-
-
-pl_logS <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
-  geom_point(col="red",size=2,
-             show.legend=TRUE)+
-  geom_abline(slope=1, intercept=0, col="black") +
-  scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
-  facet_grid2(Type2 ~ d, scales="free", switch = "y", independent = "all") +
-  theme_bw() +
-  scale_y_continuous(breaks=NULL,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
-  ) +
-  xlab("") +
-  ylab("") +
-  ggh4x::facetted_pos_scales(y = list(
-    Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=c(min(logS$logS_gen), max(logS$logS_gen)), labels = scaleFUN, sec.axis = sec_axis(~ . * 1)),
-    Type2 == "logM - Generation" ~ scale_y_continuous(breaks=c(min(logS$logS_gen), max(logS$logS_gen)), labels = scaleFUN, sec.axis = sec_axis(~ . * 1)))) +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-        axis.text.x=element_blank(), axis.text.y=element_blank(),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-pl_logS
-
-
-
-
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section3/Results")
-load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-
-logS_logmG_mcdF <- log_Score(sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd")
-logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm")
-
-rm("sim_logmG_mcdF", "sim_logmG_logmF")
-
-
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section3/Plots")
-pdf(file="logScore_logMgen.pdf", width = 20, height = 15)
-par(mfrow = c(1, length(dgrid)), pty = "s")
-for(j in 1 : length(dgrid)){
-  plot(logS_logmG_logmF[,j], logS_logmG_mcdF[,j], pch = 16, lwd = 2,
-       xlab = "logM Fit",
-       ylab = "MCD Fit",
-       main = paste0("logM Gen. d=", dgrid[j]))
-  abline(0, 1, col = "red")
-}
-dev.off()
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd("content/Section3/Comp_logM_MCD_Fit")
+# source("Functions_Plots_Overall_Fit.R")
+#
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd("content/Section3/Results")
+#
+# load(paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
+# load(paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+#
+# logS_mcdG_mcdF <- log_Score(obj=sim_mcdG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
+# logS_mcdG_logmF <- log_Score(sim_mcdG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
+#
+# rm("sim_mcdG_mcdF", "sim_mcdG_logmF")
+#
+#
+# # Must be generalised
+# logS_mcd <- data.frame(logS_gen = c(logS_mcdG_mcdF[,3], logS_mcdG_mcdF[,4], logS_mcdG_mcdF[,5]),
+#                        logS_nogen = c(logS_mcdG_logmF[,3], logS_mcdG_logmF[,4], logS_mcdG_logmF[,5]))
+#
+#
+#
+# logS_mcd <- cbind(logS_mcd, d = c(rep(c("10","15","20"), each = 10)))
+# logS_mcd <- cbind(logS_mcd, Type2 = rep("MCD - Generation"))
+#
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd("content/Section3/Results")
+#
+# load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
+# load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+#
+# logS_logmG_mcdF <- log_Score(obj=sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
+# logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
+#
+# rm("sim_logmG_mcdF", "sim_logmG_logmF")
+#
+#
+# logS_logm <- data.frame(logS_gen = c(logS_logmG_logmF[,3], logS_logmG_logmF[,4], logS_logmG_logmF[,5]),
+#                         logS_nogen = c(logS_logmG_mcdF[,3], logS_logmG_mcdF[,4], logS_logmG_mcdF[,5]))
+#
+#
+#
+# logS_logm <- cbind(logS_logm, d = c(rep(c("10","15","20"), each = 10)))
+# logS_logm <- cbind(logS_logm, Type2 = rep("logM - Generation"))
+#
+# logS <- rbind(logS_mcd,logS_logm)
+#
+# logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generation"), labels = c("MCD - Generation", "logM - Generation"))
+#
+#
+# pl_logS <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
+#   geom_point(col="red",size=2,
+#              show.legend=TRUE)+
+#   geom_abline(slope=1, intercept=0, col="black") +
+#   scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
+#   facet_grid2(Type2 ~ d, scales="free", switch = "y", independent = "all") +
+#   theme_bw() +
+#   scale_y_continuous(breaks=NULL,
+#                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
+#   ) +
+#   xlab("") +
+#   ylab("") +
+#   ggh4x::facetted_pos_scales(y = list(
+#     Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=c(min(logS$logS_gen), max(logS$logS_gen)), labels = scaleFUN, sec.axis = sec_axis(~ . * 1)),
+#     Type2 == "logM - Generation" ~ scale_y_continuous(breaks=c(min(logS$logS_gen), max(logS$logS_gen)), labels = scaleFUN, sec.axis = sec_axis(~ . * 1)))) +
+#   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+#         axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+#         axis.text.x=element_blank(), axis.text.y=element_blank(),
+#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+#
+# pl_logS
+#
+#
+#
+#
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd("content/Section3/Results")
+# load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
+# load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+#
+# logS_logmG_mcdF <- log_Score(sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd")
+# logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm")
+#
+# rm("sim_logmG_mcdF", "sim_logmG_logmF")
+#
+#
+# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# setwd("content/Section3/Plots")
+# pdf(file="logScore_logMgen.pdf", width = 20, height = 15)
+# par(mfrow = c(1, length(dgrid)), pty = "s")
+# for(j in 1 : length(dgrid)){
+#   plot(logS_logmG_logmF[,j], logS_logmG_mcdF[,j], pch = 16, lwd = 2,
+#        xlab = "logM Fit",
+#        ylab = "MCD Fit",
+#        main = paste0("logM Gen. d=", dgrid[j]))
+#   abline(0, 1, col = "red")
+# }
+# dev.off()
 
 
 
@@ -506,7 +507,7 @@ pint_type <- c("dm05","dm1", "dm2","const")
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section4/Results")
 
-# load(file=paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
+load(file=paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
 load(file=paste0("TIME_logM_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
 
 
