@@ -21,25 +21,25 @@ ncores <- 5 # Set the number of cores
 #######################################################################
 # Evaluation of the second-order derivatives w.r.t. linear predictors #
 #######################################################################
- setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
- source("Functions_Evaluation_Hessian_eta.R")
+setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
+source("Functions_Evaluation_Hessian_eta.R")
 
- nobs <- 1000
- dgrid <- seq(5, 50, by = 5)
-#
+nobs <- 1000
+dgrid <- seq(5, 50, by = 5) ## Tested on my laptop until 20
+
 TIME_MCD_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "mcd")
 TIME_logM_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "logm")
-#
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Results")
-#
-# save(TIME_MCD_D2eta,
-#      file = paste0("TIME_mcd_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
-# save(TIME_logM_D2eta,
-#      file = paste0("TIME_logm_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
-#
-# rm("TIME_MCD_D2eta", "TIME_logM_D2eta")
-# gc()
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Results")
+
+save(TIME_MCD_D2eta,
+     file = paste0("TIME_mcd_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
+save(TIME_logM_D2eta,
+     file = paste0("TIME_logm_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
+
+rm("TIME_MCD_D2eta", "TIME_logM_D2eta")
+gc()
 
 #######################################
 # Evaluation of the overall model fit #
@@ -66,62 +66,63 @@ rm("sim_mcdG_mcdF")
 gc()
 
 # Fit with logM
-# sim_mcdG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "logm", save.gam = sg,
-#                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
-# save(sim_mcdG_logmF,
-#      file = paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-# rm("sim_mcdG_logmF")
-# gc()
-#
+sim_mcdG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "logm", save.gam = sg,
+                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+save(sim_mcdG_logmF,
+     file = paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+rm("sim_mcdG_logmF")
+gc()
+
 # Generation from logM
 # Fit with MCD
 sim_logmG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "mcd", save.gam = sg,
                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
- save(sim_logmG_mcdF,
-      file = paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
- rm("sim_logmG_mcdF")
- gc()
-#
-# # Fit with logM
-# sim_logmG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "logm", save.gam = sg,
-#                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
-# save(sim_logmG_logmF,
-#      file = paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-# rm("sim_logmG_logmF")
-# gc()
+save(sim_logmG_mcdF,
+     file = paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+rm("sim_logmG_mcdF")
+gc()
+
+# Fit with logM
+sim_logmG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "logm", save.gam = sg,
+                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+save(sim_logmG_logmF,
+     file = paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+rm("sim_logmG_logmF")
+gc()
 
 #############
 # SECTION 4 #
 #############
 # Evaluation of the Hessian w.r.t. beta
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
- setwd("content/Section4")
- source("Functions_Evaluation_Hessian_beta.R")
-#
- nobs <- 1000
- dgrid <- seq(5, 100, by = 5)
- ncoef <- 10
- # S1 and S2 corresponds to dm05 and dm2
- pint_type <- c("dm05", "dm1", "dm2", "const")
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section4")
+source("Functions_Evaluation_Hessian_beta.R")
 
-# # MCD: Not reported in the paper
+nobs <- 1000
+dgrid <- seq(5, 100, by = 5)
+ncoef <- 10
+# S1 and S2 corresponds to dm05 and dm2
+pint_type <- c("dm05", "dm1", "dm2", "const")
+
+# # MCD: Not reported
 TIME_MCD_beta <- get_time_results(nobs, dgrid,  nrun, ncores, pint = pint_type,
                                   ncoef = ncoef, nb = 1, param = 1, pint_value = 0.99)
-save(TIME_MCD_beta, file = paste0("TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,".RData"))
 
-# # logM: reported in the paper
- TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores,
+# # logM: reported
+TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores,
                                     pint = pint_type, ncoef = ncoef,
                                     nb = 1, param = 2, pint_value = 0.99)
 
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section4/Results")
- save(TIME_logM_beta,
-      file = paste0("TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs, ".RData"))
-#
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section4/Results")
 
- rm("TIME_logM_beta")
- gc()
+save(TIME_MCD_beta, file = paste0("TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,".RData"))
+save(TIME_logM_beta,
+      file = paste0("TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs, ".RData"))
+
+
+rm("TIME_MCD_beta","TIME_logM_beta")
+gc()
 
 
 #############
@@ -134,17 +135,17 @@ source("Functions_Evaluation_Overall_Fit_mcd.R")
 
 dgrid <- c(2,5,10)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam objkect
+sg <- FALSE # This avoids saving the gam object
 
 
 
 sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs, dgrid,  nrun, ncores, param = "mcd",
                                     expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
 
-#save(sim_mcd_fit,
-#     file = paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#rm("sim_mcd_fit")
-#gc()
+save(sim_mcd_fit,
+     file = paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+rm("sim_mcd_fit")
+gc()
 
 
 
