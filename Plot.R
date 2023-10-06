@@ -138,8 +138,6 @@ setwd("content/Section3/Plots")
 ggsave("plot_TIME_hessian_eta.eps", pl_Heta, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_hessian_eta.pdf", pl_Heta, width = 30, height = 15, units = "cm")
 
-
-
 ###############################################
 # Code for reproducing Figure 2 - SECTION 3.3 #
 ###############################################
@@ -232,7 +230,6 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
                                                sec.axis = sec_axis(~ . * 1,
                                                                    breaks=seq(50, 100, by = 10)))
   ))
-pl_Fit_Time_Iter
 
 pl_Fit_Time_Iter2 <- ggplot(data_time_iter,
                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
@@ -286,7 +283,7 @@ pl_Fit_Time_Iter3 <- ggplot(data_time_iter,
                                                sec.axis = sec_axis(~ . * 1,
                                                                    breaks=seq(50, 100, by = 10)))
   ))
-pl_Fit_Time_Iter3
+
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Plots")
