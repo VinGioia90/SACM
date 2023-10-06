@@ -21,7 +21,7 @@ ncores <- 5 # Set the number of cores
 #######################################################################
 # Evaluation of the second-order derivatives w.r.t. linear predictors #
 #######################################################################
-setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
+setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Evaluation_Hessian_eta_parLapply.R")
 
 nobs <- 1000
@@ -51,7 +51,7 @@ gc()
 #######################################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Comp_logM_MCD_Fit")
-source("Functions_Evaluation_Overall_Fit_parLapply.R")
+source("Functions_Evaluation_Overall_Fit_parLApply.R")
 
 
 dgrid <- c(2,5,10,15,20)
