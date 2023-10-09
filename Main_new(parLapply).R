@@ -116,13 +116,13 @@ ncoef <- 10
 pint_type <- c("dm05", "dm1", "dm2", "const")
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section4/Results")
+setwd("content/Section4")
 
 
 # # MCD: Not reported in the paper
 TIME_MCD_beta <- get_time_results(nobs, dgrid,  nrun, ncores, pint = pint_type,
                                   ncoef = ncoef, nb = 1, param = 1, pint_value = 0.99)
-save(TIME_MCD_beta, file = paste0("TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,".RData"))
+save(TIME_MCD_beta, file = paste0("Results/TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,".RData"))
 
 # # logM: reported in the paper
 TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores,
@@ -130,7 +130,7 @@ TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores,
                                    nb = 1, param = 2, pint_value = 0.99)
 
 save(TIME_logM_beta,
-     file = paste0("TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs, ".RData"))
+     file = paste0("Results/TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs, ".RData"))
 
 rm("TIME_logM_beta")
 gc()
