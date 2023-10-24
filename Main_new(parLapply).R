@@ -12,7 +12,7 @@ source("loadPackages.R")
 instload_packages()
 
 nrun <- 10  # Set the number of runs
-ncores <- 5 # Set the number of cores
+ncores <- 10 # Set the number of cores
 
 ###############
 # SECTION 3.3 #
@@ -21,7 +21,7 @@ ncores <- 5 # Set the number of cores
 #######################################################################
 # Evaluation of the second-order derivatives w.r.t. linear predictors #
 #######################################################################
-setwd("content/Section3/Comp_logM_MCD_Fit")
+setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
 source("Functions_Evaluation_Hessian_eta_parLapply.R")
 
 nobs <- 1000
