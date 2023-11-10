@@ -12,7 +12,7 @@ source("loadPackages.R")
 instload_packages()
 
 nrun <- 10  # Set the number of runs
-ncores <- 5 # Set the number of cores
+ncores <- 10 # Set the number of cores
 
 ###############
 # SECTION 3.3 #
@@ -54,9 +54,9 @@ setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Evaluation_Overall_Fit_parLApply.R")
 
 
-dgrid <- c(2,5,10,15,20)
+dgrid <- c(2,5, 10, 15, 20)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam objkect
+sg <- FALSE # This avoids saving the gam object
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Results")
@@ -65,7 +65,6 @@ setwd("content/Section3/Results")
 # Fit with MCD
 sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
-
 
 save(sim_mcdG_mcdF,
     file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
@@ -139,7 +138,7 @@ gc()
 #############
 # SECTION 6 #
 #############
-# Performance Comparison inside the MCD parametrisation (FS, BFGS, )
+# Performance Comparison inside the MCD parametrisation (FS, BFGS, BFGS-initialised, BAMLSS )
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section6")
 source("Functions_Evaluation_Overall_Fit_mcd_parLapply.R")
@@ -147,7 +146,7 @@ source("Functions_Evaluation_Overall_Fit_mcd_parLapply.R")
 
 dgrid <- c(2,5,10)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam objkect
+sg <- FALSE # This avoids saving the gam object
 
 sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs, dgrid,  nrun, ncores, param = "mcd",
                                        expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
