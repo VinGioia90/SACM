@@ -678,7 +678,7 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_tim
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(name = "", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
   theme_bw() +
-  scale_y_continuous(breaks = NULL,trans = myscale_trans(),
+  scale_y_continuous(breaks = NULL,trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_logM)) +
   scale_x_discrete(breaks = dg_sel) +
   xlab("Dimension") + ylab("") +
