@@ -4,7 +4,8 @@ rm(list=ls())
 # "Scalable Additive Covariance Matrix Models       #
 #####################################################
 library(rstudioapi)
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+setwd(root_dir)
 
 # Load the needed packages
 # (it might be required to do something manually)
@@ -35,7 +36,7 @@ TIME_MCD_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "mcd")
 param <- "logm"
 TIME_logM_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "logm")
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Results")
 
 save(TIME_MCD_D2eta,
@@ -49,22 +50,23 @@ gc()
 #######################################
 # Evaluation of the overall model fit #
 #######################################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Evaluation_Overall_Fit_parLApply.R")
 
 
-dgrid <- c(2,5, 10, 15, 20)
+dgrid <- c(2,5,10,15,20)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam object
+sg <- FALSE # This avoids saving the gam objkect
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Results")
 
 # Generation from MCD
 # Fit with MCD
 sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+
 
 save(sim_mcdG_mcdF,
     file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
@@ -104,7 +106,7 @@ gc()
 # SECTION 4 #
 #############
 # Evaluation of the Hessian w.r.t. beta
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section4")
 source("Functions_Evaluation_Hessian_beta_parLapply.R")
 #
@@ -114,8 +116,8 @@ ncoef <- 10
 # S1 and S2 corresponds to dm05 and dm2
 pint_type <- c("dm05", "dm1", "dm2", "const")
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-setwd("content/Section4")
+# setwd(root_dir)
+# setwd("content/Section4")
 
 
 # # MCD: Not reported in the paper
@@ -138,15 +140,15 @@ gc()
 #############
 # SECTION 6 #
 #############
-# Performance Comparison inside the MCD parametrisation (FS, BFGS, BFGS-initialised, BAMLSS )
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+# Performance Comparison inside the MCD parametrisation (FS, BFGS, )
+setwd(root_dir)
 setwd("content/Section6")
 source("Functions_Evaluation_Overall_Fit_mcd_parLapply.R")
 
 
 dgrid <- c(2,5,10)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam object
+sg <- FALSE # This avoids saving the gam objkect
 
 sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs, dgrid,  nrun, ncores, param = "mcd",
                                        expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
