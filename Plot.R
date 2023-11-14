@@ -547,12 +547,12 @@ pl_logS3
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Plots")
-ggsave("plot_logScore1.eps", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore1.pdf", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore2.eps", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore2.pdf", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.eps", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.pdf", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.pdf", pl_logS1, width = 30, height = 15, units = "cm")
 
 #############################################
 # Code for reproducing Figure 3 - SECTION 4 #
@@ -570,7 +570,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section4/Results")
 
 load(file=paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
-load(file=paste0("TIME_logM_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
+load(file=paste0("TIME_logm_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
 
 
 # MCD: not included in the paper
