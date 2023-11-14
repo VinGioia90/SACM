@@ -32,7 +32,7 @@ myscale_trans2 <- function(){
 # Evaluation of the second-order derivatives w.r.t. linear predictors #
 #######################################################################
 nobs <- 1000
-dgrid <- seq(5, 20, by = 5)
+dgrid <- seq(5, 50, by = 5)
 
 ##################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -142,7 +142,7 @@ ggsave("plot_TIME_hessian_eta.pdf", pl_Heta, width = 30, height = 15, units = "c
 ###############################################
 # Code for reproducing Figure 2 - SECTION 3.3 #
 ###############################################
-dgrid <- c(2,5,10)#,15,20)
+dgrid <- c(2,5,10,15,20)
 nrun <-  10
 nobs <- 10000
 sg <- FALSE
@@ -415,7 +415,7 @@ rm("sim_mcdG_mcdF", "sim_mcdG_logmF")
 
 
 # MCD - Generation
-dgrid_sel <- as.character(dgrid) # I removed d=2
+dgrid_sel <- as.character(dgrid) # It could be possible to remove d=2
 
 
 logS_mcd <- data.frame(logS_gen = as.vector(logS_mcdG_mcdF[,dgrid_sel]),
@@ -437,7 +437,7 @@ colnames(logS_logmG_logmF) <- as.character(dgrid)
 
 rm("sim_logmG_mcdF", "sim_logmG_logmF")
 
-dgrid_sel <- as.character(dgrid) # I removed d=2
+dgrid_sel <- as.character(dgrid) # It could be possible to remove d=2
 
 
 logS_logm <- data.frame(logS_gen = as.vector(logS_logmG_logmF[,dgrid_sel]),
