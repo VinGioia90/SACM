@@ -10,8 +10,8 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 source("loadPackages.R")
 instload_packages()
 
-nrun <- 10  # Set the number of runs
-ncores <- 5 # Set the number of cores
+nrun <- 10   # Set the number of runs
+ncores <- 10 # Set the number of cores
 
 scaleFUN <- function(x) sprintf("%.2f", x)
 myscale_trans <- function(){
@@ -32,7 +32,7 @@ myscale_trans2 <- function(){
 # Evaluation of the second-order derivatives w.r.t. linear predictors #
 #######################################################################
 nobs <- 1000
-dgrid <- seq(5, 50, by = 5)
+dgrid <- seq(5, 20, by = 5)
 
 ##################
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
@@ -110,6 +110,7 @@ lab_time_MCD <- with(summary_time_hessian,
                        max(mean_time[param == "MCD" & Type == "EFF"]),
                        max(mean_time[param == "MCD" & Type == "AD"])))
 
+# Plot using square root scale
 pl_Heta <- ggplot(all_time_hessian, aes(x = as.factor(d), y = time)) +
   geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
   geom_point(data = summary_time_hessian, aes(x = as.factor(d), y = mean_time, colour = Type),
@@ -141,7 +142,7 @@ ggsave("plot_TIME_hessian_eta.pdf", pl_Heta, width = 30, height = 15, units = "c
 ###############################################
 # Code for reproducing Figure 2 - SECTION 3.3 #
 ###############################################
-dgrid <- c(2,5,10,15,20)
+dgrid <- c(2,5,10)#,15,20)
 nrun <-  10
 nobs <- 10000
 sg <- FALSE
@@ -193,7 +194,7 @@ data_hline <- data.frame(Type2 = c("Time","Iterations"),  # Create data for line
 data_hline$Type2 <- factor(data_hline$Type2, levels=c("Time", "Iterations"))
 
 
-dgrid_sel <- dgrid # To select a subset f dgrid
+dgrid_sel <- dgrid[-1] # To select a subset of dgrid (I removed the d=2)
 data_time_iter <- data_time_iter[which(data_time_iter$d %in% dgrid_sel),]
 data_time_iter_sum <- data_time_iter_sum[which(data_time_iter_sum$d %in% dgrid_sel),]
 
@@ -205,58 +206,63 @@ label_time <- with(data_time_iter_sum,
 
                                           max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
 
-pl_Fit_Time_Iter <- ggplot(data_time_iter,
-                           aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-  geom_point(data = data_time_iter_sum,
-             aes(x = factor(d, labels = as.character(dgrid_sel),levels = as.character(dgrid_sel)),
-                 y = Value, colour = Type), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
-  geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
-            position = position_dodge(width = 0.3)) +
-  scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
-  facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
-  theme_bw() +
-  scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
-  scale_x_discrete(breaks = dgrid_sel) +
-  xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
-        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
-  ggh4x::facetted_pos_scales(y = list(
-    Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
-                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
-                                                             breaks = label_time)),
-    Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
-                                               sec.axis = sec_axis(~ . * 1,
-                                                                   breaks=seq(50, 100, by = 10)))
-  ))
+# Plot on log scale
 
-pl_Fit_Time_Iter2 <- ggplot(data_time_iter,
-                           aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-  geom_point(data = data_time_iter_sum,
-             aes(x = factor(d, labels = as.character(dgrid_sel),levels = as.character(dgrid_sel)),
-                 y = Value, colour = Type), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
-  geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
-            position = position_dodge(width = 0.3)) +
-  scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
-  facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
-  theme_bw() +
-  scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
-  scale_x_discrete(breaks = dgrid_sel) +
-  xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
-        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
-  ggh4x::facetted_pos_scales(y = list(
-    Type2 == "Time" ~ scale_y_continuous(breaks = NULL,
-                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
-                                                             breaks = label_time)),
-    Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL,
-                                               sec.axis = sec_axis(~ . * 1,
-                                                                   breaks=seq(50,100, by = 10)))
-  ))
+# pl_Fit_Time_Iter <- ggplot(data_time_iter,
+#                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
+#   geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+#   geom_point(data = data_time_iter_sum,
+#              aes(x = factor(d, labels = as.character(dgrid_sel),levels = as.character(dgrid_sel)),
+#                  y = Value, colour = Type), size = 3,
+#              position = position_dodge(width = 0.3), show.legend = FALSE) +
+#   geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
+#             position = position_dodge(width = 0.3)) +
+#   scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+#   facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
+#   theme_bw() +
+#   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
+#   scale_x_discrete(breaks = dgrid_sel) +
+#   xlab("Dimension") + ylab("") +
+#   theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
+#   ggh4x::facetted_pos_scales(y = list(
+#     Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
+#                                          sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
+#                                                              breaks = label_time)),
+#     Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
+#                                                sec.axis = sec_axis(~ . * 1,
+#                                                                    breaks=seq(50, 100, by = 10)))
+#   ))
 
+# Plot in original scale
+
+# pl_Fit_Time_Iter2 <- ggplot(data_time_iter,
+#                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
+#   geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+#   geom_point(data = data_time_iter_sum,
+#              aes(x = factor(d, labels = as.character(dgrid_sel),levels = as.character(dgrid_sel)),
+#                  y = Value, colour = Type), size = 3,
+#              position = position_dodge(width = 0.3), show.legend = FALSE) +
+#   geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
+#             position = position_dodge(width = 0.3)) +
+#   scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+#   facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
+#   theme_bw() +
+#   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
+#   scale_x_discrete(breaks = dgrid_sel) +
+#   xlab("Dimension") + ylab("") +
+#   theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
+#   ggh4x::facetted_pos_scales(y = list(
+#     Type2 == "Time" ~ scale_y_continuous(breaks = NULL,
+#                                          sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
+#                                                              breaks = label_time)),
+#     Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL,
+#                                                sec.axis = sec_axis(~ . * 1,
+#                                                                    breaks=seq(50,100, by = 10)))
+#   ))
+
+# Plot on sqrt scale
 
 pl_Fit_Time_Iter3 <- ggplot(data_time_iter,
                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
@@ -287,207 +293,266 @@ pl_Fit_Time_Iter3 <- ggplot(data_time_iter,
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Plots")
-ggsave("plot_TIME_ITER_logscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
-ggsave("plot_TIME_ITER_logscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+#ggsave("plot_TIME_ITER_logscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+#ggsave("plot_TIME_ITER_logscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 
-ggsave("plot_TIME_ITER_origscale.eps", pl_Fit_Time_Iter2, width = 30, height = 15, units = "cm")
-ggsave("plot_TIME_ITER_origscale.pdf", pl_Fit_Time_Iter2, width = 30, height = 15, units = "cm")
+#ggsave("plot_TIME_ITER_origscale.eps", pl_Fit_Time_Iter2, width = 30, height = 15, units = "cm")
+#ggsave("plot_TIME_ITER_origscale.pdf", pl_Fit_Time_Iter2, width = 30, height = 15, units = "cm")
 
 ggsave("plot_TIME_ITER_sqrtscale.eps", pl_Fit_Time_Iter3, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_ITER_sqrtscale.pdf", pl_Fit_Time_Iter3, width = 30, height = 15, units = "cm")
 
-#############################################################################################
-# SUPPLEMENTARY MATERIAL decide whether  including the results for the logM parametrisation #
-#############################################################################################
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Results")
-#
-# load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-# load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#
-#
-# res_logmG_mcdF <- fit_time(sim_logmG_mcdF, param = "mcd", dgrid, nrun = nrun)
-# res_logmG_logmF <- fit_time(sim_logmG_logmF, param = "logm", dgrid, nrun = nrun)
-# rm("sim_logmG_mcdF", "sim_logmG_logmF")
-#
-# mean_TIME <- rbind(res_logmG_mcdF$sum_res, res_logmG_logmF$sum_res)
-# all_TIME <- rbind(res_logmG_mcdF$res, res_logmG_logmF$res)
-# mean_ITER <- rbind(res_logmG_mcdF$sum_iter, res_logmG_logmF$sum_iter)
-# all_ITER <- rbind(res_logmG_mcdF$iter, res_logmG_logmF$iter)
-#
-# colnames(mean_TIME)[2] <- colnames(all_TIME)[1] <- colnames(mean_ITER)[2] <- colnames(all_ITER)[1] <- "Value"
-#
-# mean_TIME  <- cbind(mean_TIME , c(rep("Time", 2 * length(dgrid))))
-# colnames(mean_TIME)[6] <- "Type2"
-#
-# mean_ITER  <- cbind(mean_ITER , c(rep("Iterations", 2 * length(dgrid))))
-# colnames(mean_ITER)[6] <- "Type2"
-#
-# all_TIME  <- cbind(all_TIME , c(rep("Time", 2 * length(dgrid) * nrun)))
-# colnames(all_TIME)[4] <- "Type2"
-#
-# all_ITER  <- cbind(all_ITER , c(rep("Iterations", 2 * length(dgrid) * nrun)))
-# colnames(all_ITER)[4] <- "Type2"
-#
-#
-# # Join the time and the iterations (overall)
-# data_time_iter <- rbind(all_TIME, all_ITER)
-# data_time_iter_sum <-  rbind(mean_TIME[,c(1,2,5,6)], mean_ITER[,c(1,2,5,6)])
-#
-#
-# data_hline <- data.frame(Type2 = c("Time","Iterations"),  # Create data for lines
-#                          hline = c(0, NA))
-# data_hline$Type2 <- factor(data_hline$Type2, levels=c("Time", "Iterations"))
-#
-#
-# dgrid_sel <- dgrid[-1] # To select a subset f dgrid
-# data_time_iter <- data_time_iter[which(data_time_iter$d %in% dgrid_sel),]
-# data_time_iter_sum <- data_time_iter_sum[which(data_time_iter_sum$d %in% dgrid_sel),]
-#
-# data_time_iter$Type2 <- factor(data_time_iter$Type2, levels=c("Time","Iterations"), labels=c("Time","Iterations"))
-# data_time_iter_sum$Type2 <- factor(data_time_iter_sum$Type2, levels=c("Time","Iterations"), labels=c("Time","Iterations"))
-#
-# label_time <- with(data_time_iter_sum,
-#                    c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
-#
-#                      max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
-#
-# pl_Fit_Time_Iter <- ggplot(data_time_iter,
-#                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
-#   geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-#   geom_point(data = data_time_iter_sum,
-#              aes(x = factor(d, labels = as.character(dgrid_sel),levels = as.character(dgrid_sel)),
-#                  y = Value, colour = Type), size = 3,
-#              position = position_dodge(width = 0.3), show.legend = FALSE) +
-#   geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
-#             position = position_dodge(width = 0.3)) +
-#   scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
-#   facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
-#   theme_bw() +
-#   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
-#   scale_x_discrete(breaks = dgrid_sel) +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
-#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
-#   ggh4x::facetted_pos_scales(y = list(
-#     Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
-#                                          sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
-#                                                              breaks = label_time)),
-#     Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans(),
-#                                                sec.axis = sec_axis(~ . * 1,
-#                                                                    breaks=seq(50, 225, by = 25)))
-#   ))
-#
-#
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Plots")
-# ggsave("plot_TIME_ITER2.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+##############################################################################################
+# SUPPLEMENTARY MATERIAL: decide whether  including the results for the logM parametrisation #
+# !!! I think it's redundant reporting computational times and iterations                    #
+# Now it corresponds to Figure 6 of the Supplementary Material                               #
+##############################################################################################
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Results")
 
 
-###############################################################
-# Code for reproducing the Figure 6 - SUPPLEMENTARY MATERIALS #
-###############################################################
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Comp_logM_MCD_Fit")
-# source("Functions_Plots_Overall_Fit.R")
-#
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Results")
-#
-# load(paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-# load(paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#
-# logS_mcdG_mcdF <- log_Score(obj=sim_mcdG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
-# logS_mcdG_logmF <- log_Score(sim_mcdG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
-#
-# rm("sim_mcdG_mcdF", "sim_mcdG_logmF")
-#
-#
-# # Must be generalised
-# logS_mcd <- data.frame(logS_gen = c(logS_mcdG_mcdF[,3], logS_mcdG_mcdF[,4], logS_mcdG_mcdF[,5]),
-#                        logS_nogen = c(logS_mcdG_logmF[,3], logS_mcdG_logmF[,4], logS_mcdG_logmF[,5]))
-#
-#
-#
-# logS_mcd <- cbind(logS_mcd, d = c(rep(c("10","15","20"), each = 10)))
-# logS_mcd <- cbind(logS_mcd, Type2 = rep("MCD - Generation"))
-#
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Results")
-#
-# load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-# load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#
-# logS_logmG_mcdF <- log_Score(obj=sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
-# logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
-#
-# rm("sim_logmG_mcdF", "sim_logmG_logmF")
-#
-#
-# logS_logm <- data.frame(logS_gen = c(logS_logmG_logmF[,3], logS_logmG_logmF[,4], logS_logmG_logmF[,5]),
-#                         logS_nogen = c(logS_logmG_mcdF[,3], logS_logmG_mcdF[,4], logS_logmG_mcdF[,5]))
-#
-#
-#
-# logS_logm <- cbind(logS_logm, d = c(rep(c("10","15","20"), each = 10)))
-# logS_logm <- cbind(logS_logm, Type2 = rep("logM - Generation"))
-#
-# logS <- rbind(logS_mcd,logS_logm)
-#
-# logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generation"), labels = c("MCD - Generation", "logM - Generation"))
-#
-#
-# pl_logS <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
-#   geom_point(col="red",size=2,
-#              show.legend=TRUE)+
-#   geom_abline(slope=1, intercept=0, col="black") +
-#   scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
-#   facet_grid2(Type2 ~ d, scales="free", switch = "y", independent = "all") +
-#   theme_bw() +
-#   scale_y_continuous(breaks=NULL,
-#                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
-#   ) +
-#   xlab("") +
-#   ylab("") +
-#   ggh4x::facetted_pos_scales(y = list(
-#     Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=c(min(logS$logS_gen), max(logS$logS_gen)), labels = scaleFUN, sec.axis = sec_axis(~ . * 1)),
-#     Type2 == "logM - Generation" ~ scale_y_continuous(breaks=c(min(logS$logS_gen), max(logS$logS_gen)), labels = scaleFUN, sec.axis = sec_axis(~ . * 1)))) +
-#   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-#         axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-#         axis.text.x=element_blank(), axis.text.y=element_blank(),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-# pl_logS
-#
-#
-#
-#
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Results")
-# load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
-# load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#
-# logS_logmG_mcdF <- log_Score(sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd")
-# logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm")
-#
-# rm("sim_logmG_mcdF", "sim_logmG_logmF")
-#
-#
-# setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-# setwd("content/Section3/Plots")
-# pdf(file="logScore_logMgen.pdf", width = 20, height = 15)
-# par(mfrow = c(1, length(dgrid)), pty = "s")
-# for(j in 1 : length(dgrid)){
-#   plot(logS_logmG_logmF[,j], logS_logmG_mcdF[,j], pch = 16, lwd = 2,
-#        xlab = "logM Fit",
-#        ylab = "MCD Fit",
-#        main = paste0("logM Gen. d=", dgrid[j]))
-#   abline(0, 1, col = "red")
-# }
-# dev.off()
+load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
+load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+
+
+res_logmG_mcdF <- fit_time(sim_logmG_mcdF, param = "mcd", dgrid, nrun = nrun)
+res_logmG_logmF <- fit_time(sim_logmG_logmF, param = "logm", dgrid, nrun = nrun)
+rm("sim_logmG_mcdF", "sim_logmG_logmF")
+
+mean_TIME <- rbind(res_logmG_mcdF$sum_res, res_logmG_logmF$sum_res)
+all_TIME <- rbind(res_logmG_mcdF$res, res_logmG_logmF$res)
+mean_ITER <- rbind(res_logmG_mcdF$sum_iter, res_logmG_logmF$sum_iter)
+all_ITER <- rbind(res_logmG_mcdF$iter, res_logmG_logmF$iter)
+
+colnames(mean_TIME)[2] <- colnames(all_TIME)[1] <- colnames(mean_ITER)[2] <- colnames(all_ITER)[1] <- "Value"
+
+mean_TIME  <- cbind(mean_TIME , c(rep("Time", 2 * length(dgrid))))
+colnames(mean_TIME)[6] <- "Type2"
+
+mean_ITER  <- cbind(mean_ITER , c(rep("Iterations", 2 * length(dgrid))))
+colnames(mean_ITER)[6] <- "Type2"
+
+all_TIME  <- cbind(all_TIME , c(rep("Time", 2 * length(dgrid) * nrun)))
+colnames(all_TIME)[4] <- "Type2"
+
+all_ITER  <- cbind(all_ITER , c(rep("Iterations", 2 * length(dgrid) * nrun)))
+colnames(all_ITER)[4] <- "Type2"
+
+
+# Join the time and the iterations (overall)
+data_time_iter <- rbind(all_TIME, all_ITER)
+data_time_iter_sum <-  rbind(mean_TIME[,c(1,2,5,6)], mean_ITER[,c(1,2,5,6)])
+
+
+data_hline <- data.frame(Type2 = c("Time","Iterations"),  # Create data for lines
+                         hline = c(0, NA))
+data_hline$Type2 <- factor(data_hline$Type2, levels=c("Time", "Iterations"))
+
+
+dgrid_sel <- dgrid[-1] # To select a subset f dgrid
+data_time_iter <- data_time_iter[which(data_time_iter$d %in% dgrid_sel),]
+data_time_iter_sum <- data_time_iter_sum[which(data_time_iter_sum$d %in% dgrid_sel),]
+
+data_time_iter$Type2 <- factor(data_time_iter$Type2, levels=c("Time","Iterations"), labels=c("Time","Iterations"))
+data_time_iter_sum$Type2 <- factor(data_time_iter_sum$Type2, levels=c("Time","Iterations"), labels=c("Time","Iterations"))
+
+label_time <- with(data_time_iter_sum,
+                   c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
+
+                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
+
+pl_Fit_Time_Iter <- ggplot(data_time_iter,
+                           aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
+  geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+  geom_point(data = data_time_iter_sum,
+             aes(x = factor(d, labels = as.character(dgrid_sel),levels = as.character(dgrid_sel)),
+                 y = Value, colour = Type), size = 3,
+             position = position_dodge(width = 0.3), show.legend = FALSE) +
+  geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
+            position = position_dodge(width = 0.3)) +
+  scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
+  theme_bw() +
+  scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
+  scale_x_discrete(breaks = dgrid_sel) +
+  xlab("Dimension") + ylab("") +
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
+  ggh4x::facetted_pos_scales(y = list(
+    Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
+                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
+                                                             breaks = label_time)),
+    Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
+                                               sec.axis = sec_axis(~ . * 1,
+                                                                   breaks=seq(50, 225, by = 25)))
+  ))
+
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Plots")
+ggsave("plot_TIME_ITER2_sqrtscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+ggsave("plot_TIME_ITER2_sqrtscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+
+#######################################################################################
+# Code for reproducing Figure 7 - SUPPLEMENTARY MATERIALS - comparison of performance #
+#######################################################################################
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Comp_logM_MCD_Fit")
+source("Functions_Plots_Overall_Fit.R")
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Results")
+
+load(paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
+load(paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+
+logS_mcdG_mcdF <- log_Score(obj=sim_mcdG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
+colnames(logS_mcdG_mcdF) <- as.character(dgrid)
+logS_mcdG_logmF <- log_Score(sim_mcdG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
+colnames(logS_mcdG_logmF) <- as.character(dgrid)
+
+rm("sim_mcdG_mcdF", "sim_mcdG_logmF")
+
+
+# MCD - Generation
+dgrid_sel <- as.character(dgrid) # I removed d=2
+
+
+logS_mcd <- data.frame(logS_gen = as.vector(logS_mcdG_mcdF[,dgrid_sel]),
+                       logS_nogen = as.vector(logS_mcdG_logmF[,dgrid_sel]))
+
+
+logS_mcd <- cbind(logS_mcd, d = c(rep(dgrid_sel, each = nrun)))
+logS_mcd <- cbind(logS_mcd, Type2 = rep("MCD - Generation"))
+
+
+# logm - Generation
+load(paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
+load(paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+
+logS_logmG_mcdF <- log_Score(obj=sim_logmG_mcdF, nrun, dgrid, nobs,  param = "mcd", ncov = 3)
+colnames(logS_logmG_mcdF) <- as.character(dgrid)
+logS_logmG_logmF <- log_Score(sim_logmG_logmF, nrun, dgrid, nobs,  param = "logm", ncov = 3)
+colnames(logS_logmG_logmF) <- as.character(dgrid)
+
+rm("sim_logmG_mcdF", "sim_logmG_logmF")
+
+dgrid_sel <- as.character(dgrid) # I removed d=2
+
+
+logS_logm <- data.frame(logS_gen = as.vector(logS_logmG_logmF[,dgrid_sel]),
+                         logS_nogen = as.vector(logS_logmG_mcdF[,dgrid_sel]))
 
 
 
+logS_logm <- cbind(logS_logm, d = c(rep(dgrid_sel, each = nrun)))
+logS_logm <- cbind(logS_logm, Type2 = rep("logM - Generation"))
+
+logS <- rbind(logS_mcd,logS_logm)
+
+
+
+logS$d <- factor(logS$d, levels = dgrid_sel,
+                 labels = dgrid_sel)
+
+logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generation"),
+                     labels = c("MCD - Generation", "logM - Generation"))
+
+# A possible plot: putting all togheter
+# We just need specifying suitably the x and y axis for each plot
+# left plot (logS_mcd,logSlogm) and right plot (logS_logm, logS_mcd)
+pl_logS1 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen, color = d)) +
+  geom_point(size = 2, show.legend=TRUE)+
+  geom_abline(slope=1, intercept=0, col="black") +
+  scale_color_manual(name="d",values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
+  facet_grid2( ~ Type2, scales="free", switch = "y", independent = "all") +
+  theme_bw() +
+  scale_y_continuous(breaks=seq(10000, 60000, by=10000),
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
+  scale_x_continuous(breaks=seq(10000, 60000, by=10000),
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
+  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+        #axis.text.x=element_blank(), axis.text.y=element_blank(),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+pl_logS1
+
+# Another possible way: consider dgrid_sel * 2 possible plots: We have to decide qhich one to be reported
+pl_logS2 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
+  geom_point(col="red",size=2,
+             show.legend=TRUE)+
+  geom_abline(slope=1, intercept=0, col="black") +
+  scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
+  facet_grid2(Type2 ~ d, scales="free_y", switch = "y") +
+  theme_bw() +
+  scale_y_continuous(breaks=NULL,
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
+  ) +
+  xlab("") +
+  ylab("") +
+  ggh4x::facetted_pos_scales(y = list(
+    Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=NULL,
+                                                     labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "MCD - Generation"]),
+                                                                                                              max(logS$logS_gen[logS$Type2 == "MCD - Generation"])))),
+    Type2 == "logM - Generation" ~ scale_y_continuous(breaks=NULL,
+                                                      labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "logM - Generation"]),
+                                                                                                               max(logS$logS_gen[logS$Type2 == "logM - Generation"])))))) +
+  #ggh4x::facetted_pos_scales(x = list(
+  #  d == "2" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="2"]), max(logS$logS_nogen[logS$d=="2"])),
+  #                                                   labels = scaleFUN),
+  #  d == "5" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="5"]), max(logS$logS_nogen[logS$d=="5"])),
+  #                                                    labels = scaleFUN),
+  #  d == "10" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="10"]), max(logS$logS_nogen[logS$d=="10"])),
+  #                                 labels = scaleFUN))) +
+  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+        #axis.text.x=element_blank(), axis.text.y=element_blank(),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+
+pl_logS2
+
+
+pl_logS3 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
+  geom_point(col="red",size=2,
+             show.legend=TRUE)+
+  geom_abline(slope=1, intercept=0, col="black") +
+  scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
+  facet_grid2(Type2 ~ d, scales="free", switch = "y", independent = "all") +
+  theme_bw() +
+  scale_y_continuous(breaks=NULL,
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
+  ) +
+  xlab("") +
+  ylab("") +
+  #ggh4x::facetted_pos_scales(y = list(
+  #  Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=NULL,
+  #                                                   labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "MCD - Generation"]),
+  #                                                                                                            max(logS$logS_gen[logS$Type2 == "MCD - Generation"])))),
+  #  Type2 == "logM - Generation" ~ scale_y_continuous(breaks=NULL,
+  #                                                    labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "logM - Generation"]),
+  #                                                                                                             max(logS$logS_gen[logS$Type2 == "logM - Generation"])))))) +
+  #ggh4x::facetted_pos_scales(x = list(
+  #  d == "2" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="2"]), max(logS$logS_nogen[logS$d=="2"])),
+  #                                                   labels = scaleFUN),
+  #  d == "5" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="5"]), max(logS$logS_nogen[logS$d=="5"])),
+  #                                                    labels = scaleFUN),
+  #  d == "10" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="10"]), max(logS$logS_nogen[logS$d=="10"])),
+  #                                 labels = scaleFUN))) +
+  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+        #axis.text.x=element_blank(), axis.text.y=element_blank(),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+
+pl_logS3
+
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd("content/Section3/Plots")
+ggsave("plot_logScore1.eps", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1.pdf", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.eps", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.pdf", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.eps", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.pdf", pl_logS, width = 30, height = 15, units = "cm")
 
 #############################################
 # Code for reproducing Figure 3 - SECTION 4 #
@@ -510,10 +575,10 @@ load(file=paste0("TIME_logM_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".
 
 # MCD: not included in the paper
 # time_Hbeta_mcd <-  lapply(1 : length(pint_type),
-#                           function(x) time_hessian(obj = TIME_MCD_beta[[x]], param = "mcd",
-#                                                    dgrid = dgrid, nrun = nrun,
-#                                                    type = c("block", "noblock"),
-#                                                    type1 = c("PARS", "STD"),
+#                            function(x) time_hessian(obj = TIME_MCD_beta[[x]], param = "mcd",
+#                                                     dgrid = dgrid, nrun = nrun,
+#                                                     type = c("block", "noblock"),
+#                                                     type1 = c("PARS", "STD"),
 #                                                    beta = TRUE))
 #
 #
@@ -523,24 +588,46 @@ load(file=paste0("TIME_logM_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".
 # all_time_hessianB_mcd <- rbind(time_Hbeta_mcd[[1]]$res, time_Hbeta_mcd[[3]]$res)
 # row.names(all_time_hessianB_mcd) <- NULL
 #
-# # Get the ratio of the mean and all the times
+# # # Get the ratio of the mean and all the times
 # rel_mean_time_hessianB_mcd <- data.frame(d = rep(dgrid, 2),
-#                                          rel_time = summary_time_hessianB_mcd[summary_time_hessianB_mcd$Type == "STD",2]/
-#                                                     summary_time_hessianB_mcd[summary_time_hessianB_mcd$Type == "PARS",2],
+#                                           rel_time = summary_time_hessianB_mcd[summary_time_hessianB_mcd$Type == "STD",2]/
+#                                                      summary_time_hessianB_mcd[summary_time_hessianB_mcd$Type == "PARS",2],
+#                                           param = rep("mcd", 2 * length(dgrid)),
+#                                           Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
+#                                                             labels = c("S1", "S2"), level = c("S1", "S2")),
+#                                           Ratio = rep("STD/PARS", 2 * length(dgrid)))
+#  rel_all_time_hessianB_mcd <- data.frame(d = rep(dgrid, 2),
+#                                          rel_time = all_time_hessianB_mcd[all_time_hessianB_mcd$Type == "STD",1]/
+#                                                     all_time_hessianB_mcd[all_time_hessianB_mcd$Type == "PARS",1],
 #                                          param = rep("mcd", 2 * length(dgrid)),
-#                                          Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
-#                                                            labels = c("S1", "S2"), level = c("S1", "S2")),
-#                                          Ratio = rep("STD/PARS", 2 * length(dgrid)))
-# rel_all_time_hessianB_mcd <- data.frame(d = rep(dgrid, 2),
-#                                         rel_time = all_time_hessianB_mcd[all_time_hessianB_mcd$Type == "STD",1]/
-#                                                    all_time_hessianB_mcd[all_time_hessianB_mcd$Type == "PARS",1],
-#                                         param = rep("mcd", 2 * length(dgrid)),
-#                                         Scenario = factor(rep(c("S1", "S2"), each = 2 * nrun * length(dgrid)),
-#                                                         labels = c("S1", "S2"), level = c("S1", "S2")),
-#                                         Ratio=rep("STD/PARS",2 * length(dgrid)))
+#                                          Scenario = factor(rep(c("S1", "S2"), each = 2 * nrun * length(dgrid)),
+#                                                          labels = c("S1", "S2"), level = c("S1", "S2")),
+#                                          Ratio=rep("STD/PARS",2 * length(dgrid)))
 #
-# lab_time_MCD <- c(1,max(rel_mean_time_hessianB_mcd[rel_mean_time_hessianB_mcd$Scenario == "S1",2]),
-#                     max(rel_mean_time_hessianB_mcd[rel_mean_time_hessianB_mcd$Scenario == "S2",2]))
+#  lab_time_MCD <- c(1,max(rel_mean_time_hessianB_mcd[rel_mean_time_hessianB_mcd$Scenario == "S1",2]),
+#                      max(rel_mean_time_hessianB_mcd[rel_mean_time_hessianB_mcd$Scenario == "S2",2]))
+#
+#
+#  dg_sel <- dgrid #To select a subset of the dgrid elements
+#  rel_mean_time_hessianB_MCD <- rel_mean_time_hessianB_mcd[which(rel_mean_time_hessianB_mcd$d %in% dg_sel),]
+#  rel_all_time_hessianB_MCD <- rel_all_time_hessianB_mcd[which(rel_all_time_hessianB_mcd$d %in% dg_sel),]
+#
+#  pl_Hbeta <- ggplot(rel_all_time_hessianB_MCD, aes(x = as.factor(d), y = rel_time)) +
+#    geom_point(aes(colour = Scenario), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+#    geom_point(data = rel_mean_time_hessianB_mcd, aes(x = as.factor(d), y = rel_time, colour = Scenario),
+#               size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+#    geom_line(data = rel_mean_time_hessianB_mcd, aes(y = rel_time, group = Scenario, col = Scenario),
+#              position = position_dodge(width = 0.3)) +
+#    geom_hline(yintercept = 1, linetype = "dashed") +
+#    scale_color_manual(name = "", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+#    theme_bw() +
+#    scale_y_continuous(breaks = NULL,trans = myscale_trans(),
+#                       sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_MCD)) +
+#    scale_x_discrete(breaks = dg_sel) +
+#    xlab("Dimension") + ylab("") +
+#    theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+#          legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+#
 
 
 # logM
