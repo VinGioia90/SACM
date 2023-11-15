@@ -3,7 +3,8 @@
 # "Scalable Additive Covariance Matrix Modelling"    #
 ######################################################
 library(rstudioapi)
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
+setwd(root_dir)
 
 # Load the needed packages
 # (it might be required to do something manually)
@@ -35,7 +36,7 @@ nobs <- 1000
 dgrid <- seq(5, 50, by = 5)
 
 ##################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Results")
 
 ###############################################
@@ -45,7 +46,7 @@ load(file = paste0("TIME_mcd_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid),
 load(file = paste0("TIME_logm_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
 
 ##################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
 source("Functions_Plots_Hessian_eta.R")
 
@@ -134,7 +135,7 @@ pl_Heta <- ggplot(all_time_hessian, aes(x = as.factor(d), y = time)) +
   ))
 
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Plots")
 ggsave("plot_TIME_hessian_eta.eps", pl_Heta, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_hessian_eta.pdf", pl_Heta, width = 30, height = 15, units = "cm")
@@ -147,13 +148,13 @@ nrun <-  10
 nobs <- 10000
 sg <- FALSE
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Plots_Overall_Fit.R")
 
 
 # only MCD - generation in the paper (similar results by generating with the logM)
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Results")
 
 load(paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
@@ -291,7 +292,7 @@ pl_Fit_Time_Iter3 <- ggplot(data_time_iter,
   ))
 
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Plots")
 #ggsave("plot_TIME_ITER_logscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 #ggsave("plot_TIME_ITER_logscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
@@ -307,7 +308,7 @@ ggsave("plot_TIME_ITER_sqrtscale.pdf", pl_Fit_Time_Iter3, width = 30, height = 1
 # !!! I think it's redundant reporting computational times and iterations                    #
 # Now it corresponds to Figure 6 of the Supplementary Material                               #
 ##############################################################################################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Results")
 
 
@@ -388,7 +389,7 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
   ))
 
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Plots")
 ggsave("plot_TIME_ITER2_sqrtscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_ITER2_sqrtscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
@@ -396,11 +397,11 @@ ggsave("plot_TIME_ITER2_sqrtscale.pdf", pl_Fit_Time_Iter, width = 30, height = 1
 #######################################################################################
 # Code for reproducing Figure 7 - SUPPLEMENTARY MATERIALS - comparison of performance #
 #######################################################################################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Plots_Overall_Fit.R")
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Results")
 
 load(paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse="_"), ".RData"))
@@ -545,19 +546,26 @@ pl_logS3 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
 
 pl_logS3
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Plots")
 ggsave("plot_logScore1.eps", pl_logS1, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+<<<<<<< HEAD
 ggsave("plot_logScore2.eps", pl_logS2, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore2.pdf", pl_logS2, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore3.eps", pl_logS3, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore3.pdf", pl_logS3, width = 30, height = 15, units = "cm")
+=======
+ggsave("plot_logScore2.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+>>>>>>> db1ce379bc3aa938537b0be37cb0850a887ffed9
 
 #############################################
 # Code for reproducing Figure 3 - SECTION 4 #
 #############################################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
 source("Functions_Plots_Hessian_eta.R")
 
@@ -566,11 +574,11 @@ dgrid <- seq(5, 100, by = 5)
 pint_type <- c("dm05","dm1", "dm2","const")
 
 ##################
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section4/Results")
 
 load(file=paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
-load(file=paste0("TIME_logM_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
+load(file=paste0("TIME_logm_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, ".RData"))
 
 
 # MCD: not included in the paper
@@ -685,7 +693,7 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_tim
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
-setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+setwd(root_dir)
 setwd("content/Section4/Plots")
 ggsave("plot_rel_TIME_hessian_beta_logM.eps", pl_Hbeta, width = 15, height = 15, units = "cm")
 ggsave("plot_rel_TIME_hessian_beta_logM.pdf", pl_Hbeta, width = 15, height = 15, units = "cm")
