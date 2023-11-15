@@ -142,7 +142,7 @@ ggsave("plot_TIME_hessian_eta.pdf", pl_Heta, width = 30, height = 15, units = "c
 ###############################################
 # Code for reproducing Figure 2 - SECTION 3.3 #
 ###############################################
-dgrid <- c(2,5,10,15,20)
+dgrid <- c(2,5,10)#,15,20)
 nrun <-  10
 nobs <- 10000
 sg <- FALSE
@@ -547,12 +547,12 @@ pl_logS3
 
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section3/Plots")
-ggsave("plot_logScore1.eps", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore1.pdf", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore2.eps", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore2.pdf", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.eps", pl_logS, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.pdf", pl_logS, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.eps", pl_logS2, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore2.pdf", pl_logS2, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.eps", pl_logS3, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore3.pdf", pl_logS3, width = 30, height = 15, units = "cm")
 
 #############################################
 # Code for reproducing Figure 3 - SECTION 4 #
