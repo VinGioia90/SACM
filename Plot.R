@@ -462,143 +462,156 @@ logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generati
 # A possible plot: putting all togheter
 # We just need specifying suitably the x and y axis for each plot
 # left plot (logS_mcd,logSlogm) and right plot (logS_logm, logS_mcd)
-col_values <- c("#F8766D", "#619CFF", "#E69F00")
 
-pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation"], aes(x = logS_gen, y = logS_nogen, color = d)) +
+
+col_values<- hue_pal()(length(dgrid))
+show_col(col_values)
+
+breaks_seq_MCDgen_x <- as.numeric(tapply(logS[logS$Type2=="MCD - Generation",]$logS_gen, logS$d[logS$Type2=="MCD - Generation"], mean))
+breaks_seq_MCDgen_y <- as.numeric(tapply(logS[logS$Type2=="MCD - Generation",]$logS_nogen, logS$d[logS$Type2=="MCD - Generation"], mean))
+
+pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",], aes(x = logS_gen, y = logS_nogen, color = d)) +
   geom_point(size = 2, show.legend=TRUE)+
   geom_abline(slope=1, intercept=0, col="black") +
-  scale_color_manual(name = "d", values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
+  scale_color_manual(name = "d", values = col_values)+
   theme_bw() +
-  scale_y_continuous(breaks = seq(min(logS_nogen), max(logS_nogen), by = 10000),
+  facet_grid(. ~ "MCD generation") +
+  xlab("LS - MCD fit") + ylab("LS - logM fit") +
+  scale_y_continuous(breaks = breaks_seq_MCDgen_y,
                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=seq(min(logS_gen), min(logS_gen), by=10000),
+  scale_x_continuous(breaks=breaks_seq_MCDgen_x,
                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-        #axis.text.x=element_blank(), axis.text.y=element_blank(),
         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
-pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation"], aes(x = logS_gen, y = logS_nogen, color = d)) +
+
+
+breaks_seq_logMgen_x <- as.numeric(tapply(logS[logS$Type2=="logM - Generation",]$logS_gen, logS$d[logS$Type2=="logM - Generation"], mean))
+breaks_seq_logMgen_y <- as.numeric(tapply(logS[logS$Type2=="logM - Generation",]$logS_nogen, logS$d[logS$Type2=="logM - Generation"], mean))
+
+
+pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",], aes(x = logS_gen, y = logS_nogen, color = d)) +
   geom_point(size = 2, show.legend=TRUE)+
   geom_abline(slope=1, intercept=0, col="black") +
-  facet_grid2( ~ Type2, scales="free", switch = "y", independent = "all")
-  scale_color_manual(name = "d", values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
+  facet_grid(. ~ "logM generation") +
+  xlab("LS - logM fit") + ylab("LS - MCD fit") +
+  scale_color_manual(name = "d", values = col_values)+
   theme_bw() +
-  scale_y_continuous(breaks = seq(min(logS_nogen), max(logS_nogen), by = 10000),
+  scale_y_continuous(breaks = breaks_seq_logMgen_y,
                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=seq(min(logS_gen), max(logS_gen), by=10000),
+  scale_x_continuous(breaks=breaks_seq_logMgen_x,
                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-        #axis.text.x=element_blank(), axis.text.y=element_blank(),
         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
 
-ggarrange(pl_MCD_gen,
-          pl_logM_gen,
-          nrow = 1)
+pl_logS1 <- ggarrange(pl_MCD_gen,
+                      pl_logM_gen,
+                      nrow = 1,
+                      common.legend = TRUE,
+                      legend = "bottom")
 
 
-pl_logS1 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen, color = d)) +
-  geom_point(size = 2, show.legend=TRUE)+
-  geom_abline(slope=1, intercept=0, col="black") +
-  scale_color_manual(name="d",values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
-  facet_grid2( ~ Type2, scales="free", switch = "y", independent = "all") +
-  theme_bw() +
-  scale_y_continuous(breaks=seq(10000, 60000, by=10000),
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=seq(10000, 60000, by=10000),
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-        #axis.text.x=element_blank(), axis.text.y=element_blank(),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-pl_logS1
-
-# Another possible way: consider dgrid_sel * 2 possible plots: We have to decide qhich one to be reported
-pl_logS2 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
-  geom_point(col="red",size=2,
-             show.legend=TRUE)+
-  geom_abline(slope=1, intercept=0, col="black") +
-  scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
-  facet_grid2(Type2 ~ d, scales="free_y", switch = "y") +
-  theme_bw() +
-  scale_y_continuous(breaks=NULL,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
-  ) +
-  xlab("") +
-  ylab("") +
-  ggh4x::facetted_pos_scales(y = list(
-    Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=NULL,
-                                                     labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "MCD - Generation"]),
-                                                                                                              max(logS$logS_gen[logS$Type2 == "MCD - Generation"])))),
-    Type2 == "logM - Generation" ~ scale_y_continuous(breaks=NULL,
-                                                      labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "logM - Generation"]),
-                                                                                                               max(logS$logS_gen[logS$Type2 == "logM - Generation"])))))) +
-  #ggh4x::facetted_pos_scales(x = list(
-  #  d == "2" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="2"]), max(logS$logS_nogen[logS$d=="2"])),
-  #                                                   labels = scaleFUN),
-  #  d == "5" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="5"]), max(logS$logS_nogen[logS$d=="5"])),
-  #                                                    labels = scaleFUN),
-  #  d == "10" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="10"]), max(logS$logS_nogen[logS$d=="10"])),
-  #                                 labels = scaleFUN))) +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-        #axis.text.x=element_blank(), axis.text.y=element_blank(),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-pl_logS2
-
-
-pl_logS3 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
-  geom_point(col="red",size=2,
-             show.legend=TRUE)+
-  geom_abline(slope=1, intercept=0, col="black") +
-  scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
-  facet_grid2(Type2 ~ d, scales="free", switch = "y", independent = "all") +
-  theme_bw() +
-  scale_y_continuous(breaks=NULL,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
-  ) +
-  xlab("") +
-  ylab("") +
-  #ggh4x::facetted_pos_scales(y = list(
-  #  Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=NULL,
-  #                                                   labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "MCD - Generation"]),
-  #                                                                                                            max(logS$logS_gen[logS$Type2 == "MCD - Generation"])))),
-  #  Type2 == "logM - Generation" ~ scale_y_continuous(breaks=NULL,
-  #                                                    labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "logM - Generation"]),
-  #                                                                                                             max(logS$logS_gen[logS$Type2 == "logM - Generation"])))))) +
-  #ggh4x::facetted_pos_scales(x = list(
-  #  d == "2" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="2"]), max(logS$logS_nogen[logS$d=="2"])),
-  #                                                   labels = scaleFUN),
-  #  d == "5" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="5"]), max(logS$logS_nogen[logS$d=="5"])),
-  #                                                    labels = scaleFUN),
-  #  d == "10" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="10"]), max(logS$logS_nogen[logS$d=="10"])),
-  #                                 labels = scaleFUN))) +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
-        #axis.text.x=element_blank(), axis.text.y=element_blank(),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-pl_logS3
+# pl_logS1 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen, color = d)) +
+#   geom_point(size = 2, show.legend=TRUE)+
+#   geom_abline(slope=1, intercept=0, col="black") +
+#   scale_color_manual(name="d",values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
+#   facet_grid2( ~ Type2, scales="free", switch = "y", independent = "all") +
+#   theme_bw() +
+#   scale_y_continuous(breaks=seq(10000, 60000, by=10000),
+#                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
+#   scale_x_continuous(breaks=seq(10000, 60000, by=10000),
+#                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
+#   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+#         #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+#         #axis.text.x=element_blank(), axis.text.y=element_blank(),
+#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+# pl_logS1
+#
+# # Another possible way: consider dgrid_sel * 2 possible plots: We have to decide qhich one to be reported
+# pl_logS2 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
+#   geom_point(col="red",size=2,
+#              show.legend=TRUE)+
+#   geom_abline(slope=1, intercept=0, col="black") +
+#   scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
+#   facet_grid2(Type2 ~ d, scales="free_y", switch = "y") +
+#   theme_bw() +
+#   scale_y_continuous(breaks=NULL,
+#                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
+#   ) +
+#   xlab("") +
+#   ylab("") +
+#   ggh4x::facetted_pos_scales(y = list(
+#     Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=NULL,
+#                                                      labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "MCD - Generation"]),
+#                                                                                                               max(logS$logS_gen[logS$Type2 == "MCD - Generation"])))),
+#     Type2 == "logM - Generation" ~ scale_y_continuous(breaks=NULL,
+#                                                       labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "logM - Generation"]),
+#                                                                                                                max(logS$logS_gen[logS$Type2 == "logM - Generation"])))))) +
+#   #ggh4x::facetted_pos_scales(x = list(
+#   #  d == "2" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="2"]), max(logS$logS_nogen[logS$d=="2"])),
+#   #                                                   labels = scaleFUN),
+#   #  d == "5" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="5"]), max(logS$logS_nogen[logS$d=="5"])),
+#   #                                                    labels = scaleFUN),
+#   #  d == "10" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="10"]), max(logS$logS_nogen[logS$d=="10"])),
+#   #                                 labels = scaleFUN))) +
+#   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+#         #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+#         #axis.text.x=element_blank(), axis.text.y=element_blank(),
+#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+#
+# pl_logS2
+#
+#
+# pl_logS3 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen)) +
+#   geom_point(col="red",size=2,
+#              show.legend=TRUE)+
+#   geom_abline(slope=1, intercept=0, col="black") +
+#   scale_color_manual(name="",values = c("MCD" = "#F8766D", "logM" = "#619CFF"))+
+#   facet_grid2(Type2 ~ d, scales="free", switch = "y", independent = "all") +
+#   theme_bw() +
+#   scale_y_continuous(breaks=NULL,
+#                      sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),
+#   ) +
+#   xlab("") +
+#   ylab("") +
+#   #ggh4x::facetted_pos_scales(y = list(
+#   #  Type2 == "MCD - Generation" ~ scale_y_continuous(breaks=NULL,
+#   #                                                   labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "MCD - Generation"]),
+#   #                                                                                                            max(logS$logS_gen[logS$Type2 == "MCD - Generation"])))),
+#   #  Type2 == "logM - Generation" ~ scale_y_continuous(breaks=NULL,
+#   #                                                    labels = scaleFUN, sec.axis = sec_axis(~ . * 1, breaks=c(min(logS$logS_gen[logS$Type2 == "logM - Generation"]),
+#   #                                                                                                             max(logS$logS_gen[logS$Type2 == "logM - Generation"])))))) +
+#   #ggh4x::facetted_pos_scales(x = list(
+#   #  d == "2" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="2"]), max(logS$logS_nogen[logS$d=="2"])),
+#   #                                                   labels = scaleFUN),
+#   #  d == "5" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="5"]), max(logS$logS_nogen[logS$d=="5"])),
+#   #                                                    labels = scaleFUN),
+#   #  d == "10" ~ scale_x_continuous(breaks=c(min(logS$logS_nogen[logS$d=="10"]), max(logS$logS_nogen[logS$d=="10"])),
+#   #                                 labels = scaleFUN))) +
+#   theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+#         #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+#         #axis.text.x=element_blank(), axis.text.y=element_blank(),
+#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+#
+# pl_logS3
 
 setwd(root_dir)
 setwd("content/Section3/Plots")
 ggsave("plot_logScore1.eps", pl_logS1, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
-
-<<<<<<< HEAD
-ggsave("plot_logScore2.eps", pl_logS2, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore2.pdf", pl_logS2, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.eps", pl_logS3, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.pdf", pl_logS3, width = 30, height = 15, units = "cm")
-=======
-ggsave("plot_logScore2.eps", pl_logS1, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore2.pdf", pl_logS1, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.eps", pl_logS1, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore3.pdf", pl_logS1, width = 30, height = 15, units = "cm")
->>>>>>> db1ce379bc3aa938537b0be37cb0850a887ffed9
+#
+# <<<<<<< HEAD
+# ggsave("plot_logScore2.eps", pl_logS2, width = 30, height = 15, units = "cm")
+# ggsave("plot_logScore2.pdf", pl_logS2, width = 30, height = 15, units = "cm")
+# ggsave("plot_logScore3.eps", pl_logS3, width = 30, height = 15, units = "cm")
+# ggsave("plot_logScore3.pdf", pl_logS3, width = 30, height = 15, units = "cm")
+# =======
+# ggsave("plot_logScore2.eps", pl_logS1, width = 30, height = 15, units = "cm")
+# ggsave("plot_logScore2.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+# ggsave("plot_logScore3.eps", pl_logS1, width = 30, height = 15, units = "cm")
+# ggsave("plot_logScore3.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+# >>>>>>> db1ce379bc3aa938537b0be37cb0850a887ffed9
 
 #############################################
 # Code for reproducing Figure 3 - SECTION 4 #
