@@ -462,6 +462,43 @@ logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generati
 # A possible plot: putting all togheter
 # We just need specifying suitably the x and y axis for each plot
 # left plot (logS_mcd,logSlogm) and right plot (logS_logm, logS_mcd)
+col_values <- c("#F8766D", "#619CFF", "#E69F00")
+
+pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation"], aes(x = logS_gen, y = logS_nogen, color = d)) +
+  geom_point(size = 2, show.legend=TRUE)+
+  geom_abline(slope=1, intercept=0, col="black") +
+  scale_color_manual(name = "d", values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
+  theme_bw() +
+  scale_y_continuous(breaks = seq(min(logS_nogen), max(logS_nogen), by = 10000),
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
+  scale_x_continuous(breaks=seq(min(logS_gen), min(logS_gen), by=10000),
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
+  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+        #axis.text.x=element_blank(), axis.text.y=element_blank(),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+
+pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation"], aes(x = logS_gen, y = logS_nogen, color = d)) +
+  geom_point(size = 2, show.legend=TRUE)+
+  geom_abline(slope=1, intercept=0, col="black") +
+  facet_grid2( ~ Type2, scales="free", switch = "y", independent = "all")
+  scale_color_manual(name = "d", values = c("2" = "#F8766D", "5" = "#619CFF", "10" = "#E69F00"))+
+  theme_bw() +
+  scale_y_continuous(breaks = seq(min(logS_nogen), max(logS_nogen), by = 10000),
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
+  scale_x_continuous(breaks=seq(min(logS_gen), max(logS_gen), by=10000),
+                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
+  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+        #axis.ticks.x=element_blank(), axis.ticks.y=element_blank(),
+        #axis.text.x=element_blank(), axis.text.y=element_blank(),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+
+
+ggarrange(pl_MCD_gen,
+          pl_logM_gen,
+          nrow = 1)
+
+
 pl_logS1 <- ggplot(logS, aes(x = logS_gen, y = logS_nogen, color = d)) +
   geom_point(size = 2, show.legend=TRUE)+
   geom_abline(slope=1, intercept=0, col="black") +
@@ -550,6 +587,7 @@ setwd(root_dir)
 setwd("content/Section3/Plots")
 ggsave("plot_logScore1.eps", pl_logS1, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+
 <<<<<<< HEAD
 ggsave("plot_logScore2.eps", pl_logS2, width = 30, height = 15, units = "cm")
 ggsave("plot_logScore2.pdf", pl_logS2, width = 30, height = 15, units = "cm")
