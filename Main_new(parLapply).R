@@ -30,11 +30,11 @@ dgrid <- seq(5, 50, by = 5)
 
 # mcd: 2nd derivatives w.r.t. eta
 param <- "mcd"
-TIME_MCD_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "mcd")
+TIME_MCD_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = param)
 
 # logm: 2nd derivatives w.r.t. eta
 param <- "logm"
-TIME_logM_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = "logm")
+TIME_logM_D2eta <- time_Deta(nobs, dgrid,  nrun, ncores, param = param)
 
 setwd(root_dir)
 setwd("content/Section3/Results")
@@ -57,12 +57,14 @@ source("Functions_Evaluation_Overall_Fit_parLApply.R")
 
 dgrid <- c(2,5,10,15,20)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam objkect
+sg <- FALSE # This avoids saving the gam object
 
 setwd(root_dir)
 setwd("content/Section3/Results")
 
-# Generation from MCD
+#######################
+# Generation from MCD #
+#######################
 # Fit with MCD
 sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
@@ -71,9 +73,7 @@ sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 =
 save(sim_mcdG_mcdF,
     file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_mcdG_mcdF")
-#load( paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-#gc()
-
+gc()
 
 # Fit with logM
 sim_mcdG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "logm", save.gam = sg,
@@ -81,10 +81,11 @@ sim_mcdG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 
 save(sim_mcdG_logmF,
      file = paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_mcdG_logmF")
-
 gc()
-#
-# Generation from logM
+
+########################
+# Generation from logM #
+########################
 # Fit with MCD
 sim_logmG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "mcd", save.gam = sg,
                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
@@ -92,7 +93,7 @@ save(sim_logmG_mcdF,
      file = paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_logmG_mcdF")
 gc()
-#
+
 # Fit with logM
 sim_logmG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "logm", save.gam = sg,
                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
@@ -105,27 +106,32 @@ gc()
 #############
 # SECTION 4 #
 #############
-# Evaluation of the Hessian w.r.t. beta
+
+#########################################
+# Evaluation of the Hessian w.r.t. beta #
+#########################################
 setwd(root_dir)
 setwd("content/Section4")
 source("Functions_Evaluation_Hessian_beta_parLapply.R")
-#
+
 nobs <- 1000
 dgrid <- seq(5, 100, by = 5)
 ncoef <- 10
 # S1 and S2 corresponds to dm05 and dm2
 pint_type <- c("dm05", "dm1", "dm2", "const")
 
-# setwd(root_dir)
-# setwd("content/Section4")
-
-
-# # MCD: Not reported in the paper
+##################################
+# MCD: Not included in the paper #
+##################################
 TIME_MCD_beta <- get_time_results(nobs, dgrid,  nrun, ncores, pint = pint_type,
                                   ncoef = ncoef, nb = 1, param = 1, pint_value = 0.99)
 save(TIME_MCD_beta, file = paste0("Results/TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,".RData"))
+rm("TIME_MCD_beta")
+gc()
 
-# # logM: reported in the paper
+###############################
+# logM: included in the paper #
+###############################
 TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores,
                                    pint = pint_type, ncoef = ncoef,
                                    nb = 1, param = 2, pint_value = 0.99)
@@ -140,21 +146,34 @@ gc()
 #############
 # SECTION 6 #
 #############
-# Performance Comparison inside the MCD parametrisation (FS, BFGS, )
+
+###################################################################################################
+# Performance Comparison inside the MCD parametrisation (FS, BFGS, BFGS initialised EFS, BAMLSS)  #
+###################################################################################################
 setwd(root_dir)
 setwd("content/Section6")
 source("Functions_Evaluation_Overall_Fit_mcd_parLapply.R")
 
 
-dgrid <- c(2,5,10)
+dgrid <- c(2, 5, 10, 15)
 nobs <- 10000
-sg <- FALSE # This avoids saving the gam objkect
+sg <- FALSE # This avoids saving the gam object
 
-sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs, dgrid,  nrun, ncores, param = "mcd",
-                                       expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs_train = nobs, nobs_test = nobs, dgrid,  nrun, ncores, param = "mcd",
+                                       expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), save.gam = sg)
 
 save(sim_mcd_fit,
-     file = paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+     file = paste0("Results/sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_mcd_fit")
 gc()
+
+
+#############
+# SECTION 7 #
+#############
+
+################################
+# Application to GEFCom14 Data #
+################################
+
 
