@@ -89,9 +89,6 @@ double  d2_logm_eta_row(const arma::rowvec& eta, const arma::rowvec& y, arma::ma
       zl = z[l];
       wl = w[l];
       for(j = 0; j < d; j++){
-        //if(j == zl) tildeU.at(zl, l) = Pi.at(zl, zl) * U.at(wl, zl) + Pi.at(wl, zl) * U.at(zl, zl);
-        //if(j == wl) tildeU.at(wl, l) = Pi.at(wl, wl) * U.at(zl, wl) + Pi.at(zl, wl) * U.at(wl, wl);
-        //if(j != zl and j != wl)
         tildeU.at(j, l) = Pi.at(zl, j) * U.at(wl, j) + Pi.at(wl, j) * U.at(zl, j);
       }
     }
@@ -118,6 +115,7 @@ double  d2_logm_eta_row(const arma::rowvec& eta, const arma::rowvec& y, arma::ma
       }
     }
 
+    //  Block(2,2)
     for(l = 2 * d; l < q; l++){
       zl = z[l - 2 * d];
       wl = w[l - 2 * d];
@@ -132,8 +130,6 @@ double  d2_logm_eta_row(const arma::rowvec& eta, const arma::rowvec& y, arma::ma
         }
       }
     }
-
-    out.fill(0);
 
   return(1.0);
 }
