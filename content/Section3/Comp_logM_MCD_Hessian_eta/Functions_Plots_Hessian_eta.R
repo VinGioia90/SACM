@@ -1,36 +1,28 @@
 ###########################################################
 # Needed function for visualising the computational times #
 # of evaluating the Hessian w.r.t. eta and beta           #
+# This functions allows obtaining Figure 1                #
 ###########################################################
 
-# Log Scale
-myscale_trans <- function()
-{
-  trans_new("myscale", log, exp)
-}
-
-# Size
-scaleFUN <- function(x) sprintf("%.2f", x)
-
-
-# Function for extracting and summarising the computational times. Arguments:
-#  obj: an object includin the computational times
-#  param: parametrisation ("logm" or "mcd")
-#  dgrid: grid of outcome vector dimensions
-#  nrun: number of evaluations
-#  type: vector including the strategise to compare
-#        (so for the hessian w.r.t . eta type = c("eff","TMB"),
-#         while for the hessian w.r.t . beta type = c("block","noblock"))
-#  type1: vector labelling the strategies to compare
-#         (so for the hessian w.r.t . eta type = c("EFF","AD"),
-#         while for the hessian w.r.t . beta type = c("PARS","STD"))
-#  beta: flag for indicating if we are comparing the derivatives w.r.t. eta or w.r.t. beta
+#############################################################################################
+# Function for extracting and summarising the computational times. Arguments:               #
+#  obj: an object including the computational times                                         #
+#  param: parametrisation ("logm" or "mcd")                                                 #
+#  dgrid: grid of outcome vector dimensions                                                 #
+#  nrun: number of evaluations                                                              #
+#  type: vector including the strategies to compare                                         #
+#        (so for the hessian w.r.t . eta type = c("eff","TMB"),                             #
+#         while for the hessian w.r.t . beta type = c("block","noblock"))                   #
+#  type1: vector labelling the strategies to compare                                        #
+#         (so for the hessian w.r.t . eta type = c("EFF","AD"),                             #
+#         while for the hessian w.r.t . beta type = c("PARS","STD"))                        #
+#  beta: flag for indicating if we are comparing the derivatives w.r.t. eta or w.r.t. beta  #
+#############################################################################################
 
 time_hessian <- function(obj, param = c("logm", "mcd"),
                          dgrid = NULL, nrun, type, type1, beta = FALSE){
   param <- match.arg(param)
 
-  # Summary of the times
   out <- lapply(1 : length(type), function(jj){
     if(beta == FALSE){
       str_type <- paste0("obj[[x]]$time$tD2_", type[jj])
@@ -50,6 +42,7 @@ time_hessian <- function(obj, param = c("logm", "mcd"),
     return(data)
   })
 
+  # Extract summaries of the times
   sum_res <- matrix(0, length(dgrid) * length(out), 4)
   for(j in 1 : length(out)){
     sum_res[c((length(dgrid) * (j - 1) + 1) : (length(dgrid) * j)),] <- as.matrix(out[[j]])
@@ -60,7 +53,7 @@ time_hessian <- function(obj, param = c("logm", "mcd"),
                    rep(param, each = length(dgrid)))
   colnames(sum_res) <- c("d", "mean_time", "min_time", "max_time", "Type", "param")
 
-  # Overall times: repetition of (part of) the code  above (improbvable)
+  # Overall times: repetition of (part of) the code  above (improvable !!!)
   out <- lapply(1 : length(type), function(jj){
     if(beta ==FALSE){
       str_type <- paste0("obj[[x]]$time$tD2_", type[jj])
@@ -75,10 +68,12 @@ time_hessian <- function(obj, param = c("logm", "mcd"),
     return(data_time)
   })
 
-  res <- out[[1]]
-  for(j in 2 : length(out)){
-    res <- rbind(res, out[[j]]) # not beautiful
-  }
+
+  res <- do.call(rbind, out)
+  #res <- out[[1]]
+  #for(j in 2 : length(out)){
+  #  res <- rbind(res, out[[j]]) # not beautiful
+  #}
 
   res <- cbind(res,
                rep(type1, each = length(dgrid) * nrun),
