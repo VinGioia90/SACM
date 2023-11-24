@@ -1,23 +1,26 @@
-#########################################################
-# Code for reproducibility of the results of Section 4: #
-# Hessian w.r.t. beta                                   #
-#########################################################
+#################################################################################
+# Needed functions for evaluating the hessian matrix w.r.t. beta of Section 4 #
+#################################################################################
+
+# The following codes return the indices used for sparsity handling
 source("idxHess_no0.R")
 #new version: an ifelse statement allows to consider the intercepts' blocks strategy (as implemented in the family) or not
 source("aux_idx_new.R")
 
-# This function generates the quantities used in the function time_hessian_beta. Arguments
-# d: dimension of the outcome vector
-# pint: percentage of intercepts involved in covariance matrix modelling
-# nobs: number of rows
-# ncoef: number of coefficients for each linear predictor (excluding the intercepts' case)
-# nb: number of observations' block
-# param: mcd (1) and logm (2)
-# block: intercepts block strategy (TRUE) and no block strategy (FALSE)
-# seed: is used to get fixed some quantities during the comparison
+#############################################################################################
+# This function generates the quantities used in the function time_hessian_beta. Arguments  #
+# d: dimension of the outcome vector                                                        #
+# pint: percentage of intercepts involved in covariance matrix modelling                    #
+# nobs: number of rows                                                                      #
+# ncoef: number of coefficients for each linear predictor (excluding the intercepts' case)  #
+# nb: number of observations' block (for chuncking strategy)                                #
+# param: mcd (1) and logm (2)                                                               #
+# block: intercepts block strategy (TRUE) and no block strategy (FALSE)                     #
+# seed: is used to get fixed some quantities during the comparison                          #
+#############################################################################################
 get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
 
-  #Set of indices
+  # Set of indices for useful for the MCD parametrisation
   z <- w <- t <- rep(0, (d * (d - 1)/2))
   Gm <- matrix(0, d - 1, d - 1)
   mode(Gm) <- mode(z) <- mode(w) <- mode(t) <- "integer"
@@ -26,7 +29,7 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
   # Dimension of lpi
   no_eta <- d + d * (d + 1)/2
 
-  # generate eta, y: it can be filled with zeros
+  # generate eta, y: We filled with random values but it could be filled with zeros
   set.seed(seed)
   eta <- matrix(rnorm(nobs * no_eta), nobs, no_eta)
   y <- matrix(rnorm(nobs * d), nobs, d)
@@ -35,7 +38,7 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
   intercepts <- sample(0 : 1, d * (d + 1)/2, prob= c(pint, 1 - pint), replace = TRUE)
   intercepts <- c(rep(1, d), intercepts)
 
-  # X generation: it can be filled with zeros (or considering ones in the interpcept indices)
+  # X generation: here we filled with random values but it could be filled with zeros (or considering ones in the intercept indices)
   dimX <- sum(intercepts == 0) + ncoef * sum(intercepts == 1)
   X <- matrix(rnorm(nobs * dimX), nobs, dimX)
 
@@ -52,7 +55,6 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
       count <- count + ncoef
     }
   }
-
 
   #number of (non-redundant) elements different from zero in the hessian matrix
   if(param == 1){ # See the computational paper
@@ -76,7 +78,7 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
   nlast <- nobs %% nb
   nset <- nobs %/% nb
 
-  # Derivatives w.r.t. eta initialization
+  # Derivatives w.r.t. eta: initialization
   if(nb > 1){
     l2 <- matrix(0, nset, nHel - idx_aux$llls)
   } else { # Such trick allows to pass the matrix l2 in the case nb = 1, avoiding cpp issues
@@ -105,81 +107,81 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
 
 }
 
-############################################################################################
-# Computational time comparison between the intercepts block strategy and the standard one #
-############################################################################################
-# This function calls the generated quantities function and then evaluate the derivatives w.r.t. beta for each scenario. Arguments:
-# nobs: number of rows
-# dgrid: grid of outcome vector dimensions
-# nrun: number of runs
-# ncores: number of cores
-# pint: scenario of covariance matrix modelling sparsity
-# ncoef: number of parameters for each linear predictor
-# nb: number of blocks
-# param: parametrisation (MCD, 1; logM, 2)
-# pint_value: percentage of intercepts for the const scenario
+
+#########################################################################################################################
+# This function calls the generated quantities function and then evaluate the derivatives w.r.t. beta for each scenario #
+# (intercepts block strategy vs the standard one). Arguments:                                                           #
+# nobs: number of rows                                                                                                  #
+# dgrid: grid of outcome vector dimensions                                                                              #
+# nrun: number of runs                                                                                                  #
+# ncores: number of cores                                                                                               #
+# pint: scenario of covariance matrix modelling sparsity                                                                #
+# ncoef: number of parameters for each linear predictor                                                                 #
+# nb: number of blocks                                                                                                  #
+# param: parametrisation (MCD, 1; logM, 2)                                                                              #
+# pint_value: percentage of intercepts for the const scenario                                                           #
+#########################################################################################################################
 
 time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
                               pint = c("dm05", "dm1", "dm2", "const"),
                               ncoef = 10, nb = 1, param = 1, pint_value = 1){
   pint <- match.arg(pint)
+  # Setting the scenario of interest (in the paper we just reported dm05 and dm2)
   pint_function <- switch(pint,
                           const = function(d) pint_value,
                           dm05 = function(d) 1 - 1/sqrt(d),
                           dm1 = function(d) 1 - 1/d,
                           dm2 = function(d) 1 - 1/(d ^ 2) )
 
-
-
-  #time <- mclapply(1 : nrun, function(ii){ #parLapply??? maybe it's not a big problem using mclapply here
   sim_time <- function(dgrid, nobs, param, ncoef, nb){
-    sourceCpp("idx_zwGt.cpp") # Indices z,w,G
-    sourceCpp("d2_beta_noeta.cpp")
+    sourceCpp("idx_zwGt.cpp")         # Indices z,w,G
+    sourceCpp("d2_beta_noeta.cpp")    # Cpp code for computing the derivatives w.r.t. beta
 
     out <- list()
 
-    out$thessian_block <- rep(0,length(dgrid))
-    out$thessian_noblock <- rep(0,length(dgrid))
+    out$thessian_block <- rep(0,length(dgrid))    # Here, we save the computational times leveraging the block strategy
+    out$thessian_noblock <- rep(0,length(dgrid))  # Here, we save the computational times without using the block strategy
 
     for(jj in 1 : length(dgrid)){
        d <- dgrid[jj]
-       seed <- sample(1 : nobs, 1)
+       seed <- sample(1 : nobs, 1) # We used a seed for generating quantities, despite it could be avoided
+       # Get the needed quantities for computing the 2nd  order derivatives w.r.t. beta
        getq1 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
                              nb = nb, param = param, block = TRUE, seed = seed) # via intercept blocks
        getq2 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                             nb = nb, param = param, block = FALSE, seed = seed) #
+                             nb = nb, param = param, block = FALSE, seed = seed) # without intercept blocks
        attr(out, "nb1") <- getq1$nb
        p <- ncol(getq1$X)
        lbb <- matrix(0, p, p)
 
+       #  Get the computational times (the only difference between the followings is related to use getq1 and getq2)
        time<- microbenchmark({
-         d2_beta_noeta(getq1$X, getq1$eta, getq1$y, getq1$lpi, getq1$K,
-                       lbb, getq1$l2, getq1$l2_v, getq1$l2_l, getq1$l2_v_l,
-                       getq1$idx_b, getq1$z, getq1$w, getq1$Gm, getq1$t,
-                       getq1$idx_aux$b1_eta, getq1$idx_aux$b1, getq1$idx_aux$b2,
-                       getq1$idx_aux$b3, getq1$idx_aux$idx_b1_eta, getq1$idx_aux$idx_b3,
-                       getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
+          d2_beta_noeta(getq1$X, getq1$eta, getq1$y, getq1$lpi, getq1$K,
+                        lbb, getq1$l2, getq1$l2_v, getq1$l2_l, getq1$l2_v_l,
+                        getq1$idx_b, getq1$z, getq1$w, getq1$Gm, getq1$t,
+                        getq1$idx_aux$b1_eta, getq1$idx_aux$b1, getq1$idx_aux$b2,
+                        getq1$idx_aux$b3, getq1$idx_aux$idx_b1_eta, getq1$idx_aux$idx_b3,
+                        getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
 
-      }, times = 1L)
-      out$thessian_block[jj] <- time$time
+       }, times = 1L)
+       out$thessian_block[jj] <- time$time # computational times using the block strategy
 
-      lbb <- matrix(0, p, p)
-      time<- microbenchmark({
-        d2_beta_noeta(getq2$X, getq2$eta, getq2$y, getq2$lpi, getq2$K,
-                      lbb, getq2$l2, getq2$l2_v, getq2$l2_l, getq2$l2_v_l,
-                      getq2$idx_b, getq2$z, getq2$w, getq2$Gm, getq2$t,
-                      getq2$idx_aux$b1_eta, getq2$idx_aux$b1, getq2$idx_aux$b2,
-                      getq2$idx_aux$b3, getq2$idx_aux$idx_b1_eta, getq2$idx_aux$idx_b3,
-                      getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
+       lbb <- matrix(0, p, p)
+       time<- microbenchmark({
+         d2_beta_noeta(getq2$X, getq2$eta, getq2$y, getq2$lpi, getq2$K,
+                       lbb, getq2$l2, getq2$l2_v, getq2$l2_l, getq2$l2_v_l,
+                       getq2$idx_b, getq2$z, getq2$w, getq2$Gm, getq2$t,
+                       getq2$idx_aux$b1_eta, getq2$idx_aux$b1, getq2$idx_aux$b2,
+                       getq2$idx_aux$b3, getq2$idx_aux$idx_b1_eta, getq2$idx_aux$idx_b3,
+                       getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
 
-      } ,times = 1L)
-      out$thessian_noblock[jj] <- time$time
-    }
+       } ,times = 1L)
+       out$thessian_noblock[jj] <- time$time # computational times without using the block strategy
+     }
     return(out)
-
   }
 
-
+  # Setting parallel computation
   cl <- makePSOCKcluster(ncores)
   setDefaultCluster(cl)
   clusterExport(NULL, c("nobs", "dgrid", "pint", "ncoef", "nb",
@@ -204,17 +206,18 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
 
 }
 
-# This function evaluate the derivatives w.r.t. beta for all the scenarios scenario. Arguments:
-# nobs: number of rows
-# dgrid: grid of outcome vector dimensions
-# nrun: number of runs
-# ncores: number of cores
-# pint: vector of scenarios for the covariance matrix modelling sparsity
-# ncoef: number of parameters for each linear predictor
-# nb: number of blocks
-# param: parametrisation (MCD, 1; logM, 2)
-# pint_value: percentage of intercepts for the const scenario
-
+########################################################################################
+# This function evaluate the derivatives w.r.t. beta for all the scenarios. Arguments: #
+# nobs: number of rows                                                                 #
+# dgrid: grid of outcome vector dimensions                                             #
+# nrun: number of runs                                                                 #
+# ncores: number of cores                                                              #
+# pint: vector of scenarios for the covariance matrix modelling sparsity               #
+# ncoef: number of parameters for each linear predictor                                #
+# nb: number of blocks                                                                 #
+# param: parametrisation (MCD, 1; logM, 2)                                             #
+# pint_value: percentage of intercepts for the const scenario                          #
+########################################################################################
 
 get_time_results <- function(nobs, dgrid,  nrun, ncores, pint = NULL, ncoef = 10, nb = 1, param = 1, pint_value = 1){
   out <- list()
