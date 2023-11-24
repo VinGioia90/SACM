@@ -1,3 +1,8 @@
+##################################################################################################
+# This function allows to obtain the indices of the elements different from zero for the Hessian #
+##################################################################################################
+# This is a slight modification of the corresponding function of the SCM package
+# there is an ifelse statement which allows to consider the intercepts' blocks strategy (as implemented in the family) or not
 aux_idx_new<- function(jj, idx_jk, no_eta, block){
   ll_jjx <- unlist(lapply(1 : length(jj), function(x) length(jj[[x]])))
   idx_jjx_l1 <- which(ll_jjx == 1) - 1
