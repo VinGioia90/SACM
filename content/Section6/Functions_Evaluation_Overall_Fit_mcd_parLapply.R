@@ -313,7 +313,7 @@ sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
   setDefaultCluster(cl)
   clusterExport(NULL, c("nobs_train", "nobs_test", "dgrid", "param", "expl_mean", "expl_Theta",
                         "save.gam", "blockN", "pint", "datagen", "mformula",
-                        "mformula_mvnchol", "seq_seed", "pureBFGS" ), envir = environment())
+                        "mformula_mvnchol", "seq_seed", "pureBFGS", "res_sim"), envir = environment())
   clusterEvalQ(NULL, {
     library(bamlss)
     library(mvnchol)
@@ -327,6 +327,8 @@ sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
                     save.gam = save.gam, blockN = blockN, pint = pint, seq_seed = seq_seed[.x], pureBFGS = pureBFGS)
     return(list(gen = out2))
   }
+
+  environment(out_res_sim) <- .GlobalEnv
 
   res <- list()
   res <- parLapply(NULL, 1 : nrun, out_res_sim)

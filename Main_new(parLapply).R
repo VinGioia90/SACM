@@ -1,4 +1,6 @@
 rm(list=ls())
+
+
 #####################################################
 # Code for reproducing the results of the paper:    #
 # "Scalable Additive Covariance Matrix Models       #
@@ -6,6 +8,10 @@ rm(list=ls())
 library(rstudioapi)
 root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
+
+# Install and load specific version of mgcv
+install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
+library(mgcv, lib.loc="./my_library")
 
 # Load the needed packages
 # (it might be required to do something manually)
