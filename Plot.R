@@ -642,13 +642,13 @@ setwd(root_dir)
 setwd("content/Section6")
 source("Functions_Plots_Overall_Fit.R")
 
+dgrid <- c(2, 5, 10)
+nrun <- 10
+nobs <- 10000
+
 setwd(root_dir)
 setwd("content/Section6/Results")
 load(paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-
-dgrid <- c(2, 5, 10, 15)
-nrun <- 10
-nobs <- 10000
 
 logS_mcd_test <- log_Score_test(sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
 logS_gen_test <- as.numeric(logS_mcd_test[[1]])

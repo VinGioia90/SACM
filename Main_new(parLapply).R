@@ -11,7 +11,7 @@ setwd(root_dir)
 
 # Install and load specific version of mgcv
 install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
-library(mgcv, lib.loc="./my_library")
+library("mgcv", lib.loc="./my_library")
 
 # Load the needed packages
 # (it might be required to do something manually)
@@ -161,7 +161,7 @@ setwd("content/Section6")
 source("Functions_Evaluation_Overall_Fit_mcd_parLapply.R")
 
 
-dgrid <- c(2, 5, 10, 15)
+dgrid <- c(2, 5, 10)
 nobs <- 10000
 sg <- FALSE # This avoids saving the gam object
 
