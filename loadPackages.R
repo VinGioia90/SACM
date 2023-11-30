@@ -6,7 +6,7 @@
 instload_packages <- function(){
   neededPackages <- c("parallel", "Rcpp", "TMB", "microbenchmark",
                       "bamlss",  "scoringRules", "boot", "devtools",
-                      "mgcViz",
+                      "mgcViz", "stringr", "BMisc", "electBook",
                       "Gmisc", "glue",
                       "htmlTable", "grid", "magrittr",
                       "ggpubr", "gridExtra", "ggplot2", "lattice",
@@ -28,6 +28,11 @@ instload_packages <- function(){
   }
   print("Loading SCM")
   library(SCM)
+  if ( !("electBook" %in% inst_pack[,1]) ) {
+    devtools::install_github("mfasiolo/electBook@Master")
+  }
+  print("Loading electBook")
+  library(electBook)
   if ( !("mvnchol" %in% inst_pack[,1]) ) {
     devtools::install_github("meteosimon/mvnchol")
   }
