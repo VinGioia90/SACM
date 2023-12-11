@@ -177,9 +177,52 @@ gc()
 #############
 # SECTION 7 #
 #############
+setwd(root_dir)
+setwd("content/Section7")
+source("Functions_Application.R")
 
 ################################
 # Application to GEFCom14 Data #
 ################################
+source("DataPreprocessing.R") # The dataset is GEF14_data
+
+# Set the length of train set (2005 - 2010)
+n_train <- which(GEF14_data$year==2011)[1]-1
+
+#n_train <- nrow(GEF14_data)- sum(GEF14_data$year == 2011 & GEF14_data$month == 11)                             # (1 month out-of-sample)
+#n_train <- nrow(GEF14_data)- sum(GEF14_data$year == 2011 & (GEF14_data$month == 11 | GEF14_data$month == 10))  # (2 months out-of-sample)
+
+d <- 24
+
+# Mean model formula
+mean_formula <- list()
+for(j in 0 : (d - 1)){
+  mean_formula[[j + 1]] <- as.formula(paste0("load_h",j," ~ load24_h",j, "+ dow + s(doy) + s(temp95_h", j,")" ))
+}
+
+grid_length <- 5 # To change eventually
+
+# MCD parametrisation
+param <- "mcd"
+res_mcd <- stepw_res(param = param, d = d,
+                 grid_length = grid_length,
+                 mean_model_formula = mean_formula,
+                 eff_vcov = "s(doy)",  # effect on varcov modelling
+                 data = GEF14_data[1 : n_train,],
+                 metric = "ST") # Type of criterion: Test statistic
+
+save(res_mcd, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+
+# logM parametrisation
+param <- "logm"
+res_logm <- stepw_res(param = param, d = d,
+                 grid_length = grid_length,
+                 mean_model_formula = mean_formula,
+                 eff_vcov = "s(doy)",  # effect on varcov modelling
+                 data = GEF14_data[1 : n_train,],
+                 metric = "ST") # Type of criterion: Test statistic
+
+save(res_logm, paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+
 
 

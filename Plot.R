@@ -924,3 +924,163 @@ ggsave("plot_logS_rel_difference_efs_bamlss_gen_test.pdf", pl_MCD_rel_diff_bamls
 ggsave("ComputationalTimes_efs_bamlss.eps", pl_Fit_Time_efs_bamlss, width = 15, height = 15, units = "cm")
 ggsave("ComputationalTimes_efs_bamlss.pdf", pl_Fit_Time_efs_bamlss, width = 15, height = 15, units = "cm")
 
+
+########################################################################
+# Code for reproducing Figure XXX - SECTION 6 + SUPPLEMENTARY MATERIAL #
+########################################################################
+setwd(root_dir)
+setwd("content/Section7")
+source("Functions_Plots_Application.R")
+source("DataPreprocessing.R")
+
+# Set the train set also here (reply what is done in Main_new(par_Lapply))
+n_train <- which(GEF14_data$year==2011)[1]-1 # (2005 - 2010 year)
+#n_train <- nrow(GEF14_data)- sum(GEF14_data$year == 2011 & GEF14_data$month == 11)                             # (1 month out-of-sample)
+#n_train <- nrow(GEF14_data)- sum(GEF14_data$year == 2011 & (GEF14_data$month == 11 | GEF14_data$month == 10))  # (2 months out-of-sample)
+
+d <- 24
+grid_length <- 5
+name_eff <- "doy"
+eff_grid <- seq(d * (d + 1)/2 - grid_length, grid_length, by = -grid_length)
+#######################
+# MCD parametrisation #
+#######################
+param <- "mcd"
+
+setwd(root_dir)
+setwd("content/Section7/Results")
+load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+
+setwd(root_dir)
+setwd("content/Section7/Plots")
+
+results <- res_perf(obj = res_mcd$fit,
+                    dgrid = grid_length, d = d,
+                    data_train = GEF14_data[1 : n_train,],
+                    data_test = GEF14_data[(n_train+1) : nrow(GEF14_data),])
+
+png(paste0("LogScore_param", param ,"_Testset_11months.png"))
+par(mfrow = c(1,2))
+plot(results$logSin, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Train")
+axis(1, at = 1:length(results$logSin),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+
+
+plot(results$logSout, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Test")
+axis(1, at= 1 : length(results$logSout),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+dev.off()
+
+
+
+# Only January
+resultsJ <- res_perf(res_mcd$fit, dgrid = grid_length,
+                     d = d, data_train = GEF14_data[1:n_train,],
+                     data_test=GEF14_data[(n_train+1) : (n_train+31),])
+
+png(paste0("LogScore_param", param ,"_Testset_1month(January).png"))
+par(mfrow = c(1,2))
+plot(resultsJ$logSin, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Train")
+axis(1, at = 1 : length(results$logSin),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+
+
+plot(resultsJ$logSout, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Test")
+axis(1, at = 1 : length(results$logSout),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+dev.off()
+
+
+
+pl_list <- get_plots(obj = res_mcd,
+                     name_eff = name_eff,
+                     d = d,
+                     eff_grid = eff_grid)
+
+for(j in 1:length(pl_list)){
+  ggsave(paste0("Covmod_", param, "param_with", eff_grid[j], "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
+}
+
+
+########################
+# logM parametrisation #
+########################
+param <- "logm"
+
+setwd(root_dir)
+setwd("content/Section7/Results")
+load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+
+setwd(root_dir)
+setwd("content/Section7/Plots")
+
+results <- res_perf(obj = res_logm$fit,
+                    dgrid = grid_length, d = d,
+                    data_train = GEF14_data[1 : n_train,],
+                    data_test = GEF14_data[(n_train+1) : nrow(GEF14_data),])
+
+
+png(paste0("LogScore_param", param ,"_Testset_11months.png"))
+par(mfrow = c(1,2))
+plot(results$logSin, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Train")
+axis(1, at = 1:length(results$logSin),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+
+
+plot(results$logSout, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Test")
+axis(1, at= 1 : length(results$logSout),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+dev.off()
+
+
+
+# Only January
+resultsJ <- res_perf(res_logm$fit, dgrid = grid_length,
+                     d = d, data_train = GEF14_data[1:n_train,],
+                     data_test=GEF14_data[(n_train+1) : (n_train+31),])
+
+png(paste0("LogScore_param", param ,"_Testset_1month(January).png"))
+par(mfrow = c(1,2))
+plot(resultsJ$logSin, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Train")
+axis(1, at = 1 : length(results$logSin),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+
+
+plot(resultsJ$logSout, type="p",
+     ylab = "Negative log-likelihood",
+     xlab = "Number of effects (Cov)",
+     xaxt = "n",
+     main = "Test")
+axis(1, at = 1 : length(results$logSout),labels = as.factor(c(d*(d+1)/2, eff_grid, 0)))
+dev.off()
+
+pl_list <- get_plots(obj = res_logm,
+                     name_eff = name_eff,
+                     d = d,
+                     eff_grid = eff_grid)
+
+for(j in 1:length(pl_list)){
+  ggsave(paste0("Covmod_", param, "param_with", eff_grid[j], "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
+}
+
