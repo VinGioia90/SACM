@@ -3517,9 +3517,9 @@ residuals.gam <-function(object, type = "deviance",...)
 ## Start of anova and summary (with contributions from Henric Nilsson) ....
 
 psum.chisq <- function(q,lb,df=rep(1,length(lb)),nc=rep(0,length(lb)),sigz=0,
-                            lower.tail=FALSE,tol=2e-5,nlim=100000,trace=FALSE) {
-## compute Pr(q>\sum_j lb[j] X_j + sigz Z) where X_j ~ chisq(df[j],nc[j]), Z~N(0,1) and nc is
-## a vector of non-centrality parameters. lb can be either sign. df should be integer.
+                       lower.tail=FALSE,tol=2e-5,nlim=100000,trace=FALSE) {
+  ## compute Pr(q>\sum_j lb[j] X_j + sigz Z) where X_j ~ chisq(df[j],nc[j]), Z~N(0,1) and nc is
+  ## a vector of non-centrality parameters. lb can be either sign. df should be integer.
   p <- q
   r <- length(lb)
   if (length(df)==1) df <- rep(df,r)
@@ -3533,12 +3533,15 @@ psum.chisq <- function(q,lb,df=rep(1,length(lb)),nc=rep(0,length(lb)),sigz=0,
     oo <- .C(C_davies,as.double(lb),as.double(nc),as.integer(df),as.integer(r),as.double(sigz),
              c=as.double(q[i]),as.integer(nlim),as.double(tol),trace=as.double(rep(0,7)),
              ifault=as.integer(0))
+    if(oo$c == 1){
+      oo$ifault <- 1
+    }
     if (oo$ifault!=0) {
       if (oo$ifault==2) {
         warning("danger of round-off error")
         p[i] <- if (lower.tail) oo$c else 1 - oo$c
       } else {
-        warning("failure of Davies method, falling back on Liu et al approximtion")
+        #warning("failure of Davies method, falling back on Liu et al approximtion")
         p[i] <- if (all(nc==0)) liu2(q[i],lb,h=df) else NA
       }
     } else p[i] <- if (lower.tail) oo$c else 1 - oo$c
@@ -3548,7 +3551,7 @@ psum.chisq <- function(q,lb,df=rep(1,length(lb)),nc=rep(0,length(lb)),sigz=0,
     attr(p,"ifault") <- oo$ifault
   }
   p
-} ##psum.chisq
+}
 
 liu2 <- function(x, lambda, h = rep(1,length(lambda)),lower.tail=FALSE) {
 # Evaluate Pr[sum_i \lambda_i \chi^2_h_i < x] approximately.
@@ -3810,13 +3813,13 @@ reTest <- function(b,m) {
 
 
 testStat <- function(p,X,V,rank=NULL,type=0,res.df= -1) {
-## Implements Wood (2013) Biometrika 100(1), 221-228
-## The type argument specifies the type of truncation to use.
-## on entry `rank' should be an edf estimate
-## 0. Default using the fractionally truncated pinv.
-## 1. Round down to k if k<= rank < k+0.05, otherwise up.
-## res.df is residual dof used to estimate scale. <=0 implies
-## fixed scale.
+  ## Implements Wood (2013) Biometrika 100(1), 221-228
+  ## The type argument specifies the type of truncation to use.
+  ## on entry `rank' should be an edf estimate
+  ## 0. Default using the fractionally truncated pinv.
+  ## 1. Round down to k if k<= rank < k+0.05, otherwise up.
+  ## res.df is residual dof used to estimate scale. <=0 implies
+  ## fixed scale.
 
   qrx <- qr(X,tol=0)
   R <- qr.R(qrx)
@@ -3847,21 +3850,21 @@ testStat <- function(p,X,V,rank=NULL,type=0,res.df= -1) {
 
   ## deal with the fractional part of the pinv...
   if (nu>0&&k>0) {
-     if (k>1) vec[,1:(k-1)] <- t(t(vec[,1:(k-1)])/sqrt(ed$val[1:(k-1)]))
-     b12 <- .5*nu*(1-nu)
-     if (b12<0) b12 <- 0
-     b12 <- sqrt(b12)
-     B <- matrix(c(1,b12,b12,nu),2,2)
-     ev <- diag(ed$values[k:k1]^-.5,nrow=k1-k+1)
-     B <- ev%*%B%*%ev
-     eb <- eigen(B,symmetric=TRUE)
-     rB <- eb$vectors%*%diag(sqrt(eb$values))%*%t(eb$vectors)
-     vec1 <- vec
-     vec1[,k:k1] <- t(rB%*%diag(c(-1,1))%*%t(vec[,k:k1]))
-     vec[,k:k1] <- t(rB%*%t(vec[,k:k1]))
+    if (k>1) vec[,1:(k-1)] <- t(t(vec[,1:(k-1)])/sqrt(ed$val[1:(k-1)]))
+    b12 <- .5*nu*(1-nu)
+    if (b12<0) b12 <- 0
+    b12 <- sqrt(b12)
+    B <- matrix(c(1,b12,b12,nu),2,2)
+    ev <- diag(ed$values[k:k1]^-.5,nrow=k1-k+1)
+    B <- ev%*%B%*%ev
+    eb <- eigen(B,symmetric=TRUE)
+    rB <- eb$vectors%*%diag(sqrt(eb$values))%*%t(eb$vectors)
+    vec1 <- vec
+    vec1[,k:k1] <- t(rB%*%diag(c(-1,1))%*%t(vec[,k:k1]))
+    vec[,k:k1] <- t(rB%*%t(vec[,k:k1]))
   } else {
     vec1 <- vec <- if (k==0) t(t(vec)*sqrt(1/ed$val[1])) else
-            t(t(vec)/sqrt(ed$val[1:k]))
+      t(t(vec)/sqrt(ed$val[1:k]))
     if (k==1) rank <- 1
   }
   ## there is an ambiguity in the choise of test statistic, leading to slight
@@ -3880,18 +3883,18 @@ testStat <- function(p,X,V,rank=NULL,type=0,res.df= -1) {
   ## simply refered to a chi-squared 1
 
   if (nu>0) { ## mixture of chi^2 ref dist
-     if (k1==1) rank1 <- val <- 1 else {
-       val <- rep(1,k1) ##ed$val[1:k1]
-       rp <- nu+1
-       val[k] <- (rp + sqrt(rp*(2-rp)))/2
-       val[k1] <- (rp - val[k])
-     }
+    if (k1==1) rank1 <- val <- 1 else {
+      val <- rep(1,k1) ##ed$val[1:k1]
+      rp <- nu+1
+      val[k] <- (rp + sqrt(rp*(2-rp)))/2
+      val[k1] <- (rp - val[k])
+    }
 
-     if (res.df <= 0) pval <- (psum.chisq(d,val)+psum.chisq(d1,val))/2 else {  ## (liu2(d,val) + liu2(d1,val))/2 else
-       k0 <- max(1,round(res.df))
-       pval <- (psum.chisq(0,c(val,-d/k0),df=c(rep(1,length(val)),k0)) + psum.chisq(0,c(val,-d1/k0),df=c(rep(1,length(val)),k0)) )/2
-       #pval <- (simf(d,val,res.df) + simf(d1,val,res.df))/2
-     }
+    if (res.df <= 0) pval <- (psum.chisq(d,val,tol=1e-10)+psum.chisq(d1,val,tol=1e-10))/2 else {  ## (liu2(d,val) + liu2(d1,val))/2 else
+      k0 <- max(1,round(res.df))
+      pval <- (psum.chisq(0,c(val,-d/k0),df=c(rep(1,length(val)),k0),tol=1e-10) + psum.chisq(0,c(val,-d1/k0),df=c(rep(1,length(val)),k0),tol=1e-10) )/2
+      #pval <- (simf(d,val,res.df) + simf(d1,val,res.df))/2
+    }
   } else { pval <- 2 }
   ## integer case still needs computing,
   ## OLD: also liu/pearson approx only good in
@@ -3900,7 +3903,7 @@ testStat <- function(p,X,V,rank=NULL,type=0,res.df= -1) {
   ##if (pval > .5)
   if (pval > 1) {
     if (res.df <= 0) pval <- (pchisq(d,df=rank1,lower.tail=FALSE)+pchisq(d1,df=rank1,lower.tail=FALSE))/2 else
-    pval <- (pf(d/rank1,rank1,res.df,lower.tail=FALSE)+pf(d1/rank1,rank1,res.df,lower.tail=FALSE))/2
+      pval <- (pf(d/rank1,rank1,res.df,lower.tail=FALSE)+pf(d1/rank1,rank1,res.df,lower.tail=FALSE))/2
   }
   list(stat=d,pval=min(1,pval),rank=rank)
 } ## end of testStat
