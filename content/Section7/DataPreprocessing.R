@@ -29,4 +29,5 @@ GEF14_data$dow <- GEF14$dow[GEF14$tod == 0]
 GEF14_data$month <- GEF14$month[GEF14$tod == 0]
 GEF14_data$year <- GEF14$year[GEF14$tod == 0]
 GEF14_data$progtime <- 1 : nrow(GEF14_data)
+
 ##############################################################################################
