@@ -936,7 +936,7 @@ source("DataPreprocessing.R")
 # Set the train set also here (reply what is done in Main_new(par_Lapply))
 n_train <- which(GEF14_data$year==2011)[1]-1 # (2005 - 2010 year)
 
-d <- 14
+d <- 24
 grid_length <- 5
 name_eff <- "doy"
 
