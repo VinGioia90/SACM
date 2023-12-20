@@ -180,7 +180,7 @@ gc()
 #############
 setwd(root_dir)
 setwd("content/Section7")
-source("Functions_Application_new.R")
+source("Functions_Application.R")
 
 ################################
 # Application to GEFCom14 Data #
@@ -190,7 +190,7 @@ source("DataPreprocessing.R") # The dataset is GEF14_data
 # Set the length of train set (2005 - 2010)
 n_train <- which(GEF14_data$year==2011)[1]-1
 
-d <- 14
+d <- 24
 save.gam <- FALSE
 
 # Mean model formula
@@ -219,13 +219,13 @@ gc()
 ########################
 # logM parametrisation #
 ########################
-#param <- "logm"
-#res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
-#                      data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
-#                      metric = "p",  save.gam = save.gam)
-#save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-#rm("res_logm")
-#gc()
+param <- "logm"
+res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
+                      data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
+                      metric = "p",  save.gam = save.gam)
+save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+rm("res_logm")
+gc()
 
 
 ##############################
@@ -234,7 +234,7 @@ gc()
 ncores <- 11 # It should be considered 11 due to the number of sets involved in rolling origin forecasting
 
 # Set the rolling origin forecasting splitting
-ndat <- which(GEF14_data$year==2011)[1]-1
+ndat <- which(GEF14_data$year == 2011)[1] - 1
 ndat2 <- dim(GEF14_data)[1]
 sets <- floor(seq(ndat , ndat2, length.out = 12))
 
@@ -245,20 +245,14 @@ setwd(root_dir)
 setwd("content/Section7")
 param <- "mcd"
 load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-
 cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
-
 save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
 
 ########################
 # logM parametrisation #
 ########################
-#param <- "logm"
-#load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-#
-#
-#
-#cv_mcd <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
-#cv_logm <- cv_mcd
-#save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+param <- "logm"
+load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
+save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
 
