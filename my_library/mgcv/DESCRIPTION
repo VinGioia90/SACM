@@ -20,7 +20,7 @@ LazyLoad: yes
 ByteCompile: yes
 License: GPL (>= 2)
 NeedsCompilation: yes
-Packaged: 2023-11-29 10:50:19 UTC; mf15002
+Packaged: 2023-12-11 15:27:17 UTC; mf15002
 Repository: CRAN
 Date/Publication: 2023-07-11 08:40:18 UTC
-Built: R 4.3.1; x86_64-pc-linux-gnu; 2023-11-29 11:08:57 UTC; unix
+Built: R 4.3.1; x86_64-pc-linux-gnu; 2024-01-05 14:40:14 UTC; unix

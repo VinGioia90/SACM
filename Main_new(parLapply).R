@@ -1,5 +1,6 @@
 rm(list=ls())
 
+.rs.restartR()
 
 #####################################################
 # Code for reproducing the results of the paper:    #
