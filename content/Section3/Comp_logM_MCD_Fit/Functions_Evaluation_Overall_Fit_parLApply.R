@@ -172,7 +172,7 @@ mformula <- function(d = 2, expl_mean, expl_Theta, idxcov_int = rep(1, d * (d + 
 
 
 #################################################################################
-# Function for (simulating data and) fitting the models. Arguments:             #
+# Function for (simulating data and) fitting the models. Arguments:  a          #
 # nobs: number of observations                                                  #
 # dgrid: grid of orucome dimension values                                       #
 # param1: parametrisation for data generation ("mcd" or "logm")                 #

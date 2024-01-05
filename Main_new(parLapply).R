@@ -12,6 +12,7 @@ setwd(root_dir)
 # Install and load specific version of mgcv
 install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
 library("mgcv", lib.loc="./my_library")
+#library("mgcv")
 
 # Load the needed packages
 # (it might be required to do something manually)
@@ -189,10 +190,8 @@ source("DataPreprocessing.R") # The dataset is GEF14_data
 # Set the length of train set (2005 - 2010)
 n_train <- which(GEF14_data$year==2011)[1]-1
 
-#n_train <- nrow(GEF14_data)- sum(GEF14_data$year == 2011 & GEF14_data$month == 11)                             # (1 month out-of-sample)
-#n_train <- nrow(GEF14_data)- sum(GEF14_data$year == 2011 & (GEF14_data$month == 11 | GEF14_data$month == 10))  # (2 months out-of-sample)
-
 d <- 24
+save.gam <- FALSE
 
 # Mean model formula
 mean_formula <- list()
@@ -202,27 +201,58 @@ for(j in 0 : (d - 1)){
 
 grid_length <- 5 # To change eventually
 
-# MCD parametrisation
+####################################
+# Model selection on the train set #
+####################################
+
+#######################
+# MCD parametrisation #
+#######################
 param <- "mcd"
-res_mcd <- stepw_res(param = param, d = d,
-                 grid_length = grid_length,
-                 mean_model_formula = mean_formula,
-                 eff_vcov = "s(doy)",  # effect on varcov modelling
-                 data = GEF14_data[1 : n_train,],
-                 metric = "ST") # Type of criterion: Test statistic
-
+res_mcd <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
+                     data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
+                     metric = "p",  save.gam = save.gam)
 save(res_mcd, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+rm("res_mcd")
+gc()
 
-# logM parametrisation
+########################
+# logM parametrisation #
+########################
 param <- "logm"
-res_logm <- stepw_res(param = param, d = d,
-                 grid_length = grid_length,
-                 mean_model_formula = mean_formula,
-                 eff_vcov = "s(doy)",  # effect on varcov modelling
-                 data = GEF14_data[1 : n_train,],
-                 metric = "ST") # Type of criterion: Test statistic
-
-save(res_logm, paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
+                      data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
+                      metric = "p",  save.gam = save.gam)
+save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+rm("res_logm")
+gc()
 
 
+##############################
+# Model Validation procedure #
+##############################
+ncores <- 11 # It should be considered 11 due to the number of sets involved in rolling origin forecasting
+
+# Set the rolling origin forecasting splitting
+ndat <- which(GEF14_data$year == 2011)[1] - 1
+ndat2 <- dim(GEF14_data)[1]
+sets <- floor(seq(ndat , ndat2, length.out = 12))
+
+#######################
+# MCD parametrisation #
+#######################
+setwd(root_dir)
+setwd("content/Section7")
+param <- "mcd"
+load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
+save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+
+########################
+# logM parametrisation #
+########################
+param <- "logm"
+load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
+save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
 
