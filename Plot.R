@@ -940,6 +940,11 @@ d <- 24
 grid_length <- 5
 name_eff <- "doy"
 
+# Set the rolling origin forecasting splitting
+ndat <- which(GEF14_data$year == 2011)[1] - 1
+ndat2 <- dim(GEF14_data)[1]
+sets <- floor(seq(ndat , ndat2, length.out = 12))
+
 
 ###############################################
 # Plots for showing the model selection steps #
