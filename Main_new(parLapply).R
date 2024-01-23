@@ -245,15 +245,31 @@ sets <- floor(seq(ndat , ndat2, length.out = 12))
 setwd(root_dir)
 setwd("content/Section7")
 param <- "mcd"
+
+# By creting a lower and upper threshold for the number of effects involved in covariance matrix modelling we are able to update/append further runs
+low_neff_vcov <- 0
+upp_neff_vcov <- 150
+
 load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
-save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+idx_vcov <- which((unlist(lapply(res_mcd$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
+
+cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
+                    sets_eval = sets, ncores = ncores, save.gam = save.gam)
+save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+                           grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
 ########################
 # logM parametrisation #
 ########################
 param <- "logm"
+low_neff_vcov <- 0
+upp_neff_vcov <- 150
+
 load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, sets_eval = sets, ncores = ncores, save.gam = save.gam)
-save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+idx_vcov <- which((unlist(lapply(res_logm$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
+
+cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
+                     sets_eval = sets, ncores = ncores, save.gam = save.gam)
+save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+                            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
