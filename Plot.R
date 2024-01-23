@@ -1005,17 +1005,25 @@ setwd(root_dir)
 setwd("content/Section7")
 
 param <- "mcd"
-load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+low_neff_vcov <- 0
+upp_neff_vcov <- 150
+
+load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+
 
 logScore <- res_perf(cv_mcd, d, GEF14_data, param, sets)
-# [1] 4976.360 4976.459 4977.503 4981.207 4981.240 4989.975 4989.188 4992.123 4985.646 4987.526 4989.151 4988.650 4986.384 4984.991
-#[15] 4991.833 5006.402 5021.955 5033.414 5062.374 5115.684 5252.671
+
+load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+ncov_el_mcd <- sapply(1:length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
+ncov_el_mcd <- sort(ncov_el_mcd[ncov_el_mcd >= low_neff_vcov & ncov_el_mcd <= upp_neff_vcov], decreasing = TRUE)
+
 
 setwd(root_dir)
 setwd("content/Section7/Plots")
 png(paste0("LogScore_param", param ,".png"))
-plot(sort(ncov_el_mcd, decreasing = TRUE), logScore, xaxt= "n", xlab = "Number of effects (MCD)" )
-axis(1, at = sort(ncov_el_mcd, decreasing = TRUE), labels = factor(sort(ncov_el_mcd, decreasing = TRUE), levels = sort(ncov_el_mcd, decreasing = TRUE)))
+plot(ncov_el_mcd, logScore, xaxt= "n", xlab = "Number of effects (MCD)" )
+axis(1, at = ncov_el_mcd, labels = factor(ncov_el_mcd, levels = ncov_el_mcd))
 points(ncov_el_mcd[which.min(logScore)], logScore[which.min(logScore)], col = "red",  bg=25)
 dev.off()
 
@@ -1026,19 +1034,24 @@ setwd(root_dir)
 setwd("content/Section7")
 
 param <- "logm"
-load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+low_neff_vcov <- 0
+upp_neff_vcov <- 150
+load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
 logScore <- res_perf(cv_logm, d, data, param, sets_eval)
-#[1] 4992.067 4992.889 4993.126 4993.399 4999.753 4998.989 4998.191 4996.273 4996.514 4997.317 4991.155 4997.539 4993.646 5252.684
+
+load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+ncov_el_logm <- sapply(1:length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
+ncov_el_logm <- sort(ncov_el_logm[ncov_el_logm >= low_neff_vcov & ncov_el_logm <= upp_neff_vcov], decreasing = TRUE)
+
 
 setwd(root_dir)
 setwd("content/Section7/Plots")
-
 png(paste0("LogScore_param", param ,".png"))
-plot(sort(ncov_el_logm, decreasing = TRUE), logScore, xaxt= "n", xlab = "Number of effects (logM)" )
-axis(1, at = sort(ncov_el_logm, decreasing = TRUE), labels = factor(sort(ncov_el_logm, decreasing = TRUE), levels = sort(ncov_el_logm, decreasing = TRUE)))
+plot(ncov_el_logm, logScore, xaxt= "n", xlab = "Number of effects (logM)" )
+axis(1, at = ncov_el_logm, labels = factor(ncov_el_logm, levels = ncov_el_logm))
 points(ncov_el_logm[which.min(logScore)], logScore[which.min(logScore)], col = "red",  bg=25)
 dev.off()
 
-logScore[14:1]
 
