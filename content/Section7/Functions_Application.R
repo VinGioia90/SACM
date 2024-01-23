@@ -352,12 +352,10 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
 
 
 ###################################################################
+cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save.gam = NULL){
 
-
-cross_val <- function(obj, param, d, data, sets_eval, ncores = 1, save.gam = NULL){
-
-  res_sim <- function(obj, param, d, sets_eval, data, save.gam){
-    dss <- lapply(1 : length(obj$foo), function(jj){
+  res_sim <- function(obj, param, d, sets_eval, idx_vcov, data, save.gam){
+    dss <- lapply(idx_vcov, function(jj){
       out <- list()
       if(save.gam){
         print("not yet implemented")
@@ -378,7 +376,7 @@ cross_val <- function(obj, param, d, data, sets_eval, ncores = 1, save.gam = NUL
 
   cl <- makePSOCKcluster(ncores)
   setDefaultCluster(cl)
-  clusterExport(NULL, c("obj", "save.gam", "param", "d", "data", "res_sim", "sets_eval"), envir = environment())
+  clusterExport(NULL, c("obj", "save.gam", "param", "d", "idx_vcov", "data", "res_sim", "sets_eval"), envir = environment())
 
   clusterEvalQ(NULL, {
     library(SCM)
@@ -389,7 +387,7 @@ cross_val <- function(obj, param, d, data, sets_eval, ncores = 1, save.gam = NUL
   })
 
   out_res_sim <- function(.x){
-    out2 <- res_sim(obj = obj, param = param, d = d, data = data, sets_eval = sets_eval[.x : (.x + 1)], save.gam = save.gam)
+    out2 <- res_sim(obj = obj, param = param, d = d, data = data, idx_vcov = idx_vcov, sets_eval = sets_eval[.x : (.x + 1)], save.gam = save.gam)
     return(list(gen = out2))
   }
 
