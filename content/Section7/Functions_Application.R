@@ -293,6 +293,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
     time_fit[[counter]] <- time$time
 
     if(j == length(dgrid)){
+
       break
     } else {
       formula_func <- mod_foo_building(summary_Peff= sum_Vcov_Peff[[counter]], summary_Seff = sum_Vcov_Seff[[counter]],
@@ -309,6 +310,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
     # }
   }
 
+  counter <- counter + 1
   global_formula <- mean_model_formula
   if(save.gam){
     time <- microbenchmark(
