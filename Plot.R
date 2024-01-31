@@ -1039,7 +1039,7 @@ upp_neff_vcov <- 150
 load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
             grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
-logScore <- res_perf(cv_logm, d, data, param, sets_eval)
+logScore <- res_perf(cv_logm, d, GEF14_data, param, sets)
 
 load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
 ncov_el_logm <- sapply(1:length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
