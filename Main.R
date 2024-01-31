@@ -11,7 +11,7 @@ source("loadPackages.R")
 instload_packages()
 
 nrun <- 10  # Set the number of runs
-ncores <- 5 # Set the number of cores
+ncores <- 1 # Set the number of cores
 
 ###############
 # SECTION 3.3 #
@@ -133,7 +133,7 @@ setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 setwd("content/Section6")
 source("Functions_Evaluation_Overall_Fit_mcd.R")
 
-dgrid <- c(2,5,10)
+dgrid <- 2#, c(2,5)#,10)
 nobs <- 10000
 sg <- FALSE # This avoids saving the gam object
 
