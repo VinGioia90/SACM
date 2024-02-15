@@ -1,13 +1,13 @@
-######################################################
-# Code for reproducing the figure of the manuscript: #
-# "Scalable Additive Covariance Matrix Modelling"    #
-######################################################
+###############################################################
+# Code for reproducing the figure of the manuscript:          #
+# "Scalable Generalized Additive Covariance Matrix Modelling" #
+###############################################################
 library(rstudioapi)
 root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
 # Load the needed packages
-# (it might be required to do something manually)
+# (it might be required to install some packages manually)
 source("loadPackages.R")
 instload_packages()
 
@@ -17,10 +17,10 @@ ncores <- 10 # Set the number of cores
 scaleFUN <- function(x) sprintf("%.2f", x) # Number of decimal points set to 2
 
 # logarithmic scale
-myscale_trans <- function(){
-  trans_new("myscale", function(x) log(x),
-            function(x) exp(x), domain = c(0, Inf))
-}
+#myscale_trans <- function(){
+#  trans_new("myscale", function(x) log(x),
+#            function(x) exp(x), domain = c(0, Inf))
+#}
 
 # square root scale
 myscale_trans2 <- function(){
@@ -54,7 +54,7 @@ load(file = paste0("TIME_logm_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid)
 ##################
 setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
-source("Functions_Plots_Hessian_eta.R")  # Here there is the time_hessian()
+source("Functions_Plots_Hessian_eta.R")               # Here there is the time_hessian function
 
 #################################################
 # MCD Computational times (overall and summary) #
@@ -63,6 +63,7 @@ time_hessian_mcd <- time_hessian(obj = TIME_MCD_D2eta, param = "mcd",
                                  dgrid = dgrid, nrun = nrun,
                                  type = c("eff", "TMB"),
                                  type1 =  c("EFF", "AD"))
+
 
 summary_time_hessian_mcd <- time_hessian_mcd$sum_res
 summary_time_hessian_mcd <- summary_time_hessian_mcd[order(summary_time_hessian_mcd[,5],
@@ -85,14 +86,14 @@ time_hessian_logm <- time_hessian(obj = TIME_logM_D2eta, param = "logm",
                                         type1 =  c("EFF", "AD"))
 
 summary_time_hessian_logm <- time_hessian_logm$sum_res
-summary_time_hessian_logm <- summary_time_hessian_logm[order(summary_time_hessian_logm[,5],
-                                                             summary_time_hessian_logm[,1],
+summary_time_hessian_logm <- summary_time_hessian_logm[order(summary_time_hessian_logm[, 5],
+                                                             summary_time_hessian_logm[, 1],
                                                              decreasing = FALSE),]
 row.names(summary_time_hessian_logm) <- NULL
 
 all_time_hessian_logm <- time_hessian_logm$res
-all_time_hessian_logm <- all_time_hessian_logm[order(all_time_hessian_logm[,3],
-                                                     all_time_hessian_logm[,2],
+all_time_hessian_logm <- all_time_hessian_logm[order(all_time_hessian_logm[, 3],
+                                                     all_time_hessian_logm[, 2],
                                                      decreasing = FALSE),]
 row.names(all_time_hessian_logm) <- NULL
 
@@ -101,29 +102,34 @@ row.names(all_time_hessian_logm) <- NULL
 ################################################################
 summary_time_hessian <- rbind(summary_time_hessian_mcd, summary_time_hessian_logm)
 summary_time_hessian$param<-factor(summary_time_hessian$param,
-                                labels=c("logM", "MCD"), level = c("logm", "mcd"))
+                                labels = c("logM", "MCD"), level = c("logm", "mcd"))
 
 all_time_hessian <- rbind(all_time_hessian_mcd, all_time_hessian_logm)
 all_time_hessian$param<-factor(all_time_hessian$param,
                                labels = c("logM", "MCD"), level = c("logm", "mcd"))
 
 
-dg_sel <- dgrid #To select a subset of the dgrid elements
+dg_sel <- dgrid #One can select a subset of the dgrid elements
 all_time_hessian <- all_time_hessian[which(all_time_hessian$d %in% dg_sel),]
 summary_time_hessian <- summary_time_hessian[which(summary_time_hessian$d %in% dg_sel),]
 
 # Labels
-lab_time_logM <- with(summary_time_hessian,
-                      c(min(mean_time[param == "logM" & Type == "EFF"]),
-                        min(mean_time[param == "logM" & Type == "AD"]),
-                        max(mean_time[param == "logM" & Type == "EFF"]),
-                        max(mean_time[param == "logM" & Type == "AD"])))
+#lab_time_logM <- with(summary_time_hessian,
+#                      c(min(mean_time[param == "logM" & Type == "EFF"]),
+#                        min(mean_time[param == "logM" & Type == "AD"]),
+#                        max(mean_time[param == "logM" & Type == "EFF"]),
+#                        max(mean_time[param == "logM" & Type == "AD"])))
+#
+#lab_time_MCD <- with(summary_time_hessian,
+#                     c(min(mean_time[param == "MCD" & Type == "EFF"]),
+#                       min(mean_time[param == "MCD" & Type == "AD"]),
+#                       max(mean_time[param == "MCD" & Type == "EFF"]),
+#                       max(mean_time[param == "MCD" & Type == "AD"])))
 
-lab_time_MCD <- with(summary_time_hessian,
-                     c(min(mean_time[param == "MCD" & Type == "EFF"]),
-                       min(mean_time[param == "MCD" & Type == "AD"]),
-                       max(mean_time[param == "MCD" & Type == "EFF"]),
-                       max(mean_time[param == "MCD" & Type == "AD"])))
+# To set manually
+lab_time_logM <- c(0, 10, 25, 50, 100, 225)
+lab_time_MCD <- c(0, 0.04, 0.25, 1, 2, 3.5)
+
 
 ##########################################
 # Plot using square root scale: Figure 1 #
@@ -132,9 +138,10 @@ pl_Heta <- ggplot(all_time_hessian, aes(x = as.factor(d), y = time)) +
   geom_point(aes(colour = Type), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
   geom_point(data = summary_time_hessian, aes(x = as.factor(d), y = mean_time, colour = Type),
              size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line(data = summary_time_hessian, aes(y = mean_time, group = Type, col = Type),
             position = position_dodge(width = 0.3))+
-  scale_color_manual(name = "", values = c("AD" = "#00A9FF", "EFF" = "#F8766D")) +
+  scale_color_manual(name = "Approach", values = c("AD" = "#00A9FF", "EFF" = "#F8766D")) +
   facet_grid2( . ~ param, scales = "free", switch = "y", independent = "all") +
   theme_bw() +
   scale_y_continuous(breaks = NULL,
@@ -142,14 +149,15 @@ pl_Heta <- ggplot(all_time_hessian, aes(x = as.factor(d), y = time)) +
   scale_x_discrete(breaks = dg_sel) +
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-        legend.position = "bottom", panel.spacing = unit(0.2, "lines")) +
+        legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
+        text = element_text(size = 15),  legend.text=element_text(size=15),
+        strip.text.x = element_text(size = 15)) +
   ggh4x::facetted_pos_scales(y = list(
     param == "logM" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                          sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_logM)),
     param == "MCD" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_MCD))
   ))
-
 
 setwd(root_dir)
 setwd("content/Section3/Plots")
@@ -232,11 +240,12 @@ data_time_iter$Type2 <- factor(data_time_iter$Type2, levels = c("Time", "Iterati
 data_time_iter_sum$Type2 <- factor(data_time_iter_sum$Type2, levels = c("Time", "Iterations"), labels = c("Time", "Iterations"))
 
 # Labelling
-label_time <- with(data_time_iter_sum,
-                   c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
-                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
+#label_time <- with(data_time_iter_sum,
+#                   c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
+#                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
 
-
+# To set manually
+label_time <- c(1, 5, 25, 50, 100, 450)
 
 ##########################################
 # Plot using square root scale: Figure 2 #
@@ -250,13 +259,14 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
              position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
             position = position_dodge(width = 0.3)) +
-  scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
   theme_bw() +
   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15), text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
   ggh4x::facetted_pos_scales(y = list(
     Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
@@ -270,13 +280,13 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
 
 setwd(root_dir)
 setwd("content/Section3/Plots")
-ggsave("plot_TIME_ITER_sqrtscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
-ggsave("plot_TIME_ITER_sqrtscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+ggsave("plot_TIME_ITER_sqrtscale_genMCD.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+ggsave("plot_TIME_ITER_sqrtscale_genMCD.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 
 ##############################################################################################
 # SUPPLEMENTARY MATERIAL: decide whether  including the results under logM generation        #
 # !!! I think it's redundant reporting computational times and iterations                    #
-# Now it corresponds to Figure 6 of the Supplementary Material                               #
+# Now it corresponds to Figure B.1 of the Supplementary Material                             #
 ##############################################################################################
 setwd(root_dir)
 setwd("content/Section3/Results")
@@ -332,10 +342,11 @@ data_time_iter_sum <- data_time_iter_sum[which(data_time_iter_sum$d %in% dgrid_s
 data_time_iter$Type2 <- factor(data_time_iter$Type2, levels=c("Time","Iterations"), labels=c("Time","Iterations"))
 data_time_iter_sum$Type2 <- factor(data_time_iter_sum$Type2, levels=c("Time","Iterations"), labels=c("Time","Iterations"))
 
-label_time <- with(data_time_iter_sum,
-                   c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
+#label_time <- with(data_time_iter_sum,
+#                   c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
+#                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
 
-                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
+label_time <- c(1, 5, 25, 50, 100, 450)
 
 pl_Fit_Time_Iter <- ggplot(data_time_iter,
                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
@@ -346,13 +357,14 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
              position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_line(data = data_time_iter_sum, aes(y = Value, group = Type, col = Type),
             position = position_dodge(width = 0.3)) +
-  scale_color_manual(name = "", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   facet_grid2( . ~ Type2 , scales = "free", switch = "y", independent = "all") +
   theme_bw() +
   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
   ggh4x::facetted_pos_scales(y = list(
     Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
@@ -360,14 +372,14 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
                                                              breaks = label_time)),
     Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                                sec.axis = sec_axis(~ . * 1,
-                                                                   breaks=seq(50, 225, by = 25)))
+                                                                   breaks=seq(50, 100, by = 10)))
   ))
 
 
 setwd(root_dir)
 setwd("content/SupplementaryMaterial/Plots")
-ggsave("plot_TIME_ITER2_sqrtscale.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
-ggsave("plot_TIME_ITER2_sqrtscale.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+ggsave("plot_TIME_ITER_sqrtscale_genLOGM.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
+ggsave("plot_TIME_ITER_sqrtscale_genLOGM.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 
 ##############################################################################################
 ##############################################################################################
@@ -441,7 +453,6 @@ logS$Type2 <- factor(logS$Type2, levels = c("MCD - Generation", "logM - Generati
 
 # Setting the colours (varying with d)
 col_values<- hue_pal()(length(dgrid))
-show_col(col_values)
 
 # Breaks label of x and y axes
 breaks_seq_MCDgen_x <- as.numeric(tapply(logS[logS$Type2 == "MCD - Generation",]$logS_gen, logS$d[logS$Type2 == "MCD - Generation"], mean))
@@ -451,7 +462,7 @@ breaks_seq_MCDgen_y <- as.numeric(tapply(logS[logS$Type2 == "MCD - Generation",]
 pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",], aes(x = logS_gen, y = logS_nogen, color = d)) +
   geom_point(size = 2, show.legend = TRUE)+
   geom_abline(slope = 1, intercept = 0, col = "black") +
-  scale_color_manual(name = "d", values = col_values)+
+  scale_color_manual(name = "Dimension", values = col_values)+
   theme_bw() +
   facet_grid(. ~ "MCD generation") +
   xlab("LS - MCD fit") + ylab("LS - logM fit") +
@@ -459,7 +470,8 @@ pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",], aes(x = logS_gen, 
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),) +
   scale_x_continuous(breaks = breaks_seq_MCDgen_x,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
 # Breaks label of x and y axes
@@ -472,13 +484,14 @@ pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",], aes(x = logS_gen
   geom_abline(slope = 1, intercept = 0, col = "black") +
   facet_grid(. ~ "logM generation") +
   xlab("LS - logM fit") + ylab("LS - MCD fit") +
-  scale_color_manual(name = "d", values = col_values)+
+  scale_color_manual(name = "Dimension", values = col_values)+
   theme_bw() +
   scale_y_continuous(breaks = breaks_seq_logMgen_y,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),) +
   scale_x_continuous(breaks=breaks_seq_logMgen_x,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
 # Merging the plots above
@@ -497,11 +510,13 @@ ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
 # Code for reproducing Figure 3 - SECTION 4 #
 #############################################
 setwd(root_dir)
+# The function for extracting and plotiing computational times is in Section 3
 setwd("content/Section3/Comp_logM_MCD_Hessian_eta")
 source("Functions_Plots_Hessian_eta.R")
 
 nobs <- 1000
 dgrid <- seq(5, 100, by = 5)
+step_length <- 5
 pint_type <- c("dm05","dm1", "dm2","const")
 
 ##################
@@ -605,12 +620,17 @@ rel_all_time_hessianB_logm <- data.frame(d = rep(dgrid, 2),
                                                            labels=c("S1", "S2"), level = c("S1", "S2")),
                                          Ratio = rep("STD/PARS", 2 * length(dgrid)))
 
-lab_time_logM <- c(1, max(rel_mean_time_hessianB_logm[rel_mean_time_hessianB_logm$Scenario == "S1",2]),
-                   max(rel_mean_time_hessianB_logm[rel_mean_time_hessianB_logm$Scenario == "S2",2]))
+#lab_time_logM <- c(1, max(rel_mean_time_hessianB_logm[rel_mean_time_hessianB_logm$Scenario == "S1",2]),
+#                   max(rel_mean_time_hessianB_logm[rel_mean_time_hessianB_logm$Scenario == "S2",2]))
+lab_time_logM <- c(1, 2, 4, 8, 16, 24)
+
 
 dg_sel <- dgrid #To select a subset of the dgrid elements
 rel_mean_time_hessianB_logm <- rel_mean_time_hessianB_logm[which(rel_mean_time_hessianB_logm$d %in% dg_sel),]
 rel_all_time_hessianB_logm <- rel_all_time_hessianB_logm[which(rel_all_time_hessianB_logm$d %in% dg_sel),]
+
+
+
 
 pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_time)) +
   geom_point(aes(colour = Scenario), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
@@ -619,25 +639,165 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_tim
   geom_line(data = rel_mean_time_hessianB_logm, aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
-  scale_color_manual(name = "", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  scale_color_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
   theme_bw() +
+  facet_grid(. ~ "Relative times") +
   scale_y_continuous(breaks = NULL,trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1, labels = scaleFUN, breaks = lab_time_logM)) +
   scale_x_discrete(breaks = dg_sel) +
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+
+
+nspars <- data.frame(d =  rep(seq(min(dgrid), max(dgrid), by = 0.01), 2),
+                     nelno0 = c(1/sqrt(seq(min(dgrid), max(dgrid), by = 0.01)), 1/(seq(min(dgrid), max(dgrid), by = 0.01)^2)),
+                     Scenario = factor(rep(c("S1", "S2"), each = (length(seq(min(dgrid), max(dgrid), by = 0.01)))),
+                                       labels=c("S1", "S2"), level = c("S1", "S2")))
+add_point <-  data.frame(d =  rep(seq(min(dgrid), max(dgrid), by = step_length), 2),
+                         nelno0 = c(1/sqrt(seq(min(dgrid), max(dgrid), by = step_length)), 1/(seq(min(dgrid), max(dgrid), by = step_length)^2)),
+                         Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
+                                           labels=c("S1", "S2"), level = c("S1", "S2")))
+
+
+plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0)) +
+  xlab("Dimension") + ylab("") +
+  theme_bw() +
+  ylim(0, 0.5) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_grid(. ~ "logM elements modelled (%)") +  geom_point(data = add_point , aes(x = d, y = nelno0, colour = Scenario), show.legend = TRUE) +
+  geom_line(aes(y = nelno0 , group = Scenario, col = Scenario), size = 0.1) +
+  scale_color_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
+  scale_x_continuous(breaks=add_point$d)
+
+
+
+# Merging the plots above #!!! Find a way to merge the x-axis "Dimension" title !!!#
+pl_comp_Hbeta <- ggarrange(plot_perc_covmod_lpi,
+                           pl_Hbeta ,
+                           nrow = 1,
+                           common.legend = TRUE,
+                           legend = "bottom")
+
 
 setwd(root_dir)
 setwd("content/Section4/Plots")
-ggsave("plot_rel_TIME_hessian_beta_logM.eps", pl_Hbeta, width = 15, height = 15, units = "cm")
-ggsave("plot_rel_TIME_hessian_beta_logM.pdf", pl_Hbeta, width = 15, height = 15, units = "cm")
+ggsave("plot_rel_TIME_hessian_beta_logM_and_Sparsity.eps", pl_comp_Hbeta, width = 30, height = 15, units = "cm")
+ggsave("plot_rel_TIME_hessian_beta_logM_and_Sparsity.pdf", pl_comp_Hbeta, width = 30, height = 15, units = "cm")
+
+##############################################
+# Code for reproducing Figure 4 - SECTION 6  #
+##############################################
+setwd(root_dir)
+setwd("content/Section6")
+source("Functions_Plots_Overall_Fit.R")
+
+dgrid <- c(2, 5, 10)
+nrun <- 10
+nobs <- 10000
 
 
+setwd(root_dir)
+setwd("content/Section6/Results")
+load(paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 
-########################################################################
-# Code for reproducing Figure XXX - SECTION 6 + SUPPLEMENTARY MATERIAL #
-########################################################################
+LAML_extr <- LAML_extraction(sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
+LAML_efs <- as.numeric(LAML_extr[[1]])
+LAML_bfgs <- as.numeric(LAML_extr[[2]])
+LAML_bfgsinit <- as.numeric(LAML_extr[[3]])
+
+LAML <- data.frame(LAML_efs = rep(LAML_efs,2),
+                   LAML_bfgs = c(LAML_bfgs, LAML_bfgsinit),
+                   diff_LAML_bfgs_efs = c(LAML_bfgs - LAML_efs,  LAML_bfgsinit - LAML_efs),
+                   rel_diff_LAML_bfgs_efs = c((LAML_bfgs - LAML_efs)/abs(LAML_bfgs), (LAML_bfgsinit - LAML_efs)/abs(LAML_bfgsinit)),
+                   d =  rep(factor(rep(dgrid, each = nrun ), levels = dgrid),2),
+                   init = c(rep("BFGS", length(LAML_efs)),rep("BFGS - init",length(LAML_efs))))
+
+TIMES <- fit_time(sim_mcd_fit, param = "mcd", dgrid, nrun)
+dgrid_sel <- dgrid # To select a subset of dgrid
+data_time <- TIMES$res[which(TIMES$res$d %in% dgrid_sel),]
+data_time_sum <- TIMES$sum_res[which(TIMES$sum_res$d %in% dgrid_sel),]
+
+TIMES_sum <- data.frame(Value = c(data_time_sum$efs, data_time_sum$bamlss, data_time_sum$bfgs, data_time_sum$bfgsinit + data_time_sum$efs),
+                        d = rep(dgrid, times = 4),
+                        Type2 = rep(c("FS", "BAMLSS",  "BFGS","BFGS - init"), each=length(dgrid)))
+
+TIME_efs_bamlss_bfgs <- data.frame(Value = c(data_time$time_efs,data_time$time_bamlss, data_time$time_bfgs, data_time$time_bfgsinit + data_time$time_efs),
+                              d = rep(rep(dgrid, each = nrun),4),
+                              Type2 = rep(c("FS", "BAMLSS", "BFGS", "BFGS - init"), each=nrun*length(dgrid)))
+
+
+# Decide whether plotting a line for the mean values
+pl_LAML_rel_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = rel_diff_LAML_bfgs_efs, color = init)) +
+  geom_point(aes(colour = as.factor(init)), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
+  theme_bw() +
+  facet_grid(. ~ "(LAML(BFGS) - LAML(EFS)) / |LAML(BFGS)|") +
+  xlab("Dimension") + ylab("") +
+  scale_color_manual(name = "Type", values = c("BFGS" = "#00A9FF", "BFGS - init" = "#F8766D")) +
+  theme(panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+
+# Comparison EFS v s BAMLSS in terms of computational times
+TIME_efs_bamlss_bfgs$d <- factor(TIME_efs_bamlss_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+TIME_efs_bamlss_bfgs$Type2 <- factor(TIME_efs_bamlss_bfgs$Type2, levels=c("FS","BFGS", "BFGS - init", "BAMLSS"), labels=c("FS","BFGS",  "BFGS - init", "BAMLSS"))
+TIMES_sum$d <- factor(TIMES_sum$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+TIMES_sum$Type2 <- factor(TIMES_sum$Type2, levels=c("FS", "BFGS", "BFGS - init",  "BAMLSS"), labels=c("FS", "BFGS", "BFGS - init",  "BAMLSS"))
+
+breaks_seq_time <- c(2, 10, 25, 50, 100, 200, 400)
+
+
+pl_Fit_Time_efs_bamlss_bfgs <- ggplot(TIME_efs_bamlss_bfgs,
+                                 aes(x = as.factor(d), y = Value)) +
+  geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
+  geom_point(data = TIMES_sum,
+             aes(x = as.factor(d),
+                 y = Value, colour = Type2), size = 3,
+             position = position_dodge(width = 0.1), show.legend = FALSE) +
+  facet_grid(. ~ "Fitting times") +
+  geom_line(data = TIMES_sum, aes(y = Value, group = Type2, col = Type2),
+            position = position_dodge(width = 0.1)) +
+  scale_color_manual(name = "Type", values = c("FS" = "#E76BF3", "BFGS - init" = "#F8766D", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
+  theme_bw() +
+  scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
+                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN,
+                                         breaks = breaks_seq_time)) +
+  scale_x_discrete(breaks = dgrid_sel) +
+  xlab("Dimension") + ylab("") +
+  theme(panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+
+
+pl_LAML_Times <- ggarrange(pl_LAML_rel_diff_bfgs_efs,
+                     pl_Fit_Time_efs_bamlss_bfgs,
+                     nrow = 1,
+                     common.legend = FALSE,
+                     legend = "bottom")
+
+setwd(root_dir)
+setwd("content/Section6/Plots")
+ggsave("plot_LAML_Times.eps", pl_LAML_Times , width = 30, height = 15, units = "cm")
+ggsave("plot_LAML_Times.pdf", pl_LAML_Times , width = 30, height = 15, units = "cm")
+
+
+##########################################################################################
+# Code for reproducing Figure XXX - SUPPLEMENTARY MATERIAL - comparison in terms of logS #
+##########################################################################################
+
+##########################################################################################
+# Decide whether including the comparison in terms of logScore on the test set in the SM #
+# If so, I will improve the graphical aspects                                            #
+##########################################################################################
 setwd(root_dir)
 setwd("content/Section6")
 source("Functions_Plots_Overall_Fit.R")
@@ -669,260 +829,40 @@ logS_test <- data.frame(logS_efs = logS_efs_test,
                         rel_diff_bamlss_efs_gen = (logS_bamlss_test - logS_efs_test)/abs(logS_gen_test),
                         d =  factor(rep(dgrid, each = nrun ), levels = dgrid))
 
-LAML_extr <- LAML_extraction(sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
-LAML_efs <- as.numeric(LAML_extr[[1]])
-LAML_bfgs <- as.numeric(LAML_extr[[2]])
-LAML_bfgsinit <- as.numeric(LAML_extr[[3]])
-
-LAML <- data.frame(LAML_efs = LAML_efs,
-                   LAML_bfgs = LAML_bfgs,
-                   LAML_bfgsinit = LAML_bfgsinit,
-                   diff_LAML_bfgs_efs = LAML_bfgs - LAML_efs,
-                   diff_LAML_bfgsinit_efs = LAML_bfgsinit - LAML_efs,
-                   d =  factor(rep(dgrid, each = nrun ), levels = dgrid))
-
-col_values<- hue_pal()(length(dgrid))
-show_col(col_values)
-
-breaks_seq_MCD_efs <- aggregate(logS_test$logS_efs, list(logS_test$d), FUN = mean)[,2]
-breaks_seq_MCD_bfgs <- aggregate(logS_test$logS_bfgs, list(logS_test$d), FUN = mean)[,2]
-breaks_seq_MCD_bfgsinit <- aggregate(logS_test$logS_bfgsinit, list(logS_test$d), FUN = mean)[,2]
-breaks_seq_MCD_bamlss <- aggregate(logS_test$logS_bamlss, list(logS_test$d), FUN = mean)[,2]
-
-breaks_seq_LAML_efs <- aggregate(LAML$LAML_efs, list(LAML$d), FUN = mean)[,2]
-breaks_seq_LAML_bfgs <- aggregate(LAML$LAML_bfgs, list(LAML$d), FUN = mean)[,2]
-breaks_seq_LAML_bfgsinit <- aggregate(LAML$LAML_bfgsinit, list(LAML$d), FUN = mean)[,2]
-
-
-TIMES <- fit_time(sim_mcd_fit, param = "mcd", dgrid, nrun)
-rep(dgrid, times = 2)
-dgrid_sel <- dgrid # To select a subset of dgrid
-data_time <- TIMES$res[which(TIMES$res$d %in% dgrid_sel),]
-data_time_sum <- TIMES$sum_res[which(TIMES$sum_res$d %in% dgrid_sel),]
-TIMES_sum <- data.frame(Value = c(data_time_sum$efs, data_time_sum$bamlss),
-                        d = rep(dgrid, times = 2),
-                        Type2 = rep(c("EFS", "BAMLSS"), each=length(dgrid)))
-
-TIME_efs_bamlss <- data.frame(Value = c(data_time$time_efs,data_time$time_bamlss),
-                              d = rep(rep(dgrid, each = nrun),2),
-                              Type2 = rep(c("EFS", "BAMLSS"), each=nrun*length(dgrid)))
-breaks_seq_time_efs <- data_time_sum$efs
-breaks_seq_time_bamlss <- data_time_sum$bamlss
-
-###########################
-# Comparisons EFS vs BFGS #
-###########################
-# y axis: Log-score (EFS); x axis: Log-score(BFGS))
-pl_MCD_bfgs_efs <- ggplot(logS_test, aes(x = logS_bfgs, y = logS_efs, color = d)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_abline(slope = 1, intercept = 0, col = "black") +
-  scale_color_manual(name = "d", values = col_values)+
-  theme_bw() +
-  xlab("LS - BFGS") + ylab("LS - EFS") +
-  scale_y_continuous(breaks = breaks_seq_MCD_efs ,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=breaks_seq_MCD_bfgs,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis:  Log-score(BFGS) - Log-score (EFS)
-pl_MCD_diff_bfgs_efs <- ggplot(logS_test, aes(x = d, y = diff_logS_bfgs_efs)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("LS(BFGS) - LS(EFS)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis:  (Log-score(BFGS) - Log-score (EFS))/(|log-Score(Generation)|)
-pl_MCD_rel_diff_bfgs_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bfgs_efs_gen)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("(LS(BFGS) - LS(EFS))/(|LS(gen)|)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-
-# y axis: LAML (EFS); x axis: LAML(BFGS))
-pl_LAML_bfgs_efs <- ggplot(LAML, aes(x = LAML_bfgs, y = LAML_efs, color = d)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_abline(slope = 1, intercept = 0, col = "black") +
-  scale_color_manual(name = "d", values = col_values)+
-  theme_bw() +
-  xlab("LAML - BFGS") + ylab("LAML - EFS") +
-  scale_y_continuous(breaks = breaks_seq_LAML_efs ,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=breaks_seq_LAML_bfgs,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis:  LAML(BFGS) - LAML (EFS)
-pl_LAML_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = diff_LAML_bfgs_efs)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("LAML(BFGS) - LAML(EFS)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-##################################################
-# Comparisons EFS vs BFGS (initialised with EFS) #
-##################################################
-# y axis: Log-score (EFS); x axis: Log-score(BFGS init)
-pl_MCD_bfgsinit_efs <- ggplot(logS_test, aes(x = logS_bfgsinit, y = logS_efs, color = d)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_abline(slope = 1, intercept = 0, col = "black") +
-  scale_color_manual(name = "d", values = col_values)+
-  theme_bw() +
-  xlab("LS - BFGS (init.)") + ylab("LS - EFS") +
-  scale_y_continuous(breaks = breaks_seq_MCD_efs,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=breaks_seq_MCD_bfgsinit,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis:  Log-score(BFGS init) - Log-score (EFS)
-pl_MCD_diff_bfgsinit_efs <- ggplot(logS_test, aes(x = d, y = diff_logS_bfgsinit_efs)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("LS(init. BFGS) - LS(EFS)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis:  (Log-score(BFGS init) - Log-score (EFS))/(|log-Score(Generation)|)
-pl_MCD_rel_diff_bfgsinit_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bfgsinit_efs_gen)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("(LS(BFGS init) - LS(EFS))/(|LS(gen)|)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis: LAML (EFS); x axis: LAML(BFGS init))
-pl_LAML_bfgsinit_efs <- ggplot(LAML, aes(x = LAML_bfgsinit, y = LAML_efs, color = d)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_abline(slope = 1, intercept = 0, col = "black") +
-  scale_color_manual(name = "d", values = col_values)+
-  theme_bw() +
-  xlab("LAML - BFGS (init.)") + ylab("LAML - EFS") +
-  scale_y_continuous(breaks = breaks_seq_LAML_efs ,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=breaks_seq_LAML_bfgsinit,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-# y axis:  LAML(BFGS init.) - LAML (EFS)
-pl_LAML_diff_bfgsinit_efs <- ggplot(LAML, aes(x = d, y = diff_LAML_bfgsinit_efs)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("LAML(BFGS init.) - LAML(EFS)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-
-#############################
-# Comparisons EFS vs BAMLSS #
-#############################
-# y axis: Log-score (EFS); x axis: Log-score(BAMLSS)
-pl_MCD_bamlss_efs <- ggplot(logS_test, aes(x = logS_bamlss, y = logS_efs, color = d)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_abline(slope = 1, intercept = 0, col = "black") +
-  scale_color_manual(name = "d", values = col_values)+
-  theme_bw() +
-  xlab("LS - BAMLSS") + ylab("LS - EFS") +
-  scale_y_continuous(breaks = breaks_seq_MCD_efs,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=breaks_seq_MCD_bamlss,
-                     sec.axis = sec_axis(~ . * 1,labels=scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
-
-pl_MCD_diff_bamlss_efs <- ggplot(logS_test, aes(x = d, y = diff_logS_bamlss_efs)) +
-  geom_point(size = 2, show.legend = TRUE)+
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  xlab("d") + ylab("LS(BAMLSS) - LS(EFS)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-
 
 # y axis:  (Log-score(BAMLSS) - Log-score (EFS))/(|log-Score(Generation)|)
 pl_MCD_rel_diff_bamlss_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bamlss_efs_gen)) +
-  geom_point(size = 2, show.legend = TRUE)+
+  geom_point(size = 1, show.legend = TRUE)+
   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
   theme_bw() +
-  xlab("d") + ylab("(LS(BAMLSS) - LS(EFS))/(|LS(gen)|)") +
-  theme(panel.grid.minor = element_blank(),axis.text=element_text(size=9),
+  facet_grid(. ~ "(LS(BAMLSS) - LS(FS)) / |LS(gen)|") +
+  xlab("Dimension") + ylab("") +
+  theme(panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
-
-# Comparison EFS v s BAMLSS in terms of computational times
-TIME_efs_bamlss$d <- factor(TIME_efs_bamlss$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIME_efs_bamlss$Type2 <- factor(TIME_efs_bamlss$Type2, levels=c("EFS", "BAMLSS"), labels=c("EFS", "BAMLSS"))
-TIMES_sum$d <- factor(TIMES_sum$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIMES_sum$Type2 <- factor(TIMES_sum$Type2, levels=c("EFS", "BAMLSS"), labels=c("EFS", "BAMLSS"))
-
-pl_Fit_Time_efs_bamlss <- ggplot(TIME_efs_bamlss,
-                                  aes(x = d, y = Value)) +
-  geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-  geom_point(data = TIMES_sum,
-             aes(x = d,
-                 y = Value, colour = Type2), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
-  geom_line(data = TIMES_sum, aes(y = Value, group = Type2, col = Type2),
-            position = position_dodge(width = 0.3)) +
-  scale_color_manual(name = "Type", values = c("EFS" = "#F8766D", "BAMLSS" = "#619CFF")) +
+pl_MCD_rel_diff_bfgsinit_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bfgsinit_efs_gen)) +
+  geom_point(size = 1, show.legend = TRUE)+
+  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
   theme_bw() +
-  scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN,
-                                         breaks = c(breaks_seq_time_efs,breaks_seq_time_bamlss))) +
-  scale_x_discrete(breaks = dgrid_sel) +
-  xlab("Dimension") + ylab("Fitting times") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 9),
-        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+  facet_grid(. ~ "(LS(BFGS - init) - LS(FS)) / |LS(gen)|") +
+  xlab("Dimension") + ylab("") +
+  theme(panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
+pl_MCD_logS_test <- ggarrange(pl_MCD_rel_diff_bamlss_efs_gen,
+                              pl_MCD_rel_diff_bfgsinit_efs_gen,
+                              nrow = 1,
+                              common.legend = FALSE,
+                              legend = "bottom")
 
-# Save the results
 setwd(root_dir)
-setwd("content/Section6/Plots")
-ggsave("plot_logS_comparison_efs_bfgs_test.eps", pl_MCD_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_comparison_efs_bfgs_test.pdf", pl_MCD_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_difference_efs_bfgs_test.eps", pl_MCD_diff_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_difference_efs_bfgs_test.pdf", pl_MCD_diff_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_rel_difference_bfgs_efs_gen_test.eps", pl_MCD_rel_diff_bfgs_efs_gen, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_rel_difference_bfgs_efs_gen_test.pdf", pl_MCD_rel_diff_bfgs_efs_gen, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_efs_bfgs.eps", pl_LAML_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_efs_bfgs.pdf", pl_LAML_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_difference_bfgs_efs.eps", pl_LAML_diff_bfgs_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_difference_bfgs_efs.pdf", pl_LAML_diff_bfgs_efs, width = 15, height = 15, units = "cm")
-
-ggsave("plot_logS_comparison_efs_bfgsinit_test.eps", pl_MCD_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_comparison_efs_bfgsinit_test.pdf", pl_MCD_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_difference_efs_bfgsinit_test.eps", pl_MCD_diff_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_difference_efs_bfgsinit_test.pdf", pl_MCD_diff_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_rel_difference_efs_bfgsinit_gen_test.eps", pl_MCD_rel_diff_bfgsinit_efs_gen, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_rel_difference_efs_bfgsinit_gen_test.pdf", pl_MCD_rel_diff_bfgsinit_efs_gen, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_efs_bfgsinit.eps", pl_LAML_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_efs_bfgsinit.pdf", pl_LAML_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_difference_bfgsinit_efs.eps", pl_LAML_diff_bfgsinit_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_LAML_difference_bfgsinit_efs.pdf", pl_LAML_diff_bfgsinit_efs, width = 15, height = 15, units = "cm")
-
-ggsave("plot_logS_comparison_efs_bamlss_test.eps", pl_MCD_bamlss_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_comparison_efs_bamlss_test.pdf", pl_MCD_bamlss_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_difference_efs_bamlss_test.eps", pl_MCD_diff_bamlss_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_difference_efs_bamlss_test.pdf", pl_MCD_diff_bamlss_efs, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_rel_difference_efs_bamlss_gen_test.eps", pl_MCD_rel_diff_bamlss_efs_gen, width = 15, height = 15, units = "cm")
-ggsave("plot_logS_rel_difference_efs_bamlss_gen_test.pdf", pl_MCD_rel_diff_bamlss_efs_gen, width = 15, height = 15, units = "cm")
-ggsave("ComputationalTimes_efs_bamlss.eps", pl_Fit_Time_efs_bamlss, width = 15, height = 15, units = "cm")
-ggsave("ComputationalTimes_efs_bamlss.pdf", pl_Fit_Time_efs_bamlss, width = 15, height = 15, units = "cm")
+setwd("content/SupplementaryMaterial/Plots")
+ggsave("pl_MCD_logS_test.eps", pl_MCD_logS_test , width = 30, height = 15, units = "cm")
+ggsave("pl_MCD_logS_test.pdf", pl_MCD_logS_test , width = 30, height = 15, units = "cm")
 
 
 ########################################################################
@@ -969,7 +909,7 @@ pl_list <- get_plots(obj = res_mcd,
                      d = d,
                      grid_length = grid_length,
                      param = param)
-
+pl_list[[55]]
 for(j in 1:length(pl_list)){
   ggsave(paste0("Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
 }
@@ -1035,7 +975,7 @@ setwd("content/Section7")
 
 param <- "logm"
 low_neff_vcov <- 0
-upp_neff_vcov <- 150
+upp_neff_vcov <- 10
 load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
             grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
