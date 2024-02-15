@@ -381,11 +381,11 @@ setwd("content/SupplementaryMaterial/Plots")
 ggsave("plot_TIME_ITER_sqrtscale_genLOGM.eps", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_ITER_sqrtscale_genLOGM.pdf", pl_Fit_Time_Iter, width = 30, height = 15, units = "cm")
 
-##############################################################################################
-##############################################################################################
-## SUPPLEMENTARY MATERIALS: Figure 7 - comparison of performance MCD vs logM using logScore ##
-##############################################################################################
-##############################################################################################
+################################################################################################
+################################################################################################
+## SUPPLEMENTARY MATERIALS: Figure B.2 - comparison of performance MCD vs logM using logScore ##
+################################################################################################
+################################################################################################
 setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Plots_Overall_Fit.R") #here there is the log_score() function
