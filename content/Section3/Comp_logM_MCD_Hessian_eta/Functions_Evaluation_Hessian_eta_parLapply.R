@@ -1,5 +1,5 @@
 #########################################################################################
-# useful functions for reproducing the results of Section 3.3 - 2nd derivatives wrt eta #
+# Needed functions for reproducing the results of Section 3.3 - 2nd derivatives wrt eta #
 #########################################################################################
 source("idxHess_no0.R") # List of indices to deal with the sparsity of 2nd derivatives
 
@@ -9,9 +9,9 @@ source("idxHess_no0.R") # List of indices to deal with the sparsity of 2nd deriv
 compile("nll_MCD_TMB.cpp")
 compile("nll_logM_TMB.cpp")
 
-########################################################
-# Main functions for obtaining the computational times #
-########################################################
+#######################################################
+# Main function for obtaining the computational times #
+#######################################################
 
 # The time_Deta() function evaluate the 2nd derivatives w.r.t. eta for Efficient and TMB approaches. Arguments:
 # nobs: number of rows
@@ -57,13 +57,13 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm")){
         nHel <- d * (d ^ 2 + 15 * d + 2)/6
         if(d > 2) nHel <- nHel + d * (d - 1) * (d - 2)/3
 
-        # Ger rhe indices of Hessian elements different from zero
+        # Ger the indices of Hessian elements different from zero
         idx_jk <- idxHess_no0(q, z, w, param = 1)
 
-        # Initalisation of the 2nd derivatives vector
+        # Initialisation of the 2nd derivatives vector
         res <- matrix(0, 1, nHel)
 
-        # Computational times for evaluting the Hessian derivatives (Efficient)
+        # Computational times for evaluating the Hessian derivatives (Efficient)
         time <- microbenchmark({
           for(i in 1 : nobs){
             d2_mcd_eta_row(eta[i,], y[i,], res, z, w, Gm, t, idx_jk)
@@ -72,7 +72,7 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm")){
         out$tD2_eff[jj] <- time$time
 
 
-        # Computational times for evaluting the Hessian derivatives (TMB)
+        # Computational times for evaluating the Hessian derivatives (AD)
         obj <- list()
         for(i in 1 : nobs){
           obj[[i]] <- MakeADFun(list(Y = matrix(y[i,], ncol = d)),
@@ -95,7 +95,7 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm")){
         nHel <- q * (q + 1)/2
 
         # Initialisation of the 2nd derivatives vector
-        res<- matrix(0, 1, nHel)
+        res <- matrix(0, 1, nHel)
 
         # Computational times for Efficient
         time <- microbenchmark({
@@ -137,7 +137,7 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm")){
 
   out_time <- function(.x){
     out2 <- sim_time(dgrid = dgrid, nobs = nobs, param = param)
-    return(list(time=out2))
+    return(list(time = out2))
   }
 
   res <- list()

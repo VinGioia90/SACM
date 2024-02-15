@@ -1,23 +1,24 @@
 ###########################################################
 # Needed function for visualising the computational times #
 # of evaluating the Hessian w.r.t. eta and beta           #
-# This functions allows obtaining Figure 1                #
+# This functions allows obtaining Figure 1 of Section 3.3 #
 ###########################################################
 
 #############################################################################################
-# Function for extracting and summarising the computational times. Arguments:               #
-#  obj: an object including the computational times                                         #
-#  param: parametrisation ("logm" or "mcd")                                                 #
-#  dgrid: grid of outcome vector dimensions                                                 #
-#  nrun: number of evaluations                                                              #
-#  type: vector including the strategies to compare                                         #
-#        (so for the hessian w.r.t . eta type = c("eff","TMB"),                             #
-#         while for the hessian w.r.t . beta type = c("block","noblock"))                   #
-#  type1: vector labelling the strategies to compare                                        #
-#         (so for the hessian w.r.t . eta type = c("EFF","AD"),                             #
-#         while for the hessian w.r.t . beta type = c("PARS","STD"))                        #
-#  beta: flag for indicating if we are comparing the derivatives w.r.t. eta or w.r.t. beta  #
-#############################################################################################
+# Function for extracting and summarising the computational times. Arguments:
+#  obj: an object including the computational times
+#  param: parametrisation ("logm" or "mcd")
+#  dgrid: grid of outcome vector dimensions
+#  nrun: number of evaluations
+#  type: vector including the strategies to compare
+#        (so for the hessian w.r.t . eta type = c("eff","TMB"),
+#         while for the hessian w.r.t . beta type = c("block","noblock"))
+#  type1: vector labelling the strategies to compare
+#         (so for the hessian w.r.t . eta type = c("EFF","AD"),
+#         while for the hessian w.r.t . beta type = c("PARS","STD"))
+#  beta: flag for indicating if we are comparing the derivatives w.r.t. eta or w.r.t. beta
+#
+#  Note that this function is also used for obtaining the plots of Section 4 by setting properly the arguments of type, type1 and beta
 
 time_hessian <- function(obj, param = c("logm", "mcd"),
                          dgrid = NULL, nrun, type, type1, beta = FALSE){
@@ -69,11 +70,7 @@ time_hessian <- function(obj, param = c("logm", "mcd"),
   })
 
 
-  res <- do.call(rbind, out)
-  #res <- out[[1]]
-  #for(j in 2 : length(out)){
-  #  res <- rbind(res, out[[j]]) # not beautiful
-  #}
+  res <- do.call("rbind", out)
 
   res <- cbind(res,
                rep(type1, each = length(dgrid) * nrun),
