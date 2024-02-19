@@ -11,9 +11,12 @@ root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
 # Install and load specific version of mgcv
-install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
+# install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
 library("mgcv", lib.loc="./my_library")
-#library("mgcv")
+
+if(packageVersion("mgcv") != "9.0"){
+  stop("Wrong version of mgcv!!")
+}
 
 # Load the needed packages
 # (it might be required to do something manually)
