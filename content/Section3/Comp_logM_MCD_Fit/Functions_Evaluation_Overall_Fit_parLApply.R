@@ -192,7 +192,7 @@ mformula <- function(d = 2, expl_mean, expl_Theta, idxcov_int = rep(1, d * (d + 
 #################################################################################
 
 sim_est_efs <- function(nobs, dgrid,  nrun, ncores, param1, param2 = NULL, expl_mean, expl_Theta,
-                         save.gam = "TRUE", blockN = rep(1, length(dgrid)), pint = 0){
+                         save.gam = "TRUE", blockN = rep(1, length(dgrid)), pint = 0, root_dir){
   if(is.null(param2)){
     param2 <- param1
   }
@@ -231,10 +231,14 @@ sim_est_efs <- function(nobs, dgrid,  nrun, ncores, param1, param2 = NULL, expl_
   cl <- makePSOCKcluster(ncores)
   setDefaultCluster(cl)
   clusterExport(NULL, c("nobs", "dgrid", "param1", "param2", "expl_mean", "expl_Theta",
-                        "save.gam", "blockN", "pint", "datagen","mformula","seq_seed" ), envir = environment())
+                        "save.gam", "blockN", "pint", "datagen","mformula","seq_seed", "root_dir"), envir = environment())
   clusterEvalQ(NULL, {
+    library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
     library(SCM)
     library(microbenchmark)
+    if(packageVersion("mgcv") != "9.0"){
+      stop("Wrong version of mgcv!!")
+    }
   })
 
   out_res_sim <- function(.x){

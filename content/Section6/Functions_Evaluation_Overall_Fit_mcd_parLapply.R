@@ -221,7 +221,7 @@ mformula_mvnchol <- function(d, expl_mean, expl_Theta){
 sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
                                     nrun, ncores, param = "mcd", expl_mean, expl_Theta,
                                     save.gam = "TRUE", blockN = rep(1, length(dgrid)),
-                                    pint = 0, pureBFGS = "TRUE"){
+                                    pint = 0, pureBFGS = "TRUE", root_dir){
 
   res_sim <- function(dgrid, nobs_train, nobs_test, param,  expl_mean, expl_Theta, save.gam, blockN, pint, seq_seed, pureBFGS){
     dss <- lapply(1 : length(dgrid), function(jj){
@@ -313,12 +313,16 @@ sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
   setDefaultCluster(cl)
   clusterExport(NULL, c("nobs_train", "nobs_test", "dgrid", "param", "expl_mean", "expl_Theta",
                         "save.gam", "blockN", "pint", "datagen", "mformula",
-                        "mformula_mvnchol", "seq_seed", "pureBFGS", "res_sim"), envir = environment())
+                        "mformula_mvnchol", "seq_seed", "pureBFGS", "res_sim", "root_dir"), envir = environment())
   clusterEvalQ(NULL, {
+    library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
     library(bamlss)
     library(mvnchol)
     library(SCM)
     library(microbenchmark)
+    if(packageVersion("mgcv") != "9.0"){
+      stop("Wrong version of mgcv!!")
+    }
   })
 
   out_res_sim <- function(.x){

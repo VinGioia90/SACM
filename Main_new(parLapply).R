@@ -75,7 +75,7 @@ setwd("content/Section3/Results")
 #######################
 # Fit with MCD
 sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
-                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
 
 
 save(sim_mcdG_mcdF,
@@ -85,7 +85,7 @@ gc()
 
 # Fit with logM
 sim_mcdG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "logm", save.gam = sg,
-                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
 save(sim_mcdG_logmF,
      file = paste0("sim_mcdG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_mcdG_logmF")
@@ -96,7 +96,7 @@ gc()
 ########################
 # Fit with MCD
 sim_logmG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "mcd", save.gam = sg,
-                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
 save(sim_logmG_mcdF,
      file = paste0("sim_logmG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_logmG_mcdF")
@@ -104,7 +104,7 @@ gc()
 
 # Fit with logM
 sim_logmG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "logm", save.gam = sg,
-                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"))
+                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
 save(sim_logmG_logmF,
      file = paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_logmG_logmF")
@@ -168,7 +168,8 @@ nobs <- 10000
 sg <- FALSE # This avoids saving the gam object
 
 sim_mcd_fit <- sim_est_efs_bfgs_bamlss(nobs_train = nobs, nobs_test = nobs, dgrid,  nrun, ncores, param = "mcd",
-                                       expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), save.gam = sg)
+                                       expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), save.gam = sg,
+                                       root_dir = root_dir)
 
 save(sim_mcd_fit,
      file = paste0("Results/sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
@@ -254,7 +255,7 @@ load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_lengt
 idx_vcov <- which((unlist(lapply(res_mcd$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
 
 cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
-                    sets_eval = sets, ncores = ncores, save.gam = save.gam)
+                    sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
 save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
                            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
@@ -269,7 +270,7 @@ load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_lengt
 idx_vcov <- which((unlist(lapply(res_logm$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
 
 cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
-                     sets_eval = sets, ncores = ncores, save.gam = save.gam)
+                     sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
 save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
                             grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 

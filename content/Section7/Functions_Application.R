@@ -354,7 +354,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
 
 
 ###################################################################
-cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save.gam = NULL){
+cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save.gam = NULL, root_dir){
 
   res_sim <- function(obj, param, d, sets_eval, idx_vcov, data, save.gam){
     dss <- lapply(idx_vcov, function(jj){
@@ -378,14 +378,17 @@ cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save
 
   cl <- makePSOCKcluster(ncores)
   setDefaultCluster(cl)
-  clusterExport(NULL, c("obj", "save.gam", "param", "d", "idx_vcov", "data", "res_sim", "sets_eval"), envir = environment())
+  clusterExport(NULL, c("obj", "save.gam", "param", "d", "idx_vcov", "data", "res_sim", "sets_eval", "root_dir"), envir = environment())
 
   clusterEvalQ(NULL, {
+    library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
     library(SCM)
     library(microbenchmark)
     library(stringr)
     library(BMisc)
-
+    if(packageVersion("mgcv") != "9.0"){
+      stop("Wrong version of mgcv!!")
+    }
   })
 
   out_res_sim <- function(.x){
