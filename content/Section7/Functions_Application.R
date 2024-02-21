@@ -378,10 +378,16 @@ cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save
 
   cl <- makePSOCKcluster(ncores)
   setDefaultCluster(cl)
-  clusterExport(NULL, c("obj", "save.gam", "param", "d", "idx_vcov", "data", "res_sim", "sets_eval", "root_dir"), envir = environment())
+
+  clusterExport(NULL, c("root_dir"), envir = environment())
 
   clusterEvalQ(NULL, {
     library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
+  })
+
+  clusterExport(NULL, c("obj", "save.gam", "param", "d", "idx_vcov", "data", "res_sim", "sets_eval"), envir = environment())
+
+  clusterEvalQ(NULL, {
     library(SCM)
     library(microbenchmark)
     library(stringr)
@@ -390,6 +396,7 @@ cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save
       stop("Wrong version of mgcv!!")
     }
   })
+
 
   out_res_sim <- function(.x){
     out2 <- res_sim(obj = obj, param = param, d = d, data = data, idx_vcov = idx_vcov, sets_eval = sets_eval[.x : (.x + 1)], save.gam = save.gam)
