@@ -975,7 +975,7 @@ setwd("content/Section7")
 
 param <- "logm"
 low_neff_vcov <- 0
-upp_neff_vcov <- 10
+upp_neff_vcov <- 150
 load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
             grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
 
