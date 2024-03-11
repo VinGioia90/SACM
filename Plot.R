@@ -886,13 +886,91 @@ ndat2 <- dim(GEF14_data)[1]
 sets <- floor(seq(ndat , ndat2, length.out = 12))
 
 
+##############################
+# Plots for validation steps #
+##############################
+setwd(root_dir)
+setwd("content/Section7")
+
+# Get results from MCD
+param <- "mcd"
+low_neff_vcov <- 0
+upp_neff_vcov <- 150
+
+load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+
+logScore_mcd <- res_perf(cv_mcd, d, GEF14_data, param, sets)
+
+load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+ncov_el_mcd <- sapply(1:length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
+ncov_el_mcd <- sort(ncov_el_mcd[ncov_el_mcd >= low_neff_vcov & ncov_el_mcd <= upp_neff_vcov], decreasing = TRUE)
+
+# Get results from logM
+param <- "logm"
+load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+
+logScore_logM <- res_perf(cv_logm, d, GEF14_data, param, sets)
+
+load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+ncov_el_logm <- sapply(1:length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
+ncov_el_logm <- sort(ncov_el_logm[ncov_el_logm >= low_neff_vcov & ncov_el_logm <= upp_neff_vcov], decreasing = TRUE)
+
+
+data_logScore <- data.frame("logS" = c(logScore_mcd[length(logScore_mcd):1], logScore_logM[length(logScore_logM):1]),
+                            "Param" = c(rep("MCD", length(ncov_el_mcd)), rep("logM", length(ncov_el_logm))),
+                            "Eff" = c(sort(ncov_el_mcd), sort(ncov_el_logm)))
+
+# First explore both the cases to decide the number of effects
+plot(ncov_el_mcd, logScore_mcd, xaxt= "n", xlab = "Number of effects (MCD)" )
+axis(1, at = ncov_el_mcd, labels = factor(ncov_el_mcd, levels = ncov_el_mcd))
+
+plot(ncov_el_logm, logScore_logM, xaxt= "n", xlab = "Number of effects (logM)" )
+axis(1, at = ncov_el_logm, labels = factor(ncov_el_logm, levels = ncov_el_logm))
+
+
+# Here we select the number of effects (minimum or elbow point)
+ncov_el_mcd_sel <- 70
+ncov_el_logm_sel <- 55
+
+data_logS_selected <- data.frame("logS" = c(logScore_mcd[which(ncov_el_mcd == ncov_el_mcd_sel)],
+                                            logScore_logM[which(ncov_el_logm == ncov_el_logm_sel)]),
+                                 "Param" = c("MCD","logM"),
+                                 "Eff" = c(ncov_el_mcd_sel, ncov_el_logm_sel))
+
+setwd(root_dir)
+setwd("content/Section7/Plots")
+
+pl_logS_mcd_logM <- ggplot(data_logScore,
+                           aes(x = Eff, y = logS)) + #factor(Eff, labels = as.character(Eff), levels = as.character(Eff)), y = logS)) +
+  geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+  geom_point(data = data_logS_selected, aes(x = c(15, 30), y = logS, colour = Param),
+             size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
+  geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3)) +
+  scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
+  scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  theme_bw() +
+  xlab("Number of effects") + ylab("") +
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+
+ggsave(paste0("logS_MCDandlogM_param.pdf"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
+ggsave(paste0("logS_MCDandlogM_param.eps"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
+
+
 ###############################################
 # Plots for showing the model selection steps #
 ###############################################
 
-#######################
-# MCD parametrisation #
-#######################
+#According to the previous results you must select the number of effects for the MCD and logM covariance matrix model
+neff_mcd <- ncov_el_mcd_sel
+neff_logm <- ncov_el_logm_sel
+
+###############################################
+# Both MCD and logM in the same plot          #
+###############################################
 param <- "mcd"
 
 setwd(root_dir)
@@ -901,97 +979,98 @@ load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RD
 
 ncov_el_mcd <- sapply(1: length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
 
-setwd(root_dir)
-setwd("content/Section7/Plots")
-
-pl_list <- get_plots(obj = res_mcd,
-                     name_eff = name_eff,
-                     d = d,
-                     grid_length = grid_length,
-                     param = param)
-pl_list[[55]]
-for(j in 1:length(pl_list)){
-  ggsave(paste0("Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-}
-
-########################
-# logM parametrisation #
-########################
 param <- "logm"
-setwd(root_dir)
-setwd("content/Section7/Results")
 load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-
 ncov_el_logm <- sapply(1: length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
 
 setwd(root_dir)
 setwd("content/Section7/Plots")
 
-pl_list <- get_plots(obj = res_logm,
+pl_MCD_logM <- get_plots2(obj1_mcd = res_mcd,
+                     obj2_logm = res_logm,
                      name_eff = name_eff,
                      d = d,
                      grid_length = grid_length,
-                     param = param)
-
-for(j in 1:length(pl_list)){
-  ggsave(paste0("Covmod_", param, "param_with", length(res_logm$foo[[j+1]]), "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-}
+                     neff1_mcd = neff_mcd,
+                     neff2_logm = neff_logm)
 
 
-##############################
-# Plots for validation steps #
-##############################
-setwd(root_dir)
-setwd("content/Section7")
-
-param <- "mcd"
-low_neff_vcov <- 0
-upp_neff_vcov <- 150
-
-load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
-            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+ggsave(paste0("Covmod_MCDandlogM_param.pdf"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
+ggsave(paste0("Covmod_MCDandlogM_param.eps"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
 
 
-logScore <- res_perf(cv_mcd, d, GEF14_data, param, sets)
+#######################
+# MCD parametrisation #
+#######################
+#param <- "mcd"
+#
+#setwd(root_dir)
+#setwd("content/Section7/Results")
+#load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+#
+#ncov_el_mcd <- sapply(1: length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
+#
+#setwd(root_dir)
+#setwd("content/Section7/Plots")
 
-load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-ncov_el_mcd <- sapply(1:length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
-ncov_el_mcd <- sort(ncov_el_mcd[ncov_el_mcd >= low_neff_vcov & ncov_el_mcd <= upp_neff_vcov], decreasing = TRUE)
-
-
-setwd(root_dir)
-setwd("content/Section7/Plots")
-png(paste0("LogScore_param", param ,".png"))
-plot(ncov_el_mcd, logScore, xaxt= "n", xlab = "Number of effects (MCD)" )
-axis(1, at = ncov_el_mcd, labels = factor(ncov_el_mcd, levels = ncov_el_mcd))
-points(ncov_el_mcd[which.min(logScore)], logScore[which.min(logScore)], col = "red",  bg=25)
-dev.off()
+#pl_list <- get_plots(obj = res_mcd,
+#                     name_eff = name_eff,
+#                     d = d,
+#                     grid_length = grid_length,
+#                     param = param)
+# pl_list[[7]]
+#for(j in 1:length(pl_list)){
+#  ggsave(paste0("Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
+#}
 
 ########################
 # logM parametrisation #
 ########################
-setwd(root_dir)
-setwd("content/Section7")
+#param <- "logm"
+#setwd(root_dir)
+#setwd("content/Section7/Results")
+#load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+#ncov_el_logm <- sapply(1: length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
+#
+#setwd(root_dir)
+#setwd("content/Section7/Plots")
 
-param <- "logm"
-low_neff_vcov <- 0
-upp_neff_vcov <- 150
-load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
-            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+#pl_list <- get_plots(obj = res_logm,
+#                     name_eff = name_eff,
+#                     d = d,
+#                     grid_length = grid_length,
+#                     param = param)
+#
+#for(j in 1:length(pl_list)){
+#  ggsave(paste0("Covmod_", param, "param_with", length(res_logm$foo[[j+1]]), "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
+#}
 
-logScore <- res_perf(cv_logm, d, GEF14_data, param, sets)
+time_mcd <- unlist(res_mcd$time_fit)/(1e9 * 60)
+time_logm <- unlist(res_logm$time_fit)/(1e9 * 60)
 
-load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-ncov_el_logm <- sapply(1:length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
-ncov_el_logm <- sort(ncov_el_logm[ncov_el_logm >= low_neff_vcov & ncov_el_logm <= upp_neff_vcov], decreasing = TRUE)
+
+grid_d <- seq( 0, d*(d+1)/2, by = grid_length)
+# Padding with useful info
+data_time <- data.frame("Time" = c(sort(time_mcd), sort(time_logm)),
+                        "Param" = c(rep("MCD", length(grid_d)), rep("logM", length(grid_d))),
+                        "Eff" = rep(grid_d,2))
+
 
 
 setwd(root_dir)
 setwd("content/Section7/Plots")
-png(paste0("LogScore_param", param ,".png"))
-plot(ncov_el_logm, logScore, xaxt= "n", xlab = "Number of effects (logM)" )
-axis(1, at = ncov_el_logm, labels = factor(ncov_el_logm, levels = ncov_el_logm))
-points(ncov_el_logm[which.min(logScore)], logScore[which.min(logScore)], col = "red",  bg=25)
-dev.off()
 
+pl_TIME_mcd_logM <- ggplot(data_time,
+                           aes(x = Eff, y = Time)) + #factor(Eff, labels = as.character(Eff), levels = as.character(Eff)), y = logS)) +
+  geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+  geom_line(aes(y = Time, group = Param, col = Param), position = position_dodge(width = 0.3)) +
+  scale_x_continuous(breaks = grid_d) +
+  scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  theme_bw() +
+  xlab("Number of effects") + ylab("") +
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
+ggsave(paste0("Time_MCDandlogM_param.pdf"),  plot = pl_TIME_mcd_logM, width = 20, height = 20, units = "cm")
+ggsave(paste0("Time_MCDandlogM_param.eps"),  plot = pl_TIME_mcd_logM, width = 20, height = 20, units = "cm")

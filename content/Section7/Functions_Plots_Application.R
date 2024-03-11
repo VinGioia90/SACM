@@ -90,7 +90,7 @@ res_perf <- function(obj, d, data, param, sets_eval){
 # }
 
 get_eff_idx <- function(foo_vcov, name_eff, d){
-  out <- data.frame(matrix(NA, length(name_eff) * (length(foo_vcov) - d), 6))        # NA for the element of Theta modelled via intercepts
+  out <- data.frame(matrix(NA, length(name_eff) * (length(foo_vcov) - d), 7))        # NA for the element of Theta modelled via intercepts
   out[, 1] <- rep(name_eff, each = (length(foo_vcov) - d)) # name of the effects
 
   count <- 1
@@ -116,7 +116,37 @@ get_eff_idx <- function(foo_vcov, name_eff, d){
 }
 
 
+get_eff_idx2 <- function(foo_vcov, name_eff, d, Param){
+  out <- data.frame(matrix(NA, length(name_eff) * (length(foo_vcov) - d), 7))        # NA for the element of Theta modelled via intercepts
+  out[, 1] <- rep(name_eff, each = (length(foo_vcov) - d)) # name of the effects
 
+  count <- 1
+  for(j in 1 : length(name_eff)){                               # for loop over the effects
+    for(k in (d + 1) : length(foo_vcov)){                  # for loop over the elements of the covariance matrix model formula
+      if(str_detect(deparse(foo_vcov[[k]]), name_eff[j])){ # if the effect is in the model formula save the results in the out matrix
+        out[count, 2] <- lhs.vars(foo_vcov[[k]])           # lhs of the model formula Th_<something>
+        length_string <- nchar(out[count, 2])
+        out[count, 3] <- as.numeric(substr(out[count, 2],       # get the row of Theta
+                                           start = 4 ,
+                                           stop =   gregexpr("\\.",  out[count, 2])[[1]][1]-1))
+        out[count, 4] <- as.numeric(substr(out[count, 2],       # get the column of Theta
+                                           start = gregexpr("\\.",  out[count, 2])[[1]][1]+1,
+                                           stop = length_string))
+        if(Param == "MCD"){
+          out[count, 5] <- out[count, 3] + 0.32 * cos(2 * pi * j/length(name_eff)) - 1   # jittering of the rows and columns for graphical purposes
+          out[count, 6] <- out[count, 4] - 0.32 * cos(2 * pi * j/length(name_eff)) - 1
+        } else {
+          out[count, 5] <- out[count, 3] + 0.32 * cos(2 * pi * j/length(name_eff)) - 0.5 - 1   # jittering of the rows and columns for graphical purposes
+          out[count, 6] <- out[count, 4] - 0.32 * cos(2 * pi * j/length(name_eff)) + 0.5 - 1
+        }
+        out[count, 7] <- Param
+        count <- count + 1
+      }
+    }
+  }
+  colnames(out) <- c("name_eff", "Th_el", "row", "col", "jit_row", "jit_col", "Param")
+  return(out)
+}
 
 ############################################################################################
 # This function produces a list of plots related to selection process                      #
@@ -176,6 +206,57 @@ get_plots <- function(obj, name_eff, d, grid_length, param){
             plot.title = element_text(hjust = 0.5))
     #ggsave(paste0("Covmod_with", eff_grid[j], "Effects.pdf"),  plot=pl[[j]], width = 20, height = 20, units = "cm")
   }
+  return(invisible(pl))
+}
+
+
+# This function allows for plotting the covariance matrix model selected for the MCD and logM
+get_plots2 <- function(obj1_mcd, obj2_logm, name_eff, d, grid_length, neff1_mcd, neff2_logm){
+  #removed first (full) and last (static)
+  res_plot_mcd <- lapply(2 : (length(obj1_mcd$foo) - 1), function(x) get_eff_idx2(foo_vcov = obj1_mcd$foo[[x]],
+                                                                             name_eff = name_eff, d = d, Param = "MCD"))
+  res_plot_logm <- lapply(2 : (length(obj2_logm$foo) - 1), function(x) get_eff_idx2(foo_vcov = obj2_logm$foo[[x]],
+                                                                              name_eff = name_eff, d = d, Param = "logM"))
+
+  segment_data = data.frame(  # for drawing the segments
+    x = c(rep(-0.5, d + 1), (seq(0.5, d + 0.5, by = 1))),
+    xend = c(seq(1.5, d + 1.5, by = 1),  (seq(0.5, d + 0.5, by = 1))),
+    y =  c(seq(0.5, d + 0.5, by = 1), rep(d - 0.5, d + 1)),
+    yend =  c(seq(0.5, d + 0.5, by = 1), seq(-0.5, d - 0.5, by = 1))
+  )
+
+
+  seq_mcd <- seq(nrow(res_plot_mcd[[1]]), nrow(res_plot_mcd[[length(res_plot_mcd)]]), by = -grid_length)
+  seq_logm <- seq(nrow(res_plot_logm[[1]]), nrow(res_plot_logm[[length(res_plot_logm)]]), by = -grid_length)
+
+
+  jElem_mcd <-  which(neff1_mcd == seq_mcd)
+  jElem_logm <-  which(neff2_logm == seq_logm)
+
+
+  pl <- ggplot(res_plot_mcd[[jElem_mcd]], aes(x = jit_col, y = jit_row, shape = Param, col = Param))+
+      geom_point(size = 3) +
+      geom_point(data = res_plot_logm[[jElem_logm]], aes(x = jit_col, y = jit_row, shape = Param), size = 3) +
+      scale_y_continuous(breaks = 0 : (d - 1), expand = c(0, 0), limits = c(d , -0.5), name = "Hours", trans = reverse_trans()) +
+      scale_x_continuous(breaks = 0 : (d - 1), expand = c(0, 0), limits = c(-1, d), name = "Hours") +
+      geom_segment(data = segment_data, mapping = aes(x = x, y = y, xend = xend, yend = yend),
+                   inherit.aes = FALSE, colour = "gray") +
+      scale_color_manual(name = "Param", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+      theme_bw() +
+      labs(shape = "Param") +
+      #labs(title=paste("MCD:", neff1_mcd, "effects; logM:", neff2_logm, "effects"))+
+      theme(legend.title = element_text(size = 14),
+            legend.text = element_text(size = 14),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            axis.title.x = element_text(size = 16, colour = "black"),
+            axis.title.y = element_text(size = 16, colour = "black"),
+            axis.text.x = element_text(size = 14, colour = "black"),
+            axis.text.y = element_text(size = 14, colour = "black"),
+            axis.ticks.x = element_blank(),
+            axis.ticks.y = element_blank(),
+            legend.position = "bottom",
+            plot.title = element_text(hjust = 0.5))
   return(invisible(pl))
 }
 
