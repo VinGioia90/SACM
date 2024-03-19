@@ -1497,6 +1497,8 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
   ## Idea is that rank detection takes care of structural co-linearity,
   ## while preconditioning and step 1 take care of extreme smoothing parameters
   ## related problems.
+  # print("#####################################################")
+  # tic_tot <- Sys.time()
   flagOPTIM <- get("version", envir = .GlobalEnv)
   ### Vincenzo: Here it starts the MCD fitting with efs (with changes in the code)
   if((family$family == "Multivariate normal - Covariance modelling via mcd") &  flagOPTIM  == "efs"){
@@ -1506,14 +1508,17 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
     q <- ncol(x)
     nobs <- length(y)
 
+    # tic <- Sys.time()
     if (penalized) {
       Eb <- attr(Sl,"E") ## balanced penalty sqrt
-
       ## the stability reparameterization + log|S|_+ and derivs...
-      rp <- ldetS(Sl,rho=lsp,fixed=rep(FALSE,length(lsp)),np=q,root=TRUE)
+      rp <- ldetS2(Sl,rho=lsp,fixed=rep(FALSE,length(lsp)),np=q,root=TRUE)
       x <- Sl.repara(rp$rp,x) ## apply re-parameterization to x
       Eb <- Sl.repara(rp$rp,Eb) ## root balanced penalty
-      St <- crossprod(rp$E) ## total penalty matrix
+      TMP <- as(rp$E, "sparseMatrix")
+      TMP <- Matrix:::crossprod(TMP)
+      St <- as.matrix(TMP)
+      #St <- crossprod(rp$E) ## total penalty matrix
       E <- rp$E ## root total penalty
       attr(E,"use.unscaled") <- TRUE ## signal initialization code that E not to be further scaled
       if (!is.null(start)) start  <- Sl.repara(rp$rp,start) ## re-para start
@@ -1526,6 +1531,8 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       St <- matrix(0,q,q)
       E <- matrix(0,0,q) ## can be needed by initialization code
     }
+    # print("logDetS")
+    # print(Sys.time() - tic)
     ## now call initialization code, but make sure that any
     ## supplied 'start' vector is not overwritten...
     start0 <- start
@@ -1543,7 +1550,10 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
 
     ## get log likelihood, grad and Hessian (w.r.t. coefs - not s.p.s) ...
     llf <- family$ll
+    # tic <- Sys.time()
     ll <- llf(y,x,coef,weights,family,offset=offset,deriv=1)
+    # print("llk_der1_init")
+    # print(Sys.time() - tic)
     ll0 <- ll$l - drop(t(coef)%*%St%*%coef)/2
     grad <- ll$lb - St%*%coef
     iconv <- max(abs(grad))<control$epsilon*abs(ll0)
@@ -1556,6 +1566,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
     drop <- NULL;bdrop <- rep(FALSE,q) ## by default nothing dropped
     perturbed <- 0 ## counter for number of times perturbation tried on possible saddle
 
+    # tic_main <- Sys.time()
     for (iter in 1:(2*control$maxit)) { ## main iteration
       ## get Newton step...
       if (check.deriv) { ## code for checking derivatives when debugging
@@ -1582,6 +1593,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         } else indefinite <- TRUE ## min D too negative to be semi def
       } else indefinite <- FALSE ## On basis of D could be +ve def
 
+      # tic <- Sys.time()
       if (indefinite) { ## Hessian indefinite, for sure
         ## D <- rep(1,ncol(Hp)) # moved to later otherwise Ip/Ib pointless 2/2/19
         if (eigen.fix) {
@@ -1600,6 +1612,8 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         Hp <- D*t(D*Hp) ## pre-condition Hp
         Ip <- diag(rank)*.Machine$double.eps^.5
       }
+      # print("INDEF_HESSIAN")
+      # print(Sys.time() - tic)
       #L <- suppressWarnings(chol(Hp,pivot=TRUE))
       # mult <- 1
       # while (attr(L,"rank") < rank) { ## rank deficient - add ridge penalty
@@ -1632,6 +1646,8 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       ############
       #print(family$getparam())
 
+      # tic <- Sys.time()
+      sparse_calls <- 1
       Hp_sparse <- as(Hp, "sparseMatrix")
       cdec <- Matrix:::Cholesky(Hp_sparse, perm = TRUE)
       flag_OK <- TRUE
@@ -1643,8 +1659,11 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         } else {
           cdec <- Matrix:::Cholesky(Hp_sparse + Ip, perm = TRUE)
           Ip <- Ip * 100 ## increase regularization penalty
+          sparse_calls <- sparse_calls + 1
         }
       }
+      # print(paste0("sparse_Chol X ", sparse_calls))
+      # print(Sys.time() - tic)
 
 
       piv <- cdec@perm + 1
@@ -1653,9 +1672,10 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
 
       if (converged) break
 
-
+      # tic <- Sys.time()
       step <-  D * (backsolve(L, forwardsolve(t(L), (D * grad)[piv]))[ipiv])
-
+      # print("backforsolve")
+      # print(Sys.time() - tic)
 
       c.norm <- sum(coef^2)
       if (c.norm>0) { ## limit step length to .1 of coef length
@@ -1671,10 +1691,14 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       #print("coef")
       #print(max(abs(coef1-coefV)))
 
+      # tic <- Sys.time()
       ll <- llf(y,x,coef1,weights,family,offset=offset,deriv=1)
       ll1 <- ll$l - drop(t(coef1)%*%St%*%coef1)/2
       khalf <- 0;fac <- 2
+      # print("llk_deriv_1")
+      # print(Sys.time() - tic)
 
+      # tic <- Sys.time()
       ## with ll1 < ll0 in place of ll1 <= ll0 in next line than we can repeatedly accept
       ## miniscule steps that do not actually improve anything.
       llold <- ll ## avoid losing lbb slot on stp failure
@@ -1690,6 +1714,8 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         khalf <- khalf + 1
         if (khalf>5) fac <- 5
       } ## end step halve
+      # print(paste0("step_half X ", khalf))
+      # print(Sys.time() - tic)
 
       ## Following tries steepest ascent if Newton failed. Only do this if not initially converged.
       ## Otherwise it is possible for SA to mess up when routine is called
@@ -1705,6 +1731,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         khalf <- 0
       }
 
+      # tic <- Sys.time()
       while ((!is.finite(ll1)||(ll1 <= ll0 && !iconv)) && khalf < 25) { ## step cut until it succeeds...
         step <- step/10;coef1 <- coef + step
         ll <- llf(y,x,coef1,weights,family,offset=offset,deriv=0)
@@ -1716,8 +1743,11 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         if (max(abs(coef-coef1))<max(abs(coef))*.Machine$double.eps) khalf <- 100 ## step gone nowhere
         khalf <- khalf + 1
       }
+      # print(paste0("step_half_2 X ", khalf))
+      # print(Sys.time() - tic)
 
       if ((is.finite(ll1)&&ll1 >= ll0&&khalf<25)||iter==control$maxit) { ## step ok. Accept and test
+        tic_ok <- Sys.time()
         coef <- coef + step
         grad <- ll$lb - St%*%coef
         Hp <- -ll$lbb+St
@@ -1778,7 +1808,10 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
             # ... don't break until L and D made to match final Hp
           }
         } else ll0 <- ll1 ## step ok but not converged yet
+       # print("ok_step")
+        # print(Sys.time() - tic_ok)
       } else { ## step failed.
+        # tic_bad <- Sys.time()
         ll <- llold ## restore old ll with lbb slot
         if (is.null(drop)) bdrop <- rep(FALSE,q)
         if (iconv && iter==1) { ## OK to fail on first step if apparently converged to start with
@@ -1795,7 +1828,10 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
 
           ############################
           # Added by Vincenzo
+          # tic <- Sys.time()
           kappaH <- kappa(Hp_kappa)
+          # print("Kappa")
+          # print(Sys.time() - tic)
           ############################
 
           err <- min(1e-3,kappaH*max(1,mean(abs(gradp-grad))/mean(abs(coefp-coef)))*.Machine$double.eps)
@@ -1805,9 +1841,13 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
             warn[[length(warn)+1]] <- paste("gam.fit5 step failed: max magnitude relative grad =",max(abs(grad/drop(ll0))))
           }
         }
+        # print("bad_step")
+        # print(Sys.time() - tic_bad)
         break ## no need to recompute L and D, so break now
       }
     } ## end of main fitting iteration
+    # print("MAIN Loop")
+    # print(Sys.time() - tic_main)
 
     ## at this stage the Hessian (of pen lik. w.r.t. coefs) should be +ve semi definite,
     ## so that the pivoted Choleski factor should exist...
@@ -2053,12 +2093,14 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
 
     if (penalized) {
       Eb <- attr(Sl,"E") ## balanced penalty sqrt
-
       ## the stability reparameterization + log|S|_+ and derivs...
-      rp <- ldetS(Sl,rho=lsp,fixed=rep(FALSE,length(lsp)),np=q,root=TRUE)
+      rp <- ldetS2(Sl,rho=lsp,fixed=rep(FALSE,length(lsp)),np=q,root=TRUE)
       x <- Sl.repara(rp$rp,x) ## apply re-parameterization to x
       Eb <- Sl.repara(rp$rp,Eb) ## root balanced penalty
-      St <- crossprod(rp$E) ## total penalty matrix
+      TMP <- as(rp$E, "sparseMatrix")
+      TMP <- Matrix:::crossprod(TMP)
+      St <- as.matrix(TMP)
+      #St <- crossprod(rp$E) ## total penalty matrix
       E <- rp$E ## root total penalty
       attr(E,"use.unscaled") <- TRUE ## signal initialization code that E not to be further scaled
       if (!is.null(start)) start  <- Sl.repara(rp$rp,start) ## re-para start
@@ -2540,6 +2582,9 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
 
   }
 
+  # print("gam.fit5 total:")
+  # print(Sys.time() - tic_tot)
+
   ret <- list(coefficients=coef,family=family,y=y,prior.weights=weights,
               fitted.values=fitted.values, linear.predictors=linear.predictors,
               scale.est=1, ### NOTE: needed by newton, but what is sensible here?
@@ -2578,12 +2623,16 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
   ## b'S_jb is computed as d1bSb in gam.fit5
   ## tr(V S_j) will need to be computed using Sl.termMult
   ##   Sl returned by ldetS and Vb computed as in gam.fit5.postproc.
+  # tic_tot <- Sys.time()
   tol <- 1e-6
   lsp <- lsp + 2.5
   mult <- 1
+  # print("gam.fit5_init")
+  # tic <- Sys.time()
   fit <- gam.fit5(x=x,y=y,lsp=lsp,Sl=Sl,weights=weights,offset=offset,deriv=0,family=family,
                   control=control,Mp=Mp,start=start,gamma=1)
   score.hist <- rep(0,200)
+  # print(Sys.time() - tic)
   tiny <- .Machine$double.eps^.5 ## used to bound above zero
   for (iter in 1:200) {
     start <- fit$coefficients
@@ -2591,7 +2640,19 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
     ipiv <- piv <- attr(fit$L,"pivot")
     p <- length(piv)
     ipiv[piv] <- 1:p
-    Vb <- crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE]) #Simon
+ # print("Vb")
+ #  tic <- Sys.time()
+  if((family$family == "Multivariate normal - Covariance modelling via mcd")){
+    TL <- t(as(fit$L, "sparseMatrix")) # as(fit$L, "dtTMatrix")
+    DD <- diag(fit$D, nrow = p)[piv, ]
+    Vb <- as(forwardsolve(TL, DD), "sparseMatrix")[ipiv, , drop = FALSE]
+    Vb <- Matrix:::crossprod(Vb)
+    Vb <- as.matrix(Vb)
+    #print(max(abs(Vb - crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE]))))
+  } else {
+    Vb <- crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE])
+  }
+   # print(Sys.time() - tic)
 
     #Vb <- crossprod(forwardsolve(t(fit$L),diag(fit$D, nrow=length(fit$pivot2))[fit$pivot2,,drop=FALSE])[fit$ipivot2,,drop=FALSE]) # Vincenzo
 
@@ -2601,14 +2662,23 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
       Vtemp <- Vb; Vb <- matrix(0,q,q)
       Vb[ibd,ibd] <- Vtemp
     }
+ # print("Sl.repara")
+ #  tic <- Sys.time()
     Vb <- Sl.repara(fit$rp,Vb,inverse=TRUE)
+# print(Sys.time() - tic)
+# print("Sl.termMult")
+  # tic <- Sys.time()
     SVb <- Sl.termMult(Sl,Vb) ## this could be made more efficient
+# print(Sys.time() - tic)
     trVS <- rep(0,length(SVb))
     for (i in 1:length(SVb)) {
       ind <- attr(SVb[[i]],"ind")
       trVS[i] <- sum(diag(SVb[[i]][,ind]))
     }
+# print("Sl.termMult_2")
+#   tic <- Sys.time()
     Sb <- Sl.termMult(Sl,start,full=TRUE)
+# print(Sys.time() - tic)
     bSb <- rep(0,length(Sb))
     for (i in 1:length(Sb)) {
       bSb[i] <- sum(start*Sb[[i]])
@@ -2621,15 +2691,21 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
     lsp1 <- pmin(lsp + log(r)*mult,control$efs.lspmax)
     max.step <- max(abs(lsp1-lsp))
     old.reml <- fit$REML
+  # print("gam.fit5")
+  # tic <- Sys.time()
     fit <- gam.fit5(x=x,y=y,lsp=lsp1,Sl=Sl,weights=weights,offset=offset,deriv=0,
                     family=family,control=control,Mp=Mp,start=start,gamma=1)
+# print(Sys.time() - tic)
     ## some step length control...
 
     if (fit$REML<=old.reml) { ## improvement
       if (max.step<.05) { ## consider step extension
         lsp2 <- pmin(lsp + log(r)*mult*2,12) ## try extending step...
+  # print("gam.fit5_step")
+  # tic <- Sys.time()
         fit2 <- gam.fit5(x=x,y=y,lsp=lsp2,Sl=Sl,weights=weights,offset=offset,deriv=0,family=family,
                          control=control,Mp=Mp,start=start,gamma=1)
+  # print(Sys.time() - tic)
 
         if (fit2$REML < fit$REML) { ## improvement - accept extension
           fit <- fit2;lsp <- lsp2
@@ -2642,8 +2718,11 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
       while (fit$REML > old.reml&&mult>1) { ## don't contract below 1 as update doesn't have to improve REML
         mult <- mult/2 ## contract step
         lsp1 <- pmin(lsp + log(r)*mult,control$efs.lspmax)
+  # print("gam.fit5_step_2")
+  # tic <- Sys.time()
         fit <- gam.fit5(x=x,y=y,lsp=lsp1,Sl=Sl,weights=weights,offset=offset,deriv=0,family=family,
                         control=control,Mp=Mp,start=start,gamma=1)
+  # print(Sys.time() - tic)
       }
       lsp <- lsp1
       if (mult<1) mult <- 1
@@ -2662,6 +2741,8 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
   fit$outer.info <- list(iter = iter,score.hist=score.hist[1:iter])
   fit$outer.info$conv <- if (iter==200) "iteration limit reached" else "full convergence"
   if (!is.null(fit$warn)&&length(fit$warn)>0) for (i in 1:length(fit$warn)) warning(fit$warn[[i]])
+  # print("efsud_total")
+  # print(Sys.time() - tic_tot)
   fit
 } ## efsud
 

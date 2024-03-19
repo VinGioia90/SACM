@@ -931,7 +931,7 @@ axis(1, at = ncov_el_logm, labels = factor(ncov_el_logm, levels = ncov_el_logm))
 
 
 # Here we select the number of effects (minimum or elbow point)
-ncov_el_mcd_sel <- 70
+ncov_el_mcd_sel <- 75
 ncov_el_logm_sel <- 55
 
 data_logS_selected <- data.frame("logS" = c(logScore_mcd[which(ncov_el_mcd == ncov_el_mcd_sel)],
