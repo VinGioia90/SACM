@@ -11,8 +11,8 @@ root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
 # Install and load specific version of mgcv
-system("rm -rf ./my_library/mgcv")
-install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
+#system("rm -rf ./my_library/mgcv")
+#install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
 library("mgcv", lib.loc="./my_library")
 
 if(packageVersion("mgcv") != "9.0"){
@@ -202,7 +202,7 @@ save.gam <- FALSE
 # Mean model formula
 mean_formula <- list()
 for(j in 0 : (d - 1)){
-  mean_formula[[j + 1]] <- as.formula(paste0("load_h",j," ~ load24_h",j, "+ dow + s(doy) + s(temp95_h", j,")" ))
+  mean_formula[[j + 1]] <- as.formula(paste0("load_h",j," ~ load24_h",j, "+ dow + s(doy) + s(temp_h", j,")" ))
 }
 
 grid_length <- 5 # To change eventually
@@ -219,6 +219,9 @@ res_mcd <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model
                      data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
                      metric = "p",  save.gam = save.gam)
 save(res_mcd, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+par(mfrow = c(1, 2))
+plot(rev(unlist(res_mcd$time_fit)))
+plot(rev(unlist(res_mcd$time_fit)/unlist(res_mcd$num_iter)))
 rm("res_mcd")
 gc()
 
@@ -230,6 +233,9 @@ res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_mode
                       data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
                       metric = "p",  save.gam = save.gam)
 save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+par(mfrow = c(1, 2))
+plot(rev(unlist(res_logm$time_fit)))
+plot(rev(unlist(res_logm$time_fit)/unlist(res_logm$num_iter)))
 rm("res_logm")
 gc()
 

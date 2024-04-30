@@ -126,7 +126,11 @@ summary_time_hessian <- summary_time_hessian[which(summary_time_hessian$d %in% d
 #                       max(mean_time[param == "MCD" & Type == "EFF"]),
 #                       max(mean_time[param == "MCD" & Type == "AD"])))
 
-# To set manually
+
+
+############################
+# Note!!!: To set manually #
+############################
 lab_time_logM <- c(0, 10, 25, 50, 100, 225)
 lab_time_MCD <- c(0, 0.04, 0.25, 1, 2, 3.5)
 
@@ -150,6 +154,7 @@ pl_Heta <- ggplot(all_time_hessian, aes(x = as.factor(d), y = time)) +
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
+        axis.text = element_text(size = 12),
         text = element_text(size = 15),  legend.text=element_text(size=15),
         strip.text.x = element_text(size = 15)) +
   ggh4x::facetted_pos_scales(y = list(
@@ -265,7 +270,7 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15), text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12), text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
   ggh4x::facetted_pos_scales(y = list(
@@ -363,7 +368,7 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
   scale_y_continuous(breaks = NULL, sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL)) +
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
   ggh4x::facetted_pos_scales(y = list(
@@ -470,7 +475,7 @@ pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",], aes(x = logS_gen, 
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),) +
   scale_x_continuous(breaks = breaks_seq_MCDgen_x,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
@@ -490,7 +495,7 @@ pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",], aes(x = logS_gen
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),) +
   scale_x_continuous(breaks=breaks_seq_logMgen_x,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
@@ -597,10 +602,11 @@ time_Hbeta_logm <-  lapply(1 : length(pint_type),
                                                     beta = TRUE))
 
 # Select Scenario 1 (dm05) and Scenario 2 (dm2)
-summary_time_hessianB_logm <- rbind(time_Hbeta_logm[[1]]$sum_res, time_Hbeta_logm[[3]]$sum_res)
+#summary_time_hessianB_logm <- rbind(time_Hbeta_logm[[1]]$sum_res, time_Hbeta_logm[[3]]$sum_res)
+summary_time_hessianB_logm <- rbind(time_Hbeta_logm[[1]]$sum_res, time_Hbeta_logm[[2]]$sum_res)
 row.names(summary_time_hessianB_logm) <- NULL
 
-all_time_hessianB_logm <- rbind(time_Hbeta_logm[[1]]$res, time_Hbeta_logm[[3]]$res)
+all_time_hessianB_logm <- rbind(time_Hbeta_logm[[1]]$res, time_Hbeta_logm[[2]]$res)
 row.names(all_time_hessianB_logm) <- NULL
 
 rel_mean_time_hessianB_logm <- data.frame(d = rep(dgrid, 2),
@@ -647,35 +653,68 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm, aes(x = as.factor(d), y = rel_tim
   scale_x_discrete(breaks = dg_sel) +
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
 
 nspars <- data.frame(d =  rep(seq(min(dgrid), max(dgrid), by = 0.01), 2),
-                     nelno0 = c(1/sqrt(seq(min(dgrid), max(dgrid), by = 0.01)), 1/(seq(min(dgrid), max(dgrid), by = 0.01)^2)),
+                     nelno0_rel = c(1/sqrt(seq(min(dgrid), max(dgrid), by = 0.01)), 1/(seq(min(dgrid), max(dgrid), by = 0.01))),
+                     nelno0_abs = c(seq(min(dgrid), max(dgrid), by = 0.01) * (seq(min(dgrid), max(dgrid), by = 0.01)+1)/2 * 1/sqrt(seq(min(dgrid), max(dgrid), by = 0.01)),
+                                    seq(min(dgrid), max(dgrid), by = 0.01) * (seq(min(dgrid), max(dgrid), by = 0.01)+1)/2 * 1/seq(min(dgrid), max(dgrid), by = 0.01)),
                      Scenario = factor(rep(c("S1", "S2"), each = (length(seq(min(dgrid), max(dgrid), by = 0.01)))),
                                        labels=c("S1", "S2"), level = c("S1", "S2")))
 add_point <-  data.frame(d =  rep(seq(min(dgrid), max(dgrid), by = step_length), 2),
-                         nelno0 = c(1/sqrt(seq(min(dgrid), max(dgrid), by = step_length)), 1/(seq(min(dgrid), max(dgrid), by = step_length)^2)),
+                         nelno0_rel = c(1/sqrt(seq(min(dgrid), max(dgrid), by = step_length)), 1/(seq(min(dgrid), max(dgrid), by = step_length))),
+                         nelno0_abs = c(seq(min(dgrid), max(dgrid), by = step_length) * (seq(min(dgrid), max(dgrid), by = step_length)+1)/2 * 1/sqrt(seq(min(dgrid), max(dgrid), by = step_length)),
+                                        seq(min(dgrid), max(dgrid), by = step_length) * (seq(min(dgrid), max(dgrid), by = step_length)+1)/2 * 1/seq(min(dgrid), max(dgrid), by = step_length)),
                          Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
                                            labels=c("S1", "S2"), level = c("S1", "S2")))
 
 
-plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0)) +
+#plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0_rel)) +
+#  xlab("Dimension") + ylab("") +
+#  theme_bw() +
+#  ylim(0, 0.5) +
+#  geom_hline(yintercept = 0, linetype = "dashed") +
+#  facet_grid(. ~ "logM elements modelled (%)") +  geom_point(data = add_point , aes(x = d, y = nelno0_rel, colour = Scenario), show.legend = TRUE) +
+#  geom_line(aes(y = nelno0 , group = Scenario, col = Scenario), size = 0.1) +
+#  scale_color_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+#  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+#        axis.text = element_text(size = 15),  text = element_text(size = 15),
+#        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+#        legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
+#  scale_x_continuous(breaks=add_point$d)
+
+
+# 505 is the number of elements modelled for d=100 under S1
+# 0.44721360 is the % number of elements modelled for d=5 under S1
+# So I scaled by the ratio between the maximum of value of absolute and relative frequencies.
+scale_function <- function(x){
+  return (x/(505/ 0.44721360))
+}
+inv_scale_function <- function(x){
+  return (x*(505/ 0.44721360))
+}
+
+
+plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0_rel)) +
   xlab("Dimension") + ylab("") +
   theme_bw() +
-  ylim(0, 0.5) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  facet_grid(. ~ "logM elements modelled (%)") +  geom_point(data = add_point , aes(x = d, y = nelno0, colour = Scenario), show.legend = TRUE) +
-  geom_line(aes(y = nelno0 , group = Scenario, col = Scenario), size = 0.1) +
+  facet_grid(. ~ "logM elements modelled") +
+  geom_point(data = add_point , aes(x = d, y = nelno0_rel, colour = Scenario), show.legend = TRUE) +
+  geom_point(data = add_point , aes(x = d, y = scale_function(nelno0_abs), colour = Scenario), show.legend = TRUE) +
+  geom_line(aes(y = nelno0_rel, group = Scenario, col = Scenario), size = 0.1) +
+  geom_line(aes(y = scale_function(nelno0_abs), group = Scenario, col = Scenario), size = 0.1, lty = "dashed") +
   scale_color_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
-  scale_x_continuous(breaks=add_point$d)
-
+  scale_x_continuous(breaks=add_point$d) +
+  scale_y_continuous( breaks = seq(0,0.5,by=0.05), lim = c(0,0.5) ,
+                     sec.axis = sec_axis(~ inv_scale_function(.), breaks = seq(0,550,50),  name = ""))
 
 
 # Merging the plots above #!!! Find a way to merge the x-axis "Dimension" title !!!#
@@ -684,7 +723,7 @@ pl_comp_Hbeta <- ggarrange(plot_perc_covmod_lpi,
                            nrow = 1,
                            common.legend = TRUE,
                            legend = "bottom")
-
+#pl_comp_Hbeta
 
 setwd(root_dir)
 setwd("content/Section4/Plots")
@@ -742,7 +781,7 @@ pl_LAML_rel_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = rel_diff_LAML_bfgs_efs,
   xlab("Dimension") + ylab("") +
   scale_color_manual(name = "Type", values = c("BFGS" = "#00A9FF", "BFGS - init" = "#F8766D")) +
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
@@ -773,7 +812,7 @@ pl_Fit_Time_efs_bamlss_bfgs <- ggplot(TIME_efs_bamlss_bfgs,
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
@@ -849,7 +888,7 @@ pl_MCD_rel_diff_bfgsinit_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bf
   facet_grid(. ~ "(LS(BFGS - init) - LS(FS)) / |LS(gen)|") +
   xlab("Dimension") + ylab("") +
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 15),  text = element_text(size = 15),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
@@ -932,7 +971,7 @@ axis(1, at = ncov_el_logm, labels = factor(ncov_el_logm, levels = ncov_el_logm))
 
 # Here we select the number of effects (minimum or elbow point)
 ncov_el_mcd_sel <- 75
-ncov_el_logm_sel <- 55
+ncov_el_logm_sel <- 60
 
 data_logS_selected <- data.frame("logS" = c(logScore_mcd[which(ncov_el_mcd == ncov_el_mcd_sel)],
                                             logScore_logM[which(ncov_el_logm == ncov_el_logm_sel)]),
@@ -945,14 +984,15 @@ setwd("content/Section7/Plots")
 pl_logS_mcd_logM <- ggplot(data_logScore,
                            aes(x = Eff, y = logS)) + #factor(Eff, labels = as.character(Eff), levels = as.character(Eff)), y = logS)) +
   geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-  geom_point(data = data_logS_selected, aes(x = c(15, 30), y = logS, colour = Param),
+  geom_point(data = data_logS_selected, aes(x = c(ncov_el_logm_sel, ncov_el_mcd_sel), y = logS, colour = Param),
              size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
   geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3)) +
   scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
   scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   theme_bw() +
   xlab("Number of effects") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text.y = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
@@ -965,8 +1005,8 @@ ggsave(paste0("logS_MCDandlogM_param.eps"),  plot = pl_logS_mcd_logM, width = 20
 ###############################################
 
 #According to the previous results you must select the number of effects for the MCD and logM covariance matrix model
-neff_mcd <- ncov_el_mcd_sel
-neff_logm <- ncov_el_logm_sel
+neff_mcd <- 75 #ncov_el_mcd_sel
+neff_logm <- 60 #ncov_el_logm_sel
 
 ###############################################
 # Both MCD and logM in the same plot          #
@@ -995,7 +1035,7 @@ pl_MCD_logM <- get_plots2(obj1_mcd = res_mcd,
                      neff2_logm = neff_logm)
 
 
-ggsave(paste0("Covmod_MCDandlogM_param.pdf"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
+ggsave(paste0("Covmod_MCDandlogM_param260.pdf"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
 ggsave(paste0("Covmod_MCDandlogM_param.eps"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
 
 
@@ -1045,13 +1085,13 @@ ggsave(paste0("Covmod_MCDandlogM_param.eps"),  plot = pl_MCD_logM, width = 20, h
 #  ggsave(paste0("Covmod_", param, "param_with", length(res_logm$foo[[j+1]]), "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
 #}
 
-time_mcd <- unlist(res_mcd$time_fit)/(1e9 * 60)
-time_logm <- unlist(res_logm$time_fit)/(1e9 * 60)
+#time_mcd <- unlist(res_mcd$time_fit)/(1e9 * 60)
+#time_logm <- unlist(res_logm$time_fit)/(1e9 * 60)
 
 
 grid_d <- seq( 0, d*(d+1)/2, by = grid_length)
 # Padding with useful info
-data_time <- data.frame("Time" = c(sort(time_mcd), sort(time_logm)),
+data_time <- data.frame("Time" = c(time_mcd[length(time_mcd):1], time_logm[length(time_logm):1]),
                         "Param" = c(rep("MCD", length(grid_d)), rep("logM", length(grid_d))),
                         "Eff" = rep(grid_d,2))
 
@@ -1068,9 +1108,9 @@ pl_TIME_mcd_logM <- ggplot(data_time,
   scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   theme_bw() +
   xlab("Number of effects") + ylab("") +
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 15),  text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5),
+        axis.text.y = element_text(size = 12), text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
 ggsave(paste0("Time_MCDandlogM_param.pdf"),  plot = pl_TIME_mcd_logM, width = 20, height = 20, units = "cm")
-ggsave(paste0("Time_MCDandlogM_param.eps"),  plot = pl_TIME_mcd_logM, width = 20, height = 20, units = "cm")
