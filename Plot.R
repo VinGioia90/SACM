@@ -1042,51 +1042,51 @@ ggsave(paste0("Covmod_MCDandlogM_param.eps"),  plot = pl_MCD_logM, width = 20, h
 #######################
 # MCD parametrisation #
 #######################
-#param <- "mcd"
-#
-#setwd(root_dir)
-#setwd("content/Section7/Results")
-#load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-#
-#ncov_el_mcd <- sapply(1: length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
-#
-#setwd(root_dir)
-#setwd("content/Section7/Plots")
+param <- "mcd"
 
-#pl_list <- get_plots(obj = res_mcd,
-#                     name_eff = name_eff,
-#                     d = d,
-#                     grid_length = grid_length,
-#                     param = param)
-# pl_list[[7]]
-#for(j in 1:length(pl_list)){
-#  ggsave(paste0("Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-#}
+setwd(root_dir)
+setwd("content/Section7/Results")
+load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+
+ncov_el_mcd <- sapply(1: length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
+
+setwd(root_dir)
+setwd("content/Section7/Plots")
+
+pl_list <- get_plots(obj = res_mcd,
+                    name_eff = name_eff,
+                    d = d,
+                    grid_length = grid_length,
+                    param = param)
+pl_list[[7]]
+for(j in 1:length(pl_list)){
+ ggsave(paste0("Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
+}
 
 ########################
 # logM parametrisation #
 ########################
-#param <- "logm"
-#setwd(root_dir)
-#setwd("content/Section7/Results")
-#load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-#ncov_el_logm <- sapply(1: length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
-#
-#setwd(root_dir)
-#setwd("content/Section7/Plots")
+param <- "logm"
+setwd(root_dir)
+setwd("content/Section7/Results")
+load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
+ncov_el_logm <- sapply(1: length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
 
-#pl_list <- get_plots(obj = res_logm,
-#                     name_eff = name_eff,
-#                     d = d,
-#                     grid_length = grid_length,
-#                     param = param)
-#
-#for(j in 1:length(pl_list)){
-#  ggsave(paste0("Covmod_", param, "param_with", length(res_logm$foo[[j+1]]), "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-#}
+setwd(root_dir)
+setwd("content/Section7/Plots")
 
-#time_mcd <- unlist(res_mcd$time_fit)/(1e9 * 60)
-#time_logm <- unlist(res_logm$time_fit)/(1e9 * 60)
+pl_list <- get_plots(obj = res_logm,
+                    name_eff = name_eff,
+                    d = d,
+                    grid_length = grid_length,
+                    param = param)
+
+for(j in 1:length(pl_list)){
+ ggsave(paste0("Covmod_", param, "param_with", length(res_logm$foo[[j+1]]), "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
+}
+
+time_mcd <- unlist(res_mcd$time_fit)/(1e9 * 60)
+time_logm <- unlist(res_logm$time_fit)/(1e9 * 60)
 
 
 grid_d <- seq( 0, d*(d+1)/2, by = grid_length)
