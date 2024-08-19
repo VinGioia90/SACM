@@ -357,7 +357,7 @@ param <- "mcd"
 
 # By creting a lower and upper threshold for the number of effects involved in covariance matrix modelling we are able to update/append further runs
 low_neff_vcov <- 0
-upp_neff_vcov <- 120
+upp_neff_vcov <- 150
 
 
 for(outcome in c("residuals", "response")){
