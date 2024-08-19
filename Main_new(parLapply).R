@@ -11,8 +11,8 @@ root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
 # Install and load specific version of mgcv
-#system("rm -rf ./my_library/mgcv")
-#install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
+# system("rm -rf ./my_library/mgcv")
+# install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
 library("mgcv", lib.loc="./my_library")
 
 if(packageVersion("mgcv") != "9.0"){
@@ -79,11 +79,11 @@ setwd("content/Section3/Results")
 #######################
 # Fit with MCD
 sim_mcdG_mcdF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "mcd", param2 = "mcd", save.gam = sg,
-                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
+                             expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
 
 
 save(sim_mcdG_mcdF,
-    file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+     file = paste0("sim_mcdG_mcdF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_mcdG_mcdF")
 gc()
 
@@ -108,7 +108,7 @@ gc()
 
 # Fit with logM
 sim_logmG_logmF <- sim_est_efs(nobs, dgrid, nrun, ncores, param1 = "logm", param2 = "logm", save.gam = sg,
-                              expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
+                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), root_dir = root_dir)
 save(sim_logmG_logmF,
      file = paste0("sim_logmG_logmF_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 rm("sim_logmG_logmF")
@@ -188,22 +188,26 @@ setwd(root_dir)
 setwd("content/Section7")
 source("Functions_Application.R")
 
+
 ################################
 # Application to GEFCom14 Data #
 ################################
 source("DataPreprocessing.R") # The dataset is GEF14_data
 
+#head(GEF14_data)
 # Set the length of train set (2005 - 2010)
 n_train <- which(GEF14_data$year==2011)[1]-1
 
-d <- 24
+d <- 24  # The test can be done wit d such that d + d(d+1)/2 is divisible per 5
 save.gam <- FALSE
 
 # Mean model formula
 mean_formula <- list()
 for(j in 0 : (d - 1)){
-  mean_formula[[j + 1]] <- as.formula(paste0("load_h",j," ~ load24_h",j, "+ dow + s(doy) + s(temp_h", j,")" ))
+  mean_formula[[j + 1]] <- as.formula(paste0("load_h",j," ~ load24_h",j, "+ dow + s(doy, k = 20) + s(temp95_h", j,", k = 15) + s(temp_h", j," , k = 15) +  s(progtime, k = 4)"))
 }
+
+
 
 grid_length <- 5 # To change eventually
 
@@ -211,63 +215,175 @@ grid_length <- 5 # To change eventually
 # Model selection on the train set #
 ####################################
 
+
 #######################
 # MCD parametrisation #
 #######################
 param <- "mcd"
-res_mcd <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
-                     data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
-                     metric = "p",  save.gam = save.gam)
-save(res_mcd, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-par(mfrow = c(1, 2))
-plot(rev(unlist(res_mcd$time_fit)))
-plot(rev(unlist(res_mcd$time_fit)/unlist(res_mcd$num_iter)))
-rm("res_mcd")
-gc()
+
+for(outcome in c("residuals", "response")){
+  print(outcome)
+  res_mcd <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
+                       data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
+                       metric = "p",  save.gam = save.gam, outcome = outcome)
+  save(res_mcd, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
+
+  par(mfrow = c(1, 2))
+  plot(rev(unlist(res_mcd$time_fit)))
+  plot(rev(unlist(res_mcd$time_fit)/unlist(res_mcd$num_iter)))
+  rm("res_mcd")
+  gc()
+
+
+}
+
+
+
+
 
 ########################
 # logM parametrisation #
 ########################
 param <- "logm"
-res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
-                      data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
-                      metric = "p",  save.gam = save.gam)
-save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-par(mfrow = c(1, 2))
-plot(rev(unlist(res_logm$time_fit)))
-plot(rev(unlist(res_logm$time_fit)/unlist(res_logm$num_iter)))
-rm("res_logm")
-gc()
+
+
+for(outcome in c("residuals", "response")){
+
+  res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
+                        data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
+                        metric = "p",  save.gam = save.gam, outcome = outcome)
+  save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
+
+  par(mfrow = c(1, 2))
+  plot(rev(unlist(res_logm$time_fit)))
+  plot(rev(unlist(res_logm$time_fit)/unlist(res_logm$num_iter)))
+  rm("res_logm")
+  gc()
+
+}
+
 
 
 ##############################
 # Model Validation procedure #
 ##############################
-ncores <- 11 # It should be considered 11 due to the number of sets involved in rolling origin forecasting
+
+# Here, I am separating the dataset
+res_mat <- matrix(0, nrow(GEF14_data), d)
+GEF14_data_residuals <- cbind(res_mat, res_mat, GEF14_data)
+colnames(GEF14_data_residuals)[1:d] <- paste0("res_h", 0:(d-1))
+colnames(GEF14_data_residuals)[(d+1):(2*d)] <- paste0("res_out_h", 0:(d-1))
+
 
 # Set the rolling origin forecasting splitting
 ndat <- which(GEF14_data$year == 2011)[1] - 1
 ndat2 <- dim(GEF14_data)[1]
+sets <- c(0, floor(seq(ndat , ndat2, length.out = 12)))
+
+
+###########################################
+# Preparing dataset padded with residuals #
+###########################################
+ncores <- 12
+
+flag_residuals <- TRUE
+if(flag_residuals){
+  cl <- makePSOCKcluster(ncores)
+  setDefaultCluster(cl)
+  clusterExport(NULL, c("sets", "GEF14_data_residuals", "mean_formula"), envir = environment())
+  clusterEvalQ(NULL, {
+    library(mgcv)
+  })
+
+  mod <- list()
+  for( j in 1:(length(sets)-1)){
+    clusterExport(NULL, c("j"), envir = environment())
+
+    mod[[j]] <- parLapply(NULL, 1:d, function(ii){
+      gam(mean_formula[[ii]], family = gaussian,
+          data = GEF14_data_residuals[(sets[1]+1):(sets[j+1]),], optimizer = "efs",
+          control = list(trace = FALSE))
+    })
+
+    for(ii in 1:d){
+      tmp_nam <- paste0("res_h", ii - 1)
+      tmp_ind <- (sets[j]+1):(sets[j+1])
+      tmp_mod <- mod[[j]][[ii]]
+      # In-sample raw residuals
+      GEF14_data_residuals[tmp_ind, tmp_nam] <- GEF14_data_residuals[tmp_ind,paste0("load_h",ii-1)] - predict(tmp_mod)[tmp_ind]
+      # Out-of-sample raw residuals
+      if(j < (length(sets) - 1)){
+        tmp_nam2 <- paste0("res_out_h", ii-1)
+        tmp_ind2 <- (sets[j+1]+1):(sets[j+2])
+        GEF14_data_residuals[tmp_ind2, tmp_nam2] <- GEF14_data_residuals[tmp_ind2,paste0("load_h",ii-1)] - predict(tmp_mod, newdata = GEF14_data_residuals[tmp_ind2, ])
+      }
+    }
+    print(j)
+  }
+  stopCluster(cl)
+  rm(list = c("mod"))
+  gc()
+
+
+
+
+  # Now we need to inflate the marginal variance of the in-sample residuals to match the variance
+  # of the out-of-sample residuals. We are using the 2011 data (last year) to compute the inflation factor
+  # the out-of-sample residuals (2011 and 2018) are left unperturbed
+  #  tmp <- apply(GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_out_h", 0:(d-1))], 2, sd) /
+  #    apply(GEF14_data_residuals[ GEF14_data_residuals$year == 2011, paste0("res_h", 0:(d-1))], 2, sd)
+  # GEF14_data_residuals[ , paste0("res_h", 0:(d-1))] <- t(t(GEF14_data_residuals[ , paste0("res_h", 0:(d-1))])*tmp)
+
+  # GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_h", 0:(d-1))] <-  GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_out_h", 0:(d-1))]
+  # GEF14_data_residuals[ , paste0("res_out_h", 0:(d-1))] <- NULL
+}
+
+
+save(GEF14_data_residuals, file = "GEF14_data_residuals.RData")
+
+# Set the rolling origin forecasting splitting (here we do not account for the 0 at the beginning - just for implementation purposes)
+ndat <- which(GEF14_data$year == 2011)[1] - 1
+ndat2 <- dim(GEF14_data)[1]
 sets <- floor(seq(ndat , ndat2, length.out = 12))
+
+
 
 #######################
 # MCD parametrisation #
 #######################
-setwd(root_dir)
-setwd("content/Section7")
+ncores <- 11 # It should be considered 11 due to the number of sets involved in rolling origin forecasting
+
 param <- "mcd"
 
 # By creting a lower and upper threshold for the number of effects involved in covariance matrix modelling we are able to update/append further runs
 low_neff_vcov <- 0
-upp_neff_vcov <- 150
+upp_neff_vcov <- 120
 
-load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-idx_vcov <- which((unlist(lapply(res_mcd$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
 
-cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
-                    sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
-save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
-                           grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+for(outcome in c("residuals", "response")){
+
+  load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
+
+  idx_vcov <- which((unlist(lapply(res_mcd$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
+
+  if(outcome == "response"){
+    cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
+                        sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
+    save(cv_mcd, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+                               grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov, "_", outcome, ".RData" ))
+  }
+  if(outcome == "residuals"){
+    cv_mcd_residuals <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data_residuals, idx_vcov = idx_vcov,
+                                  sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
+    save(cv_mcd_residuals, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+                                         grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov, "_", outcome, ".RData" ))
+  }
+}
+
+
+
+
+
 
 ########################
 # logM parametrisation #
@@ -276,11 +392,22 @@ param <- "logm"
 low_neff_vcov <- 0
 upp_neff_vcov <- 150
 
-load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, ".RData"))
-idx_vcov <- which((unlist(lapply(res_logm$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
+for(outcome in c("residuals", "response")){
 
-cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
-                     sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
-save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
-                            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,   ".RData"))
+  load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
 
+  idx_vcov <- which((unlist(lapply(res_logm$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
+
+  if(outcome == "response"){
+    cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
+                         sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
+    save(cv_logm, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+                                grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov, "_", outcome, ".RData" ))
+  }
+  if(outcome == "residuals"){
+    cv_logm_residuals <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data_residuals, idx_vcov = idx_vcov,
+                                   sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
+    save(cv_logm_residuals, file = paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
+                                          grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov, "_", outcome, ".RData" ))
+  }
+}

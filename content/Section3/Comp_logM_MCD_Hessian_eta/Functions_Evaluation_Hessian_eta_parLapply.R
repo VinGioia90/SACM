@@ -87,6 +87,16 @@ time_Deta <- function(nobs, dgrid,  nrun, ncores, param = c("mcd", "logm")){
         }, times = 1L)
         out$tD2_TMB[jj] <- time$time
 
+        # MATTEO: here I corrected for the time spent by AD to allocate the full
+        # hessian. It does not seem to make a different, so I commented it out.
+        # time_corr <- microbenchmark({
+        #   for(i in 1 : nobs){
+        #     tmp <- matrix(NA, nrow = nrow(HTMBi), ncol = ncol(HTMBi))
+        #   }
+        # }, times = 1L)
+        #
+        # out$tD2_TMB[jj] <- out$tD2_TMB[jj] - time_corr$time
+
       } else {        # Hessian logM parametrisation
         sourceCpp("d2_logm_eta_row.cpp") # Efficient
         dyn.load(dynlib("nll_logM_TMB")) # TMB

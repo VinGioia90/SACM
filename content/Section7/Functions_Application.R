@@ -77,11 +77,12 @@ is.logical0 <- function(x){
 # It starts from a fitted model, get the summary and order the  the smooth (and linear) effects
 # involved in covariance matrix modelling according to the p-value, build the model formula for theta and append such formula to the mean model
 #################################################################################################################################################################
-mod_foo_building <- function(summary_Peff, summary_Seff, mean_model_formula,  K_covmod, grid_length, metric = metric){
+mod_foo_building <- function(summary_Peff, summary_Seff, mean_model_formula,  K_covmod, grid_length, metric = metric, outcome){
 
   #!!! Problem: if set a different number of basis you cannot extract the number of basis from the summary print (this is related to the mgcv summary function)
   # Thus, maybe it should be better to consider the default k=10
 
+  if(outcome == "response"){
   name_Peff <- row.names(summary_Peff)
   name_Seff <- row.names(summary_Seff)
 
@@ -148,6 +149,61 @@ mod_foo_building <- function(summary_Peff, summary_Seff, mean_model_formula,  K_
   }
 
   global_formula <- c(mean_model_formula,  theta_foo)
+  } else {
+    #name_Peff <- row.names(summary_Peff)
+    name_Seff <- row.names(summary_Seff)
+
+    #string_Peff <- get_substr_rhs_lpi_Vcov(name_Peff)
+    string_Seff <- get_substr_rhs_lpi_Vcov(name_Seff)
+
+    #idx_Peff <- get_idx_lpi_Vcov(string_Peff)
+    idx_Seff <- get_idx_lpi_Vcov(string_Seff)
+
+    mat_eff <- data.frame(matrix(0, nrow = length(idx_Seff), 7))
+    names(mat_eff) <- c("Eff_Lpi", "StTest", "pvalue", "lpvalue", "rank_ST", "rank_p", "rank_lp")
+    mat_eff[,1] <- name_Seff[idx_Seff]
+    mat_eff[,2] <- summary_Seff[idx_Seff, 3]
+    mat_eff[,3] <- summary_Seff[idx_Seff, 4]
+    mat_eff[,4] <- log(abs(summary_Seff[idx_Seff, 4]))
+
+
+
+    if(metric == "p"){
+      order.pvalue <- order(mat_eff$pvalue, mat_eff$Eff_Lpi)
+      numb_p0 <- sum(mat_eff$pvalue <= 0)
+      mat_eff$rank_p[order.pvalue] <- 1 : nrow(mat_eff)
+      get_eff <- mat_eff[!(mat_eff$rank_p %in% ((K_covmod - grid_length + 1) : K_covmod)),]
+    } else if(metric == "logp"){
+      order.logpvalue <- order(mat_eff$lpvalue, mat_eff$Eff_Lpi)
+      numb_p0 <- sum(mat_eff$pvalue <= 0)
+      mat_eff$rank_lp[order.logpvalue] <- 1 : nrow(mat_eff)
+      get_eff <- mat_eff[!(mat_eff$rank_lp %in% ((K_covmod - grid_length + 1) : K_covmod)),]
+    } else if(metric == "ST"){
+      order.ST <- order(mat_eff$StTest, mat_eff$Eff_Lpi, decreasing = TRUE)
+      mat_eff$rank_ST[order.ST] <- 1 : nrow(mat_eff)
+      get_eff <- mat_eff[!(mat_eff$rank_ST %in% ((K_covmod - grid_length + 1) : K_covmod)),]
+    }
+
+    get_eff$Effect <- get_substr_lhs_lpi_Vcov(get_eff[, 1])
+    get_eff$Lpi <- get_substr_rhs_lpi_Vcov(get_eff[, 1])
+    bool_duplicated <- duplicated(get_eff$Lpi)
+
+
+    theta_foo <- list()
+    count <- 1
+    for(j in 1 : nrow(get_eff)){
+      if( bool_duplicated[j] == FALSE){
+        theta_foo[[count]] <- as.formula(paste0(get_eff$Lpi[j], "~",  get_eff$Effect[j]))
+        count <- count + 1
+      } else {
+        string_dupl_lpi <- get_eff$Lpi[j]
+        idx_dup <- unlist(lapply(1 : (count - 1), function(.x)  grepl(string_dupl_lpi, theta_foo[[.x]])[2]))
+        theta_foo[[which(idx_dup)]] <- as.formula(paste0(deparse(theta_foo[[idx_dup]]), "+", get_eff$Effect[j]))
+      }
+    }
+
+    global_formula <- c(mean_model_formula,  theta_foo)
+  }
   return(list(global_formula = global_formula, numb_p0 = numb_p0))
 }
 
@@ -169,7 +225,9 @@ mod_foo_building <- function(summary_Peff, summary_Seff, mean_model_formula,  K_
 # eff_vcov: name of the effects to be used for "covariance matrix" model formula
 # metric: one among p (p-values), logp ("log p-values"), ST ("test staistic")
 stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff_vcov = NULL,
-                      metric = c("p", "logp", "ST"), save.gam = NULL){
+                      metric = c("p", "logp", "ST"), save.gam = NULL, outcome = c("residuals", "response")){
+
+  outcome <- match.arg(outcome)
 
   metric <- match.arg(metric)
   if(is.null(save.gam)){
@@ -183,6 +241,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
   } else {
     model_formula <- list()
   }
+
 
   time_fit <- list()         #list of model fitting times
   num_iter <- list()
@@ -204,7 +263,17 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
     }
   }
 
-  global_formula_full <- c(mean_model_formula,  theta_foo)
+  if(outcome == "response"){
+    global_formula_full <- c(mean_model_formula,  theta_foo)
+  } else if (outcome == "residuals"){
+    res_gam <-lapply(1:d, function(x) gam(mean_formula[[x]], family = gaussian, data = data_train, optimizer = "efs"))
+    my_res_gam <- data.frame(sapply(res_gam, function(x) unlist(x$y - x$fitted.values)))
+    colnames(my_res_gam) <- paste0("res_h", 0:(d-1))
+    data_train <- cbind(my_res_gam, data_train)
+    mean_model_formula <- lapply(1:d, function(x) as.formula(paste0("res_h", x - 1, "~", 1)))
+    global_formula_full <- c(mean_model_formula,  theta_foo)
+  }
+
   K_covmod <- d * (d + 1)/2
 
   if(K_covmod %% grid_length != 0){
@@ -213,6 +282,10 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
 
   #First model is the full model
   if(save.gam){
+    #time <- microbenchmark(stepw_model[[1]] <- gam_scm(global_formula_full,
+    #               family = mvn_scm(d = d, param = param), optimizer = "efs",
+    #               data = data_train), times = 1L)
+
     tmp <- gam_scm(global_formula_full,
                    family = mvn_scm(d = d, param = param), optimizer = "efs",
                    data = data_train,
@@ -227,13 +300,17 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
     stepw_model[[1]]$R <- stepw_model[[1]]$H <- stepw_model[[1]]$Vc <- stepw_model[[1]]$Vp <- stepw_model[[1]]$Ve <- stepw_model[[1]]$lbb <- stepw_model[[1]]$L <- stepw_model[[1]]$St <- NULL
   } else {
     model_formula[[1]] <- global_formula_full
+    #time <- microbenchmark(stepw_model <- gam_scm(global_formula_full,
+    #               family = mvn_scm(d = d, param = param), optimizer = "efs",
+    #               data = data_train), times = 1L)
+
     tmp <- gam_scm(global_formula_full,
                    family = mvn_scm(d = d, param = param), optimizer = "efs",
                    data = data_train,
                    aGam = list(fit = FALSE))
     time <- microbenchmark(
-      stepw_model <- gam_scm(optimizer = "efs",
-                             aGam = list(G = tmp, control = list(trace = FALSE))), times = 1L)
+     stepw_model <- gam_scm(optimizer = "efs",
+                            aGam = list(G = tmp, control = list(trace = FALSE))), times = 1L)
     num_iter[[1]] <-  stepw_model$family$getNC() - 1
     sum_Vcov_Peff[[1]] <- summary(stepw_model, print = FALSE)$p.table # summary table for linear effects (if there are any)
     sum_Vcov_Seff[[1]] <- summary(stepw_model, print = FALSE)$s.table # table of smooth effects
@@ -258,7 +335,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
   # Build the model formula of the first nested model
 
   formula_func <- mod_foo_building(summary_Peff = sum_Vcov_Peff[[1]], summary_Seff = sum_Vcov_Seff[[1]],
-                                   mean_model_formula, K_covmod, grid_length, metric)
+                                   mean_model_formula, K_covmod, grid_length, metric, outcome = outcome)
   global_formula_old <- global_formula_full
   global_formula <- formula_func$global_formula
 
@@ -283,6 +360,12 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
 
     np0[counter] <- formula_func$numb_p0
     if(save.gam){
+      #time <- microbenchmark(
+      #               stepw_model[[counter]] <- gam_scm(global_formula,
+      #               family=mvn_scm(d = d, param = param),
+      #               optimizer = "efs",
+      #               data = data_train), times = 1L)
+
       tmp <- gam_scm(global_formula,
                      family=mvn_scm(d = d, param = param),
                      optimizer = "efs",
@@ -290,8 +373,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
                      aGam = list(fit = FALSE))
       time <- microbenchmark(
         stepw_model[[counter]] <- gam_scm(optimizer = "efs",
-                                          aGam = list(G = tmp, control = list(trace = FALSE)))
-        , times=1L)
+                                          aGam = list(G = tmp, control = list(trace = FALSE))), times=1L)
       num_iter[[counter]] <-  stepw_model[[counter]]$family$getNC() - 1
       sum_Vcov_Peff[[counter]] <- summary(stepw_model[[counter]], print = FALSE)$p.table # summary table for linear effects (if there are any)
       sum_Vcov_Seff[[counter]] <- summary(stepw_model[[counter]], print = FALSE)$s.table
@@ -302,9 +384,14 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
         break
       } else if (np0[counter] > (length(model_formula[[counter-1]])-d -grid_length)){
         formula_func <- mod_foo_building(summary_Peff= sum_Vcov_Peff[[counter-1]], summary_Seff = sum_Vcov_Seff[[counter-1]],
-                                         mean_model_formula, length(model_formula[[counter-1]]) - d, length(model_formula[[counter-1]]) - d - np0[counter], metric)
+                                         mean_model_formula, length(model_formula[[counter-1]]) - d, length(model_formula[[counter-1]]) - d - np0[counter], metric, outcome)
         global_formula <- formula_func$global_formula
         model_formula[[counter]] <- global_formula
+        #time <- microbenchmark(stepw_model <- gam_scm(global_formula,
+        #                       family=mvn_scm(d = d, param = param),
+        #                       optimizer = "efs",
+        #                       data = data_train, aGam = list(in.out = list(sp = sp_init, scale = 1), start = beta_init)), times = 1L)
+
         tmp <- gam_scm(global_formula,
                        family=mvn_scm(d = d, param = param),
                        optimizer = "efs",
@@ -321,6 +408,12 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
         stepw_model$R <- stepw_model$H <- stepw_model$Vc <- stepw_model$Vp <- stepw_model$Ve <- stepw_model$lbb <- stepw_model$L <- stepw_model$St <- NULL
       } else {
         model_formula[[counter]] <- global_formula
+        #time <- microbenchmark(
+        #               stepw_model <- gam_scm(global_formula,
+        #               family=mvn_scm(d = d, param = param),
+        #               optimizer = "efs",
+        #               data = data_train, aGam = list(in.out = list(sp = sp_init, scale = 1), start = beta_init)), times = 1L)
+
         tmp <- gam_scm(global_formula,
                        family=mvn_scm(d = d, param = param),
                        optimizer = "efs",
@@ -349,7 +442,7 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
       global_formula <- mean_model_formula
     } else {
       formula_func <- mod_foo_building(summary_Peff= sum_Vcov_Peff[[counter]], summary_Seff = sum_Vcov_Seff[[counter]],
-                                       mean_model_formula, dgrid[j], grid_length, metric)  # Build the model formula of subsequent steps
+                                       mean_model_formula, dgrid[j], grid_length, metric, outcome)  # Build the model formula of subsequent steps
       global_formula_old <- global_formula
       global_formula <- formula_func$global_formula
     }
@@ -390,6 +483,12 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
     stepw_model[[counter]]$R <- stepw_model[[counter]]$H <- stepw_model[[counter]]$Vc <- stepw_model[[counter]]$Vp <- stepw_model[[counter]]$Ve <- stepw_model[[counter]]$lbb <- stepw_model[[counter]]$L <- stepw_model[[counter]]$St <- NULL
   } else {
     model_formula[[counter]] <- global_formula
+    #time <- microbenchmark(stepw_model <- gam_scm(global_formula,
+    #                       family=mvn_scm(d = d, param = param),
+    #                       optimizer = "efs",
+    #                       data = data_train,
+    #                       aGam = list(in.out = list(sp = sp_init, scale = 1), start = beta_init)), times = 1L)
+
     tmp <-  gam_scm(global_formula,
                     family=mvn_scm(d = d, param = param),
                     optimizer = "efs",
@@ -399,8 +498,13 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
       stepw_model <- gam_scm(optimizer = "efs",
                              aGam = list(G = tmp, control = list(trace = FALSE), in.out = list(sp = sp_init, scale = 1), start = beta_init)), times=1L)
     num_iter[[counter]] <-  stepw_model$family$getNC() - 1
-    sum_Vcov_Peff[[counter]] <- summary(stepw_model, print = FALSE)$p.table # summary table for linear effects (if there are any)
-    sum_Vcov_Seff[[counter]] <- summary(stepw_model, print = FALSE)$s.table
+    if(outcome == "response"){
+      sum_Vcov_Peff[[counter]] <- summary(stepw_model, print = FALSE)$p.table # summary table for linear effects (if there are any)
+      sum_Vcov_Seff[[counter]] <- summary(stepw_model, print = FALSE)$s.table
+    } else {
+      sum_Vcov_Peff[[counter]] <- NULL #summary(stepw_model, print = FALSE)$p.table # summary table for linear effects (if there are any)
+      sum_Vcov_Seff[[counter]] <- NULL #summary(stepw_model, print = FALSE)$s.table
+    }
     betas[[counter]] <- stepw_model$coefficients
     sps[[counter]] <- stepw_model$sp
     stepw_model$R <- stepw_model$H <- stepw_model$Vc <- stepw_model$Vp <- stepw_model$Ve <- stepw_model$lbb <- stepw_model$L <- stepw_model$St <- NULL
@@ -411,11 +515,19 @@ stepw_res <- function(param, d, grid_length, mean_model_formula, data_train, eff
   if(save.gam){
     #tmp_save <- list(fit = stepw_model, time_fit = time_fit, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps)
     #save(file = "tmp_save.RData", tmp_save)
-    return(list(fit = stepw_model, time_fit = time_fit, num_iter = num_iter, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps))
+    if(outcome == "response"){
+      return(list(fit = stepw_model, time_fit = time_fit, num_iter = num_iter, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps))
+    } else {
+      return(list(fit = stepw_model, time_fit = time_fit, num_iter = num_iter, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps, residuals = my_res_gam))
+    }
   } else {
     #tmp_save <- list(foo = model_formula, time_fit = time_fit, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps)
     #save(file = "tmp_save.RData", tmp_save)
-    return(list(foo =    model_formula, time_fit = time_fit, num_iter = num_iter, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps))
+    if(outcome == "response"){
+      return(list(foo =    model_formula, time_fit = time_fit, num_iter = num_iter, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps))
+    } else {
+      return(list(foo =    model_formula, time_fit = time_fit, num_iter = num_iter, summary_Peff = sum_Vcov_Peff, summary_Seff = sum_Vcov_Seff, np0 = np0, betas = betas, sps = sps, residuals = my_res_gam))
+    }
   }
 }
 
@@ -450,7 +562,7 @@ cross_val <- function(obj, param, d, data, sets_eval, idx_vcov, ncores = 1, save
   clusterExport(NULL, c("root_dir"), envir = environment())
 
   clusterEvalQ(NULL, {
-    library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
+   library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
   })
 
   clusterExport(NULL, c("obj", "save.gam", "param", "d", "idx_vcov", "data", "res_sim", "sets_eval"), envir = environment())
@@ -481,7 +593,6 @@ void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, co
 }
 ")
   })
-
 
   out_res_sim <- function(.x){
     out2 <- res_sim(obj = obj, param = param, d = d, data = data, idx_vcov = idx_vcov, sets_eval = sets_eval[.x : (.x + 1)], save.gam = save.gam)

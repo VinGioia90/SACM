@@ -245,19 +245,91 @@ get_plots2 <- function(obj1_mcd, obj2_logm, name_eff, d, grid_length, neff1_mcd,
       theme_bw() +
       labs(shape = "Param") +
       #labs(title=paste("MCD:", neff1_mcd, "effects; logM:", neff2_logm, "effects"))+
-      theme(legend.title = element_text(size = 14),
-            legend.text = element_text(size = 14),
+      theme(legend.title = element_text(size = 15),
+            legend.text = element_text(size = 15),
             panel.grid.major = element_blank(),
             panel.grid.minor = element_blank(),
-            axis.title.x = element_text(size = 16, colour = "black"),
-            axis.title.y = element_text(size = 16, colour = "black"),
-            axis.text.x = element_text(size = 14, colour = "black"),
-            axis.text.y = element_text(size = 14, colour = "black"),
+            axis.title.x = element_text(size = 15, colour = "black"),
+            axis.title.y = element_text(size = 15, colour = "black"),
+            axis.text.x = element_text(size = 12, colour = "black"),
+            axis.text.y = element_text(size = 12, colour = "black"),
             axis.ticks.x = element_blank(),
             axis.ticks.y = element_blank(),
             legend.position = "bottom",
             plot.title = element_text(hjust = 0.5))
   return(invisible(pl))
+}
+
+heatmap_FitCov <- function(PredCov, d, range_var = NULL, range_corr = c(0, 1), label = "h",
+                           label_xaxis, label_yaxis, col_var, col_cor){
+
+  diagDf <- data.frame(
+    var1 = c(paste0("h0", 1:9), paste0("h", 10:d)),
+    var2 = c(paste0("h", (d):10), paste0("h0", 9:1)),
+    Stdev =  sqrt(diag(PredCov)[d : 1])
+  )
+
+
+
+  sDf <- data.frame(X1 = rep(NA, d ^ 2), X2 = rep(NA, d ^ 2), Corr = rep(NA, d ^ 2))
+
+
+  count <- 1
+  for(i in 1 : d){
+    for(j in 1 : d){
+      if(i >= 10 & ((d - j) + 2>= 10)){
+        sDf$X1[count] <- paste0(label, i)
+        sDf$X2[count] <- paste0(label, (d - j) + 1)
+      }
+      if(i >= 10 & ((d - j) + 2 <= 10)){
+        sDf$X1[count] <- paste0(label, i)
+        sDf$X2[count] <- paste0(label, "0", (d - j) + 1)
+      }
+
+      if(i < 10 & ((d - j) + 2  >= 10)){
+        sDf$X1[count] <- paste0(label, "0", i)
+        sDf$X2[count] <- paste0(label, (d - j) + 1)
+      }
+
+      if(i < 10 & ((d - j) + 2  <= 10)){
+        sDf$X1[count] <- paste0(label, "0", i)
+        sDf$X2[count] <- paste0(label, "0", (d - j) + 1)
+      }
+
+      if(i == j){
+         sDf$Corr[count] <- 0
+      }
+      if(j < i){
+        sDf$Corr[count] <- NA
+      }
+      if(j > i){
+        sDf$Corr[count] <- PredCov[j, i]
+      }
+      count <- count + 1
+    }
+  }
+
+
+  gg1 <- ggplot(sDf, aes(X1, X2)) +
+    geom_tile(aes(fill = Corr)) +
+    scale_fill_gradientn(colors =  col_cor, limits = range_corr, na.value = "white") +
+    new_scale_fill() +
+    geom_tile(data = diagDf, aes(var1, var2, fill = Stdev)) +
+    scale_fill_gradientn(colors = col_var) +
+    theme(aspect.ratio = 1,
+          axis.title.x = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.x=element_text(size=10),
+          axis.text.y=element_text(size=10),
+          legend.key.width  = unit(1, "lines"),
+          legend.key.height = unit(1, "lines"),
+          legend.text=element_text(size=12),
+          legend.title=element_text(size=15))+
+    scale_x_discrete(labels = label_xaxis)+
+    scale_y_discrete(labels = label_yaxis)
+
+  return(invisible(gg1))
+
 }
 
 

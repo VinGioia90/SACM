@@ -236,12 +236,23 @@ sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
         out$time_bamlss <- time_bamlss$time
 
 
+        fam <- mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj])
+        fam$exact_fs <- NULL
         time_efs <- microbenchmark(out$fit_efs <- gam_scm(out$foo,
-                                                          family = mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj]),
+                                                          family = fam,
                                                           optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
         out$time_efs <- time_efs$time
         out$outer_efs <- out$fit_efs$iter
         out$inner_efs <- out$fit_efs$family$getNC() - 1
+
+        fam$exact_fs <- TRUE
+        time_exact_efs <- microbenchmark(out$fit_exact_efs <- gam_scm(out$foo,
+                                                                family = fam,
+                                                                optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
+        out$time_exact_efs <- time_exact_efs$time
+        out$outer_exact_efs <- out$fit_exact_efs$iter
+        out$inner_exact_efs <- out$fit_exact_efs$family$getNC() - 1
+
 
         if(pureBFGS){
           time_bfgs <- microbenchmark(out$fit_bfgs <- gam_scm(out$foo,
@@ -266,8 +277,10 @@ sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
         out$lpi_pred_bamlss <- predict(bamlss_fit)
         out$lpi_pred_test_bamlss <- predict(bamlss_fit, newdata = as.data.frame(out$sim$data_test))
 
+        fam <- mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj])
+        fam$exact_fs <- NULL
         time_efs <- microbenchmark(fit_efs <- gam_scm(out$foo,
-                                                      family = mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj]),
+                                                      family = fam,
                                                       optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
         out$time_efs <- time_efs$time
         out$outer_efs<- fit_efs$iter
@@ -275,6 +288,31 @@ sim_est_efs_bfgs_bamlss <- function(nobs_train, nobs_test, dgrid,
         out$LAML_efs <- fit_efs$gcv.ubre
         out$lpi_pred_efs <- predict(fit_efs)
         out$lpi_pred_test_efs <- predict(fit_efs, newdata = as.data.frame(out$sim$data_test))
+
+        fam$exact_fs <- TRUE
+        time_exact_efs <- microbenchmark(fit_exact_efs <- gam_scm(out$foo,
+                                                                  family = fam,
+                                                                  optimizer= "efs",
+                                                                  data = as.data.frame(out$sim$data_train)), times = 1L)
+        out$time_exact_efs <- time_exact_efs$time
+        out$outer_exact_efs<- fit_exact_efs$iter
+        out$inner_exact_efs <- fit_exact_efs$family$getNC() - 1
+        out$LAML_exact_efs <- fit_exact_efs$gcv.ubre
+        out$lpi_pred_exact_efs <- predict(fit_exact_efs)
+        out$lpi_pred_test_exact_efs <- predict(fit_exact_efs, newdata = as.data.frame(out$sim$data_test))
+
+
+        time_exact_efs_initialised <- microbenchmark(fit_exact_efs_initialised <- gam_scm(out$foo,
+                                                                  family = fam,
+                                                                  optimizer= "efs",
+                                                                  data = as.data.frame(out$sim$data_train),
+                                                                  aGam = list(start = fit_efs$coef, in.out = list(sp = fit_efs$sp, scale = 1))), times = 1L)
+        out$time_exact_efs_initialised <- time_exact_efs_initialised$time
+        out$outer_exact_efs_initialised<- fit_exact_efs_initialised$iter
+        out$inner_exact_efs_initialised <- fit_exact_efs_initialised$family$getNC() - 1
+        out$LAML_exact_efs_initialised <- fit_exact_efs_initialised$gcv.ubre
+        out$lpi_pred_exact_efs_initialised <- predict(fit_exact_efs_initialised)
+        out$lpi_pred_test_exact_efs_initialised <- predict(fit_exact_efs_initialised, newdata = as.data.frame(out$sim$data_test))
 
         if(pureBFGS){
           time_bfgs <- microbenchmark(fit_bfgs <- gam_scm(out$foo,
@@ -358,5 +396,6 @@ void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, co
   rm(cl)
   return(res)
 }
+
 
 

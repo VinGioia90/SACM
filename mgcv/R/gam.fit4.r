@@ -1872,6 +1872,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
         -D*(backsolve(L,forwardsolve(t(L),(D*Sib[[i]][!bdrop])[piv]))[ipiv])
 
       ## obtain the curvature check matrix...
+      L <- as.matrix(L) # MATTEO & VINCENZO
       dVkk <- crossprod(L[,ipiv]%*%(d1b/D))  ## Added as.matrix:Vincenzo
 
       if (!is.null(drop)) { ## create full version of d1b with zeros for unidentifiable
@@ -1964,17 +1965,21 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       }
     } else { ## REML required
       NCV <- NCV1 <- NULL
+      my_list <- list()
       ## Compute the derivatives of log|H+S|...
       if (deriv == 1) { ## only first derivative wrt rho required...
         d1ldetH <- -ll$d1H
 
+        my_list$trVbSj <- numeric(m)
         for (i in 1:m) {
           A <- Sl.mult(rp$Sl,diag(q),i,full=TRUE)[!bdrop,!bdrop]
           bind <- rowSums(abs(A))!=0 ## row/cols of non-zero block
           A <- A[,bind,drop=FALSE] ## drop the zero columns
           A <- D*(backsolve(L,forwardsolve(t(L),(D*A)[piv,]))[ipiv,,drop=FALSE])
           d1ldetH[i] <- d1ldetH[i] + sum(diag(A[bind,,drop=FALSE]))
+          my_list$trVbSj[i] <- sum(diag(A[bind,,drop=FALSE]))
         }
+        my_list$c <- - ll$d1H
         ## move this to deriv>1
         #d1ldetH <- rep(0,m)
         #d1Hp <- list()
@@ -2039,8 +2044,11 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       REML <- -as.numeric((ll$l - drop(t(coef)%*%St%*%coef)/2)/gamma + rp$ldetS/2  - ldetHp/2  +
                             Mp*(log(2*pi)/2)-log(gamma)/2)
 
+      my_list$a <- d1bSb
+      my_list$trSSj <- rp$ldet1
       REML1 <- if (deriv<1) NULL else -as.numeric( # d1l # cancels
         - d1bSb/(2*gamma) + rp$ldet1/2  - d1ldetH/2 )
+      if( deriv >= 1) attr(REML1, "my_list") <- my_list
       REML2 <- if (deriv<2) NULL else -( (d2l - d2bSb/2)/gamma + rp$ldet2/2  - d2ldetH/2 )
     } ## REML computations
 
@@ -2624,6 +2632,8 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
   ## tr(V S_j) will need to be computed using Sl.termMult
   ##   Sl returned by ldetS and Vb computed as in gam.fit5.postproc.
   # tic_tot <- Sys.time()
+  exact_fs <- family$exact_fs
+  if(is.null(exact_fs)){
   tol <- 1e-6
   lsp <- lsp + 2.5
   mult <- 1
@@ -2743,6 +2753,145 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
   if (!is.null(fit$warn)&&length(fit$warn)>0) for (i in 1:length(fit$warn)) warning(fit$warn[[i]])
   # print("efsud_total")
   # print(Sys.time() - tic_tot)
+  } else {
+    tol <- 1e-6
+    lsp <- lsp + 2.5
+    mult <- 1
+    # print("gam.fit5_init")
+    # tic <- Sys.time()
+    fit <- gam.fit5(x=x,y=y,lsp=lsp,Sl=Sl,weights=weights,offset=offset,deriv=1,family=family,
+                    control=control,Mp=Mp,start=start,gamma=1)
+    score.hist <- rep(0,200)
+    # print(Sys.time() - tic)
+    tiny <- .Machine$double.eps^.5 ## used to bound above zero
+    for (iter in 1:200) {
+      start <- fit$coefficients
+      ## obtain Vb...
+      ipiv <- piv <- attr(fit$L,"pivot")
+      p <- length(piv)
+      ipiv[piv] <- 1:p
+      # print("Vb")
+      #  tic <- Sys.time()
+      if((family$family == "Multivariate normal - Covariance modelling via mcd")){
+        TL <- t(as(fit$L, "sparseMatrix")) # as(fit$L, "dtTMatrix")
+        DD <- diag(fit$D, nrow = p)[piv, ]
+        Vb <- as(forwardsolve(TL, DD), "sparseMatrix")[ipiv, , drop = FALSE]
+        Vb <- Matrix:::crossprod(Vb)
+        Vb <- as.matrix(Vb)
+        #print(max(abs(Vb - crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE]))))
+      } else {
+        Vb <- crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE])
+      }
+      # print(Sys.time() - tic)
+
+      #Vb <- crossprod(forwardsolve(t(fit$L),diag(fit$D, nrow=length(fit$pivot2))[fit$pivot2,,drop=FALSE])[fit$ipivot2,,drop=FALSE]) # Vincenzo
+
+      if (sum(fit$bdrop)) { ## some coefficients were dropped...
+        q <- length(fit$bdrop)
+        ibd <- !fit$bdrop
+        Vtemp <- Vb; Vb <- matrix(0,q,q)
+        Vb[ibd,ibd] <- Vtemp
+      }
+      # print("Sl.repara")
+      #  tic <- Sys.time()
+      Vb <- Sl.repara(fit$rp,Vb,inverse=TRUE)
+      # print(Sys.time() - tic)
+      # print("Sl.termMult")
+      # tic <- Sys.time()
+      SVb <- Sl.termMult(Sl,Vb) ## this could be made more efficient
+      # print(Sys.time() - tic)
+      trVS <- rep(0,length(SVb))
+      for (i in 1:length(SVb)) {
+        ind <- attr(SVb[[i]],"ind")
+        trVS[i] <- sum(diag(SVb[[i]][,ind]))
+      }
+      # print("Sl.termMult_2")
+      #   tic <- Sys.time()
+      Sb <- Sl.termMult(Sl,start,full=TRUE)
+      # print(Sys.time() - tic)
+      bSb <- rep(0,length(Sb))
+      for (i in 1:length(Sb)) {
+        bSb[i] <- sum(start*Sb[[i]])
+      }
+
+      # OLD CODE
+      # a <- pmax(tiny,fit$S1*exp(-lsp) - trVS)
+      # r <- a/pmax(tiny,bSb)
+      # fit$S1*exp(-lsp) is trace(S_lambda^- S_j)
+      # trVS is trace((I + S_lambda)^-1 S_j)
+      # "a" here is "b" is review paper
+      # bSb is "a" in review paper
+      my_list <- attr(fit$REML1, "my_list")
+      cc <- my_list$c # cc <- - fit$dH * exp(-lsp)
+      cc_p <- which(cc >= 0)
+      cc_m <- which(cc < 0)
+      aa <- my_list$a # aa <- bSb
+      bb <- pmax(tiny, my_list$trSSj - my_list$trVbSj) # bb <- pmax(tiny, fit$S1*exp(-lsp) - trVS)
+      r <- numeric(length(lsp))
+      if(length(cc_m)){
+        r[cc_m] <- pmax(tiny, bb[cc_m] - cc[cc_m]) / pmax(tiny, aa[cc_m])
+      }
+      if(length(cc_p)){
+        r[cc_p] <- bb[cc_p] / pmax(tiny, aa[cc_p] + cc[cc_p])
+      }
+      #r[bb==0&aa==0] <- 1
+      r[!is.finite(r)] <- 1e6
+      lsp1 <- pmin(lsp + log(r)*mult,control$efs.lspmax)
+      max.step <- max(abs(lsp1-lsp))
+      old.reml <- fit$REML
+      # print("gam.fit5")
+      # tic <- Sys.time()
+      fit <- gam.fit5(x=x,y=y,lsp=lsp1,Sl=Sl,weights=weights,offset=offset,deriv=1,
+                      family=family,control=control,Mp=Mp,start=start,gamma=1)
+      # print(Sys.time() - tic)
+      ## some step length control...
+
+      if (fit$REML<=old.reml) { ## improvement
+        if (max.step<.05) { ## consider step extension
+          lsp2 <- pmin(lsp + log(r)*mult*2,12) ## try extending step...
+          # print("gam.fit5_step")
+          # tic <- Sys.time()
+          fit2 <- gam.fit5(x=x,y=y,lsp=lsp2,Sl=Sl,weights=weights,offset=offset,deriv=1,family=family,
+                           control=control,Mp=Mp,start=start,gamma=1)
+          # print(Sys.time() - tic)
+
+          if (fit2$REML < fit$REML) { ## improvement - accept extension
+            fit <- fit2;lsp <- lsp2
+            mult <- mult * 2
+          } else { ## accept old step
+            lsp <- lsp1
+          }
+        } else lsp <- lsp1
+      } else { ## no improvement
+        while (fit$REML > old.reml&&mult>1) { ## don't contract below 1 as update doesn't have to improve REML
+          mult <- mult/2 ## contract step
+          lsp1 <- pmin(lsp + log(r)*mult,control$efs.lspmax)
+          # print("gam.fit5_step_2")
+          # tic <- Sys.time()
+          fit <- gam.fit5(x=x,y=y,lsp=lsp1,Sl=Sl,weights=weights,offset=offset,deriv=1,family=family,
+                          control=control,Mp=Mp,start=start,gamma=1)
+          # print(Sys.time() - tic)
+        }
+        lsp <- lsp1
+        if (mult<1) mult <- 1
+      }
+      score.hist[iter] <- fit$REML
+      ## break if EFS step small and REML change negligible over last 3 steps.
+      if (iter>3 && max.step<.05 && max(abs(diff(score.hist[(iter-3):iter])))<control$efs.tol) break
+      ## or break if log lik not changing...
+      if (iter==1) old.ll <- fit$l else {
+        if (abs(old.ll-fit$l)<100*control$eps*abs(fit$l)) break
+        old.ll <- fit$l
+      }
+    }
+    fit$sp <- exp(lsp)
+    fit$iter <- iter
+    fit$outer.info <- list(iter = iter,score.hist=score.hist[1:iter])
+    fit$outer.info$conv <- if (iter==200) "iteration limit reached" else "full convergence"
+    if (!is.null(fit$warn)&&length(fit$warn)>0) for (i in 1:length(fit$warn)) warning(fit$warn[[i]])
+    # print("efsud_total")
+    # print(Sys.time() - tic_tot)
+  }
   fit
 } ## efsud
 
