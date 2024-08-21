@@ -1137,7 +1137,7 @@ setwd("content/Section7")
 load("GEF14_data_residuals.RData")
 
 low_neff_vcov <- 0
-upp_neff_vcov <- 120  # Here must be setted according to the maximum value of the explored grid
+upp_neff_vcov <- 150  # Here must be setted according to the maximum value of the explored grid
 
 
 flag_residuals <- TRUE
