@@ -1212,7 +1212,7 @@ if(flag_residuals){
   }
   )
   with(data_logScore[data_logScore$Param == "logM", ],{
-    plot(Eff, logS, xaxt= "n", xlab = "Number of effects (MCD)", main = "Response" )
+    plot(Eff, logS, xaxt= "n", xlab = "Number of effects (logM)", main = "Response" )
     axis(1, at = Eff, labels = factor(Eff, levels = Eff))
     points(Eff[which.min(logS)], logS[which.min(logS)], col = "red", pch = 19)
   }
