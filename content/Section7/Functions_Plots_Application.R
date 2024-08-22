@@ -54,6 +54,20 @@ res_perf <- function(obj, d, data, param, sets_eval){
 }
 
 
+res_perf_MSE_mar <- function(obj, d, data, param, sets_eval){
+  ncv_rof <- length(obj)
+  nmodel <- length(obj[[1]]$gen)
+
+  eta_hat <- lapply(1 : nmodel,
+                    function(ii){ do.call("rbind", lapply(1 : ncv_rof, function(x) obj[[x]]$gen[[ii]]$lpi_pred_out[,1:d])) } )
+
+  y <- as.matrix(data[(sets_eval[1]+1): sets_eval[length(sets_eval)], 1:d])
+
+  MSE_mar <- sapply(1 : nmodel, function(ii) return( apply((y-eta_hat[[ii]])^2, 2, mean )))
+
+  return(MSE_mar)
+}
+
 
 ############################################################################################
 # This function takes in input:                                                            #
@@ -133,11 +147,11 @@ get_eff_idx2 <- function(foo_vcov, name_eff, d, Param){
                                            start = gregexpr("\\.",  out[count, 2])[[1]][1]+1,
                                            stop = length_string))
         if(Param == "MCD"){
-          out[count, 5] <- out[count, 3] + 0.32 * cos(2 * pi * j/length(name_eff)) - 1   # jittering of the rows and columns for graphical purposes
-          out[count, 6] <- out[count, 4] - 0.32 * cos(2 * pi * j/length(name_eff)) - 1
+          out[count, 5] <- out[count, 3] + 0.32/2 * cos(2 * pi * j/length(name_eff)) - 1   # jittering of the rows and columns for graphical purposes
+          out[count, 6] <- out[count, 4] - 0.32/2 * cos(2 * pi * j/length(name_eff)) - 1
         } else {
-          out[count, 5] <- out[count, 3] + 0.32 * cos(2 * pi * j/length(name_eff)) - 0.5 - 1   # jittering of the rows and columns for graphical purposes
-          out[count, 6] <- out[count, 4] - 0.32 * cos(2 * pi * j/length(name_eff)) + 0.5 - 1
+          out[count, 5] <- out[count, 3] + 0.32/2 * cos(2 * pi * j/length(name_eff)) - 0.5 - 1   # jittering of the rows and columns for graphical purposes
+          out[count, 6] <- out[count, 4] - 0.32/2 * cos(2 * pi * j/length(name_eff)) + 0.5 - 1
         }
         out[count, 7] <- Param
         count <- count + 1
@@ -319,7 +333,7 @@ heatmap_FitCov <- function(PredCov, d, range_var = NULL, range_corr = c(0, 1), l
     theme(aspect.ratio = 1,
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
-          axis.text.x=element_text(size=10),
+          axis.text.x=element_text(size=10, angle = 90, vjust = 0.5, hjust=1),
           axis.text.y=element_text(size=10),
           legend.key.width  = unit(1, "lines"),
           legend.key.height = unit(1, "lines"),
