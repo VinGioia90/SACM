@@ -22,6 +22,14 @@ fit_time <- function(obj, param = "mcd", dgrid = NULL, nrun){
   data_time_efs <-  data.frame(unlist(lapply(1 : length(dgrid),
                                              function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_efs / (1e9 * 60))))),
                                rep(dgrid, each = nrun))
+  data_time_exact_efs <-  data.frame(unlist(lapply(1 : length(dgrid),
+                                             function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_exact_efs / (1e9 * 60))))),
+                               rep(dgrid, each = nrun))
+
+  data_time_exact_efs_initialised <-  data.frame(unlist(lapply(1 : length(dgrid),
+                                                        function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_exact_efs_initialised / (1e9 * 60))))),
+                                                 rep(dgrid, each = nrun))
+
   data_time_bfgs <-  data.frame(unlist(lapply(1 : length(dgrid),
                                              function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_bfgs / (1e9 * 60))))),
                                rep(dgrid, each = nrun))
@@ -32,20 +40,22 @@ fit_time <- function(obj, param = "mcd", dgrid = NULL, nrun){
                                                   function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_bamlss / (1e9 * 60))))),
                                     rep(dgrid, each = nrun))
 
-  res <- cbind(data_time_efs[,1], data_time_bfgs[,1], data_time_bfgsinit[,1], data_time_bamlss[,1],data_time_efs[,2])
-  colnames(res) <- c("time_efs", "time_bfgs", "time_bfgsinit", "time_bamlss", "d")
+  res <- cbind(data_time_efs[,1], data_time_exact_efs[,1], data_time_exact_efs_initialised[,1], data_time_bfgs[,1], data_time_bfgsinit[,1], data_time_bamlss[,1], data_time_efs[,2])
+  colnames(res) <- c("time_efs", "time_exact_efs", "time_exact_efs_initialised", "time_bfgs", "time_bfgsinit", "time_bamlss", "d")
   res <- as.data.frame(res)
 
   ###################
   # Summary indices #
   ###################
   mean_efs_time <- aggregate(res$time_efs, list(res$d), FUN = mean)[,2]
+  mean_exact_efs_time <- aggregate(res$time_exact_efs, list(res$d), FUN = mean)[,2]
+  mean_exact_efs_time_initialised <- aggregate(res$time_exact_efs_initialised, list(res$d), FUN = mean)[,2]
   mean_bfgs_time <- aggregate(res$time_bfgs, list(res$d), FUN = mean)[,2]
   mean_bfgsinit_time <- aggregate(res$time_bfgsinit, list(res$d), FUN = mean)[,2]
   mean_bamlss_time <- aggregate(res$time_bamlss, list(res$d), FUN = mean)[,2]
 
-  out <- cbind(mean_efs_time, mean_bfgs_time, mean_bfgsinit_time, mean_bamlss_time, dgrid)
-  colnames(out) <- c("efs", "bfgs", "bfgsinit", "bamlss", "d")
+  out <- cbind(mean_efs_time, mean_exact_efs_time, mean_exact_efs_time_initialised, mean_bfgs_time, mean_bfgsinit_time, mean_bamlss_time, dgrid)
+  colnames(out) <- c("efs", "efsExact", "efsExact_initalised", "bfgs", "bfgsinit", "bamlss", "d")
   sum_res <- as.data.frame(out)
 
   return(list(sum_res = data.frame(sum_res),
@@ -87,6 +97,13 @@ log_Score_train <- function(obj, nrun, dgrid, nobs, param = "mcd"){
   res_efs <- lapply(1 : length(dgrid),
                     function(z) lapply(1 : nrun,
                                    function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_efs, as.matrix(obj[[x]]$gen[[z]]$sim$data_train[, c(1 : dgrid[z])]))))
+  res_exact_efs <- lapply(1 : length(dgrid),
+                    function(z) lapply(1 : nrun,
+                                       function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_exact_efs, as.matrix(obj[[x]]$gen[[z]]$sim$data_train[, c(1 : dgrid[z])]))))
+  res_exact_efs_initialised <- lapply(1 : length(dgrid),
+                                      function(z) lapply(1 : nrun,
+                                             function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_exact_efs_initialised, as.matrix(obj[[x]]$gen[[z]]$sim$data_train[, c(1 : dgrid[z])]))))
+
   res_bfgs <- lapply(1 : length(dgrid),
                      function(z) lapply(1 : nrun,
                                        function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_bfgs, as.matrix(obj[[x]]$gen[[z]]$sim$data_train[, c(1 : dgrid[z])]))))
@@ -133,10 +150,10 @@ log_Score_train <- function(obj, nrun, dgrid, nobs, param = "mcd"){
   res_gen <- lapply(1 : length(dgrid),
                 function(z) lapply(1 : nrun,
                                    function(x) SCM::internal()$ll_mcd(lpi_pred_gen[[z]][[x]], as.matrix(obj[[x]]$gen[[z]]$sim$data_train[, c(1 : dgrid[z])]))))
-  res <- list(res_gen, res_efs, res_bfgs, res_bfgs_efs, res_bamlss)
+  res <- list(res_gen, res_efs, res_exact_efs, res_exact_efs_initialised, res_bfgs, res_bfgs_efs, res_bamlss)
 
   out <- list()
-  for(i in 1 : 5){
+  for(i in 1 : 7){
     out[[i]] <- matrix(0, nrun, length(dgrid))
     for(j in 1:length(dgrid)){
       for(k in 1:nrun){
@@ -161,6 +178,13 @@ log_Score_test <- function(obj, nrun, dgrid, nobs, param = "mcd"){
   res_efs <- lapply(1 : length(dgrid),
                     function(z) lapply(1 : nrun,
                                        function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_test_efs, as.matrix(obj[[x]]$gen[[z]]$sim$data_test[, c(1 : dgrid[z])]))))
+  res_exact_efs <- lapply(1 : length(dgrid),
+                    function(z) lapply(1 : nrun,
+                                       function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_test_exact_efs, as.matrix(obj[[x]]$gen[[z]]$sim$data_test[, c(1 : dgrid[z])]))))
+  res_exact_efs_initialised <- lapply(1 : length(dgrid),
+                                      function(z) lapply(1 : nrun,
+                                             function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_test_exact_efs_initialised, as.matrix(obj[[x]]$gen[[z]]$sim$data_test[, c(1 : dgrid[z])]))))
+
   res_bfgs <- lapply(1 : length(dgrid),
                      function(z) lapply(1 : nrun,
                                         function(x) SCM::internal()$ll_mcd(obj[[x]]$gen[[z]]$lpi_pred_test_bfgs, as.matrix(obj[[x]]$gen[[z]]$sim$data_test[, c(1 : dgrid[z])]))))
@@ -206,10 +230,10 @@ log_Score_test <- function(obj, nrun, dgrid, nobs, param = "mcd"){
   res_gen <- lapply(1 : length(dgrid),
                     function(z) lapply(1 : nrun,
                                        function(x) SCM::internal()$ll_mcd(lpi_pred_test_gen[[z]][[x]], as.matrix(obj[[x]]$gen[[z]]$sim$data_test[, c(1 : dgrid[z])]))))
-  res <- list(res_gen, res_efs, res_bfgs, res_bfgs_efs, res_bamlss)
+  res <- list(res_gen, res_efs, res_exact_efs, res_exact_efs_initialised, res_bfgs, res_bfgs_efs, res_bamlss)
 
   out <- list()
-  for(i in 1 : 5){
+  for(i in 1 : 7){
     out[[i]] <- matrix(0, nrun, length(dgrid))
     for(j in 1:length(dgrid)){
       for(k in 1:nrun){
@@ -236,6 +260,14 @@ LAML_extraction <- function(obj, nrun, dgrid, nobs, param = "mcd"){
   res_efs <- lapply(1 : length(dgrid),
                     function(z) lapply(1 : nrun,
                                        function(x) sim_mcd_fit[[x]]$gen[[z]]$LAML_efs))
+  res_exact_efs <- lapply(1 : length(dgrid),
+                     function(z) lapply(1 : nrun,
+                                        function(x) sim_mcd_fit[[x]]$gen[[z]]$LAML_exact_efs))
+
+  res_exact_efs_initialisation <- lapply(1 : length(dgrid),
+                          function(z) lapply(1 : nrun,
+                                             function(x) sim_mcd_fit[[x]]$gen[[z]]$LAML_exact_efs_initialised))
+
   res_bfgs <- lapply(1 : length(dgrid),
                      function(z) lapply(1 : nrun,
                                         function(x) sim_mcd_fit[[x]]$gen[[z]]$LAML_bfgs))
@@ -243,10 +275,10 @@ LAML_extraction <- function(obj, nrun, dgrid, nobs, param = "mcd"){
                          function(z) lapply(1 : nrun,
                                             function(x) sim_mcd_fit[[x]]$gen[[z]]$LAML_bfgs_efs))
 
-  res <- list(res_efs, res_bfgs, res_bfgs_efs)
+  res <- list(res_efs, res_exact_efs, res_exact_efs_initialisation, res_bfgs, res_bfgs_efs)
 
   out <- list()
-  for(i in 1 : 3){
+  for(i in 1 : 5){
     out[[i]] <- matrix(0, nrun, length(dgrid))
     for(j in 1:length(dgrid)){
       for(k in 1:nrun){
