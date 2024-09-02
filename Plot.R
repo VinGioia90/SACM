@@ -1140,7 +1140,7 @@ low_neff_vcov <- 0
 upp_neff_vcov <- 150  # Here must be setted according to the maximum value of the explored grid
 
 
-flag_residuals <- TRUE
+flag_residuals <- FALSE
 if(flag_residuals){
   param <- "mcd"
   # MCD
@@ -1187,7 +1187,7 @@ if(flag_residuals){
   load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
   ncov_el_mcd <- sapply(1:length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
   ncov_el_mcd <- sort(ncov_el_mcd[ncov_el_mcd >= low_neff_vcov & ncov_el_mcd <= upp_neff_vcov], decreasing = TRUE)
-  cv_mcd <- cv_mcd_response
+  #cv_mcd <- cv_mcd_response
   logScore_mcd <- res_perf(cv_mcd, d, GEF14_data, param, sets)
 
   param <- "logm"
@@ -1196,7 +1196,7 @@ if(flag_residuals){
   load( paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
   ncov_el_logm <- sapply(1:length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
   ncov_el_logm <- sort(ncov_el_logm[ncov_el_logm >= low_neff_vcov & ncov_el_logm <= upp_neff_vcov], decreasing = TRUE)
-  cv_logm <- cv_logm_response
+  #cv_logm <- cv_logm_response
   logScore_logm <- res_perf(cv_logm, d, GEF14_data, param, sets)
 
 
@@ -1226,7 +1226,7 @@ setwd(root_dir)
 setwd("content/Section7/Plots")
 
 
-flag_residuals <- TRUE
+flag_residuals <- FALSE
 if(flag_residuals){
   ncov_el_mcd_sel <- 65
   ncov_el_logm_sel <- 30
@@ -1288,7 +1288,7 @@ if(flag_residuals){
 ###############################################
 # Both MCD and logM in the same plot          #
 ###############################################
-flag_residuals <- TRUE
+flag_residuals <- FALSE
 if(flag_residuals){
   setwd(root_dir)
   setwd("content/Section7/Results")
@@ -1479,7 +1479,7 @@ if(flag_residuals){
 
 
 
-flag_residuals <- TRUE
+flag_residuals <- FALSE
 if(flag_residuals){
   param <- "mcd"
   setwd(root_dir)
