@@ -462,8 +462,8 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
   print(pl2)
 
   ############################################################################################################################
-  col_cor2 <- rev(colorspace::divergingx_hcl(palette = "Fall", n = 100))
-  col_var2 <- rev(colorspace::divergingx_hcl(palette = "Spectral", n = 100))
+  col_var2 <- rev(colorspace::diverging_hcl(palette = "Blue - Red 2", n = 100))
+  col_cor2 <- rev(colorspace::divergingx_hcl(palette = "RdBu", n = 100))[100:1]
 
   minV <- min((sqrt(diag(Sigma_predMat_model[[idx_min_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
   maxV <- max((sqrt(diag(Sigma_predMat_model[[idx_min_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
