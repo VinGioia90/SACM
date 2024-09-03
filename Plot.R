@@ -1577,7 +1577,7 @@ param <- "mcd"
 
 # here you select to visualisize "full" or "reduced"
 model <- "reduced"
-flag_residuals <- TRUE
+#flag_residuals <- FALSE
 
 fit_mcd_static_reduced_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
                                                      param = "mcd", model_type = "reduced", neff_reduced = 80,
