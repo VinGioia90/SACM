@@ -500,16 +500,16 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
 
   if(flag_res == TRUE){
     ggsave(paste0("Residuals_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_fixed, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
   } else {
     ggsave(paste0("Response_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_fixed, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
   }
   return(NULL)
 }
