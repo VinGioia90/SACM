@@ -40,6 +40,7 @@ nrun <- 10   # Set the number of runs
 ncores <- 10 # Set the number of cores
 
 scaleFUN <- function(x) sprintf("%.2f", x) # Number of decimal points set to 2
+scaleFUN2 <- function(x) sprintf("%.2f", x/1000) # Number of decimal points set to 2
 
 # logarithmic scale
 #myscale_trans <- function(){
@@ -275,7 +276,7 @@ data_time_iter_sum$Type2 <- factor(data_time_iter_sum$Type2, levels = c("Time", 
 #                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
 
 # To set manually
-label_time <- c(1, 5, 25, 50, 100, 450)
+label_time <- c(1, 5, 25, 50, 100, 500)
 
 ##########################################
 # Plot using square root scale: Figure 2 #
@@ -300,7 +301,7 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
   ggh4x::facetted_pos_scales(y = list(
     Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
+                                         sec.axis = sec_axis(~ . * 1, #labels = scaleFUN,
                                                              breaks = label_time)),
     Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                                sec.axis = sec_axis(~ . * 1,
@@ -376,7 +377,7 @@ data_time_iter_sum$Type2 <- factor(data_time_iter_sum$Type2, levels=c("Time","It
 #                   c(min(Value[Type2 == "Time" & Type == "MCD"]), min(Value[Type2 == "Time" & Type == "logM"]),
 #                     max(Value[Type2 == "Time" & Type == "MCD"]), max(Value[Type2 == "Time" & Type == "logM"])))
 
-label_time <- c(1, 5, 25, 50, 100, 450)
+label_time <- c(1, 5, 25, 50, 100, 500)
 
 pl_Fit_Time_Iter <- ggplot(data_time_iter,
                            aes(x = factor(d, labels = as.character(dgrid_sel), levels = as.character(dgrid_sel)), y = Value)) +
@@ -398,7 +399,7 @@ pl_Fit_Time_Iter <- ggplot(data_time_iter,
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))+
   ggh4x::facetted_pos_scales(y = list(
     Type2 == "Time" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-                                         sec.axis = sec_axis(~ . * 1, labels = scaleFUN,
+                                         sec.axis = sec_axis(~ . * 1, #labels = scaleFUN,
                                                              breaks = label_time)),
     Type2 == "Iterations" ~ scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                                                sec.axis = sec_axis(~ . * 1,
@@ -495,11 +496,12 @@ pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",], aes(x = logS_gen, 
   theme_bw() +
   facet_grid(. ~ "MCD generation") +
   xlab("LS - MCD fit") + ylab("LS - logM fit") +
-  scale_y_continuous(breaks = breaks_seq_MCDgen_y,
-                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks = breaks_seq_MCDgen_x,
-                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),)+
+  scale_y_continuous(breaks = breaks_seq_MCDgen_y, labels = scaleFUN2,#labels = scientific,
+                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN2, breaks = NULL),) +
+  scale_x_continuous(breaks = breaks_seq_MCDgen_x, labels = scaleFUN2,#labels = scientific,
+                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN2, breaks = NULL),)+
   theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12),  text = element_text(size = 15),
+        #axis.text.x=element_text(angle=45,  vjust = 0.65, hjust=0.5), axis.text.y=element_text(angle=45,  vjust = 0.65, hjust=0.5),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
@@ -515,11 +517,13 @@ pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",], aes(x = logS_gen
   xlab("LS - logM fit") + ylab("LS - MCD fit") +
   scale_color_manual(name = "Dimension", values = col_values)+
   theme_bw() +
-  scale_y_continuous(breaks = breaks_seq_logMgen_y,
+  scale_y_continuous(breaks = breaks_seq_logMgen_y, labels = scaleFUN2, #labels = scientific,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),) +
-  scale_x_continuous(breaks=breaks_seq_logMgen_x,
+  scale_x_continuous(breaks=breaks_seq_logMgen_x, labels = scaleFUN2, #labels = scientific,
                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN, breaks = NULL),)+
-  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12),  text = element_text(size = 15),
+  theme(panel.grid.minor = element_blank(), axis.text = element_text(size = 12),
+        #axis.text.x=element_text(angle=45,  vjust = 0.65, hjust=0.5), axis.text.y=element_text(angle=45,  vjust = 0.65, hjust=0.5),
+        text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
@@ -529,6 +533,8 @@ pl_logS1 <- ggarrange(pl_MCD_gen,
                       nrow = 1,
                       common.legend = TRUE,
                       legend = "bottom")
+
+
 
 setwd(root_dir)
 setwd("content/SupplementaryMaterial/Plots")
@@ -770,7 +776,7 @@ setwd(root_dir)
 setwd("content/Section6/Results")
 load(paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 
-LAML_extr <- LAML_extraction(sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
+LAML_extr <- LAML_extraction(obj = sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
 #LAML_efs <- as.numeric(LAML_extr[[1]])
 #LAML_bfgs <- as.numeric(LAML_extr[[2]])
 #LAML_bfgsinit <- as.numeric(LAML_extr[[3]])
@@ -1288,7 +1294,7 @@ if(flag_residuals){
 ###############################################
 # Both MCD and logM in the same plot          #
 ###############################################
-flag_residuals <- FALSE
+flag_residuals <- TRUE
 if(flag_residuals){
   setwd(root_dir)
   setwd("content/Section7/Results")
@@ -1479,7 +1485,7 @@ if(flag_residuals){
 
 
 
-flag_residuals <- FALSE
+flag_residuals <- TRUE
 if(flag_residuals){
   param <- "mcd"
   setwd(root_dir)
@@ -1590,11 +1596,12 @@ fit_mcd_static_reduced_residuals <- fit_model_AllData(data = GEF14_data_residual
 #fit_mcd_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
 #                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
 #                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
+#
 #fit_mcd_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
 #                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
 #                                                     grid_length = 5, grid_d = grid_d, d = 24)
 
+param <- "logm"
 fit_logm_static_reduced_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
                                                      param = "logm", model_type = "reduced", neff_reduced = 40,
                                                      grid_length = 5, grid_d = grid_d, d = 24)
