@@ -43,7 +43,6 @@ scaleFUN <- function(x) sprintf("%.2f", x) # Number of decimal points set to 2
 scaleFUN2 <- function(x) sprintf("%.2f", x/1000) # Number of decimal points set to 2
 
 # logarithmic scale
-#myscale_trans <- function(){
 #  trans_new("myscale", function(x) log(x),
 #            function(x) exp(x), domain = c(0, Inf))
 #}
@@ -787,59 +786,35 @@ LAML_bfgs <- as.numeric(LAML_extr[[4]])
 LAML_bfgsinit <- as.numeric(LAML_extr[[5]])
 
 
-#LAML <- data.frame(LAML_efs = rep(LAML_efs,2),
-#                   LAML_bfgs = c(LAML_bfgs, LAML_bfgsinit),
-#                   diff_LAML_bfgs_efs = c(LAML_bfgs - LAML_efs,  LAML_bfgsinit - LAML_efs),
-#                   rel_diff_LAML_bfgs_efs = c((LAML_bfgs - LAML_efs)/abs(LAML_bfgs), (LAML_bfgsinit - LAML_efs)/abs(LAML_bfgsinit)),
-#                   d =  rep(factor(rep(dgrid, each = nrun ), levels = dgrid),2),
-#                   init = c(rep("BFGS", length(LAML_efs)),rep("BFGS - init",length(LAML_efs))))
-LAML <- data.frame(LAML_efs = rep(LAML_efs, 4),
-                   LAML_other = c(LAML_exact_efs, LAML_exact_efs_initialised, LAML_bfgs, LAML_bfgsinit),
-                   diff_LAML_other_efs = c(LAML_exact_efs - LAML_efs, LAML_exact_efs_initialised - LAML_efs,
-                                           LAML_bfgs - LAML_efs,  LAML_bfgsinit - LAML_efs),
+LAML_fsVSefs <- data.frame(LAML_efs = rep(LAML_efs, 2),
+                   LAML_other = c(LAML_exact_efs, LAML_exact_efs_initialised),
+                   diff_LAML_other_efs = c(LAML_exact_efs - LAML_efs, LAML_exact_efs_initialised - LAML_efs),
                    rel_diff_LAML_other_efs = c((LAML_exact_efs - LAML_efs)/abs(LAML_exact_efs),
-                                               (LAML_exact_efs_initialised - LAML_efs)/abs(LAML_exact_efs),
-                                               (LAML_bfgs - LAML_efs)/abs(LAML_bfgs),
-                                               (LAML_bfgsinit - LAML_efs)/abs(LAML_bfgsinit)),
-                   d =  rep(factor(rep(dgrid, each = nrun ), levels = dgrid),4),
-                   init = c(rep("ExactFS", length(LAML_efs)), rep("ExactFS - init", length(LAML_efs)),
-                            rep("BFGS", length(LAML_efs)),rep("BFGS - init",length(LAML_efs))))
+                                               (LAML_exact_efs_initialised - LAML_efs)/abs(LAML_exact_efs)),
+                   d =  rep(factor(rep(dgrid, each = nrun ), levels = dgrid),2),
+                   init = c(rep("EFS", length(LAML_efs)), rep("EFS - init", length(LAML_efs))))
 
-TIMES <- fit_time(sim_mcd_fit, param = "mcd", dgrid, nrun)
-dgrid_sel <- dgrid # To select a subset of dgrid
-data_time <- TIMES$res[which(TIMES$res$d %in% dgrid_sel),]
-data_time_sum <- TIMES$sum_res[which(TIMES$sum_res$d %in% dgrid_sel),]
 
-#TIMES_sum <- data.frame(Value = c(data_time_sum$efs, data_time_sum$bamlss, data_time_sum$bfgs, data_time_sum$bfgsinit + data_time_sum$efs),
-#                        d = rep(dgrid, times = 4),
-#                        Type2 = rep(c("FS", "BAMLSS",  "BFGS","BFGS - init"), each=length(dgrid)))
-#
-#TIME_efs_bamlss_bfgs <- data.frame(Value = c(data_time$time_efs,data_time$time_bamlss, data_time$time_bfgs, data_time$time_bfgsinit + data_time$time_efs),
-#                              d = rep(rep(dgrid, each = nrun),4),
-#                              Type2 = rep(c("FS", "BAMLSS", "BFGS", "BFGS - init"), each=nrun*length(dgrid)))
-
-TIMES_sum <- data.frame(Value = c(data_time_sum$efs, data_time_sum$efsExact, data_time_sum$efsExact + data_time_sum$efs,
-                                  data_time_sum$bamlss, data_time_sum$bfgs, data_time_sum$bfgsinit + data_time_sum$efs),
-                        d = rep(dgrid, times = 6),
-                        Type2 = rep(c("FS", "ExactFS", "ExactFS - init", "BAMLSS",  "BFGS","BFGS - init"), each=length(dgrid)))
-
-TIME_efs_bamlss_bfgs <- data.frame(Value = c(data_time$time_efs, data_time$time_exact_efs, data_time$time_exact_efs + data_time$time_efs,
-                                             data_time$time_bamlss, data_time$time_bfgs, data_time$time_bfgsinit + data_time$time_efs),
-                                   d = rep(rep(dgrid, each = nrun), 6),
-                                   Type2 = rep(c("FS", "ExactFS", "ExactFS - init", "BAMLSS",  "BFGS", "BFGS - init"), each=nrun * length(dgrid)))
+LAML_fsVSbfgs <- data.frame(LAML_efs = rep(LAML_efs, 2),
+                            LAML_other = c(LAML_bfgs, LAML_bfgsinit),
+                            diff_LAML_other_efs = c(LAML_bfgs - LAML_efs,  LAML_bfgsinit - LAML_efs),
+                            rel_diff_LAML_other_efs = c((LAML_bfgs - LAML_efs)/abs(LAML_bfgs),
+                                                        (LAML_bfgsinit - LAML_efs)/abs(LAML_bfgsinit)),
+                            d =  rep(factor(rep(dgrid, each = nrun ), levels = dgrid),2),
+                            init = c(rep("BFGS", length(LAML_efs)),rep("BFGS - init",length(LAML_efs))))
 
 # absolute differences
-pl_LAML_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = diff_LAML_other_efs, color = init)) +
-  geom_point(aes(colour = as.factor(init)), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-  theme_bw() +
-  facet_grid(. ~ "(LAML(other) - LAML(EFS))") +
-  xlab("Dimension") + ylab("") +
-  scale_color_manual(name = "Type", values = c("ExactFS" =  "#0072B2", "ExactFS - init" =  "#00A9FF", "BFGS" = "#AE4371", "BFGS - init" = "#F8766D")) +
-  theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),  text = element_text(size = 15),
-        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+#pl_LAML_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = diff_LAML_other_efs, color = init)) +
+#  geom_point(aes(colour = as.factor(init)), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+#  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
+#  theme_bw() +
+#  facet_grid(. ~ "(LAML(other) - LAML(EFS))") +
+#  xlab("Dimension") + ylab("") +
+#  scale_color_manual(name = "Type", values = c("ExactFS" =  "#0072B2", "ExactFS - init" =  "#00A9FF", "BFGS" = "#AE4371", "BFGS - init" = "#F8766D")) +
+#  theme(panel.grid.minor = element_blank(),
+#        axis.text = element_text(size = 12),  text = element_text(size = 15),
+#        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+#        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
 
 
 # Decide whether plotting a line for the mean values
@@ -855,13 +830,27 @@ pl_LAML_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = diff_LAML_other_efs, color 
 #        axis.text = element_text(size = 12),  text = element_text(size = 15),
 #        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
 #        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-pl_LAML_rel_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = rel_diff_LAML_other_efs, color = init)) +
+
+
+pl_LAML_rel_diff_fs_efs <- ggplot(LAML_fsVSefs, aes(x = d, y = rel_diff_LAML_other_efs, color = init)) +
   geom_point(aes(colour = as.factor(init)), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
   theme_bw() +
-  facet_grid(. ~ "(LAML(other) - LAML(EFS)) / |LAML(other)|") +
+  facet_grid(. ~ "(LAML(EFS) - LAML(FS)) / |LAML(EFS)|") +
   xlab("Dimension") + ylab("") +
-  scale_color_manual(name = "Type", values = c("ExactFS" =  "#0072B2", "ExactFS - init" =  "#00A9FF", "BFGS" = "#AE4371", "BFGS - init" = "#F8766D")) +
+  scale_color_manual(name = "", values = c("EFS" =  "#0072B2", "EFS - init" =  "#F8766D")) +
+  theme(panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
+
+pl_LAML_rel_diff_fs_bfgs <- ggplot(LAML_fsVSbfgs, aes(x = d, y = rel_diff_LAML_other_efs, color = init)) +
+  geom_point(aes(colour = as.factor(init)), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+  geom_hline(yintercept = 0, col = "black", lty = "dashed") +
+  theme_bw() +
+  facet_grid(. ~ "(LAML(BFGS) - LAML(FS)) / |LAML(BFGS)|") +
+  xlab("Dimension") + ylab("") +
+  scale_color_manual(name = "", values = c("BFGS" = "#00A9FF", "BFGS - init" = "#AE4371")) +
   theme(panel.grid.minor = element_blank(),
         axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
@@ -870,58 +859,53 @@ pl_LAML_rel_diff_bfgs_efs <- ggplot(LAML, aes(x = d, y = rel_diff_LAML_other_efs
 
 # Comparison EFS v s BAMLSS in terms of computational times
 
-#TIME_efs_bamlss_bfgs$d <- factor(TIME_efs_bamlss_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-#TIME_efs_bamlss_bfgs$Type2 <- factor(TIME_efs_bamlss_bfgs$Type2, levels=c("FS","BFGS", "BFGS - init", "BAMLSS"), labels=c("FS","BFGS",  "BFGS - init", "BAMLSS"))
-#TIMES_sum$d <- factor(TIMES_sum$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-#TIMES_sum$Type2 <- factor(TIMES_sum$Type2, levels=c("FS", "BFGS", "BFGS - init",  "BAMLSS"), labels=c("FS", "BFGS", "BFGS - init",  "BAMLSS"))
-
-TIME_efs_bamlss_bfgs$d <- factor(TIME_efs_bamlss_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIME_efs_bamlss_bfgs$Type2 <- factor(TIME_efs_bamlss_bfgs$Type2, levels=c("FS", "ExactFS", "ExactFS - init", "BFGS", "BFGS - init", "BAMLSS"),
-                                     labels=c("FS", "ExactFS", "ExactFS - init", "BFGS",  "BFGS - init", "BAMLSS"))
-TIMES_sum$d <- factor(TIMES_sum$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIMES_sum$Type2 <- factor(TIMES_sum$Type2, levels=c("FS", "ExactFS", "ExactFS - init", "BFGS", "BFGS - init",  "BAMLSS"),
-                          labels=c("FS", "ExactFS", "ExactFS - init", "BFGS", "BFGS - init",  "BAMLSS"))
-
-breaks_seq_time <- c(2, 10, 25, 50, 100, 200, 400)
+TIMES <- fit_time(sim_mcd_fit, param = "mcd", dgrid, nrun)
+dgrid_sel <- dgrid # To select a subset of dgrid
+data_time <- TIMES$res[which(TIMES$res$d %in% dgrid_sel),]
+data_time_sum <- TIMES$sum_res[which(TIMES$sum_res$d %in% dgrid_sel),]
 
 
-# pl_Fit_Time_efs_bamlss_bfgs <- ggplot(TIME_efs_bamlss_bfgs,
-#                                  aes(x = as.factor(d), y = Value)) +
-#   geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
-#   geom_point(data = TIMES_sum,
-#              aes(x = as.factor(d),
-#                  y = Value, colour = Type2), size = 3,
-#              position = position_dodge(width = 0.1), show.legend = FALSE) +
-#   facet_grid(. ~ "Fitting times") +
-#   geom_line(data = TIMES_sum, aes(y = Value, group = Type2, col = Type2),
-#             position = position_dodge(width = 0.1)) +
-#   scale_color_manual(name = "Type", values = c("FS" = "#E76BF3", "BFGS - init" = "#F8766D", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
-#   theme_bw() +
-#   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-#                      sec.axis = sec_axis(~ . * 1,labels = scaleFUN,
-#                                          breaks = breaks_seq_time)) +
-#   scale_x_discrete(breaks = dgrid_sel) +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+TIMES_sum_efs_bamlss <- data.frame(Value = c(data_time_sum$efs, data_time_sum$efsExact, data_time_sum$efsExact_initalised + data_time_sum$efs, data_time_sum$bamlss),
+                                   d = rep(dgrid, times = 4),
+                                   Type2 = rep(c("FS", "EFS", "EFS - init", "BAMLSS"), each=length(dgrid)))
 
-pl_Fit_Time_efs_bamlss_bfgs <- ggplot(TIME_efs_bamlss_bfgs,
-                                      aes(x = as.factor(d), y = Value)) +
+TIME_efs_bamlss <- data.frame(Value = c(data_time$time_efs, data_time$time_exact_efs, data_time$time_exact_efs_initialised + data_time$time_efs, data_time$time_bamlss),
+                              d = rep(rep(dgrid, each = nrun), 4),
+                              Type2 = rep(c("FS", "EFS", "EFS - init", "BAMLSS"), each=nrun * length(dgrid)))
+
+TIMES_sum_efs_bfgs <- data.frame(Value = c(data_time_sum$efs, data_time_sum$bfgs, data_time_sum$bfgsinit + data_time_sum$efs),
+                                 d = rep(dgrid, times = 3),
+                                 Type2 = rep(c("FS", "BFGS","BFGS - init"), each=length(dgrid)))
+
+TIME_efs_bfgs <- data.frame(Value = c(data_time$time_efs, data_time$time_bfgs, data_time$time_bfgsinit + data_time$time_efs),
+                            d = rep(rep(dgrid, each = nrun), 3),
+                            Type2 = rep(c("FS", "BFGS", "BFGS - init"), each=nrun * length(dgrid)))
+
+
+TIME_efs_bamlss$d <- factor(TIME_efs_bamlss$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+TIME_efs_bamlss$Type2 <- factor(TIME_efs_bamlss$Type2, levels=c("FS", "EFS", "EFS - init", "BAMLSS"), labels=c("FS", "EFS", "EFS - init", "BAMLSS"))
+
+TIMES_sum_efs_bamlss$d <- factor(TIMES_sum_efs_bamlss$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+TIMES_sum_efs_bamlss$Type2 <- factor(TIMES_sum_efs_bamlss$Type2, levels = c("FS", "EFS", "EFS - init", "BAMLSS"), labels=c("FS", "EFS", "EFS - init", "BAMLSS"))
+
+TIME_efs_bfgs$d <- factor(TIME_efs_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+TIME_efs_bfgs$Type2 <- factor(TIME_efs_bfgs$Type2, levels=c("FS", "BFGS", "BFGS - init"), labels=c("FS", "BFGS",  "BFGS - init"))
+TIMES_sum_efs_bfgs$d <- factor(TIMES_sum_efs_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+TIMES_sum_efs_bfgs$Type2 <- factor(TIMES_sum_efs_bfgs$Type2, levels=c("FS", "BFGS", "BFGS - init"), labels=c("FS", "BFGS", "BFGS - init"))
+
+
+breaks_seq_time1 <- c(2, 10, 25, 50, 100, 200, 400)
+breaks_seq_time2 <- c(2, 10, 25, 50, 100, 150)
+
+pl_Fit_Time_efs_bamlss <- ggplot(TIME_efs_bamlss, aes(x = as.factor(d), y = Value)) +
   geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
-  geom_point(data = TIMES_sum,
-             aes(x = as.factor(d),
-                 y = Value, colour = Type2), size = 3,
-             position = position_dodge(width = 0.1), show.legend = FALSE) +
+  geom_point(data = TIMES_sum_efs_bamlss, aes(x = as.factor(d), y = Value, colour = Type2), size = 3, position = position_dodge(width = 0.1), show.legend = FALSE) +
   facet_grid(. ~ "Fitting times") +
-  geom_line(data = TIMES_sum, aes(y = Value, group = Type2, col = Type2),
-            position = position_dodge(width = 0.1)) +
-  scale_color_manual(name = "Type", values = c("FS" = "#E76BF3", "ExactFS" = "#0072B2", "ExactFS - init" = "#AE4371",
-                                               "BFGS - init" = "#F8766D", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
+  geom_line(data = TIMES_sum_efs_bamlss, aes(y = Value, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
+  scale_color_manual(name = "", values = c("FS" = "#E76BF3", "EFS" = "#0072B2", "EFS - init" = "#F8766D", "BAMLSS" = "#7CAE00")) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-                     sec.axis = sec_axis(~ . * 1,labels = scaleFUN,
+                     sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
                                          breaks = breaks_seq_time)) +
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("Dimension") + ylab("") +
@@ -931,16 +915,47 @@ pl_Fit_Time_efs_bamlss_bfgs <- ggplot(TIME_efs_bamlss_bfgs,
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
 
-pl_LAML_Times <- ggarrange(pl_LAML_rel_diff_bfgs_efs,
-                     pl_Fit_Time_efs_bamlss_bfgs,
+pl_Fit_Time_efs_bfgs <- ggplot(TIME_efs_bfgs, aes(x = as.factor(d), y = Value)) +
+  geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
+  geom_point(data = TIMES_sum_efs_bfgs, aes(x = as.factor(d), y = Value, colour = Type2), size = 3,
+             position = position_dodge(width = 0.1), show.legend = FALSE) +
+  facet_grid(. ~ "Fitting times") +
+  geom_line(data = TIMES_sum_efs_bfgs, aes(y = Value, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
+  scale_color_manual(name = "", values = c("FS" = "#E76BF3",  "BFGS - init" = "#AE4371", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
+  theme_bw() +
+  scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
+                     sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
+                                         breaks = breaks_seq_time2)) +
+  scale_x_discrete(breaks = dgrid_sel) +
+  xlab("Dimension") + ylab("") +
+  theme(panel.grid.minor = element_blank(),
+        axis.text = element_text(size = 12),  text = element_text(size = 15),
+        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+
+
+
+pl_LAML_Times_efs_bamlss <- ggarrange(pl_LAML_rel_diff_fs_efs,
+                     pl_Fit_Time_efs_bamlss,
                      nrow = 1,
                      common.legend = FALSE,
                      legend = "bottom")
 
+pl_LAML_Times_efs_bfgs <- ggarrange(pl_LAML_rel_diff_fs_bfgs,# +  rremove("xlab"),
+                                    pl_Fit_Time_efs_bfgs,# + rremove("xlab"),
+                                      nrow = 1,
+                                      common.legend = FALSE,
+                                      legend = "bottom")
+#annotate_figure(pl_LAML_Times_efs_bfgs, bottom = textGrob("Common x-axis", gp = gpar(cex = 1.3)))
+
+
 setwd(root_dir)
 setwd("content/Section6/Plots")
-ggsave("plot_LAML_Times.eps", pl_LAML_Times , width = 30, height = 15, units = "cm")
-ggsave("plot_LAML_Times.pdf", pl_LAML_Times , width = 30, height = 15, units = "cm")
+ggsave("plot_LAML_Times_efs_bamlss.eps", pl_LAML_Times_efs_bamlss , width = 30, height = 15, units = "cm")
+ggsave("plot_LAML_Times_efs_bamlss.pdf", pl_LAML_Times_efs_bamlss , width = 30, height = 15, units = "cm")
+
+ggsave("plot_LAML_Times_efs_bfgs.eps", pl_LAML_Times_efs_bfgs , width = 30, height = 15, units = "cm")
+ggsave("plot_LAML_Times_efs_bfgs.pdf", pl_LAML_Times_efs_bfgs , width = 30, height = 15, units = "cm")
 
 
 ##########################################################################################
