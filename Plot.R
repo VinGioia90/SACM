@@ -505,15 +505,15 @@ pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",], aes(x = logS_gen, 
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.1, "lines"))
 
 # Breaks label of x and y axes
-breaks_seq_logMgen_x <- as.numeric(tapply(logS[logS$Type2 == "logM - Generation",]$logS_gen, logS$d[logS$Type2 == "logM - Generation"], mean))
-breaks_seq_logMgen_y <- as.numeric(tapply(logS[logS$Type2 == "logM - Generation",]$logS_nogen, logS$d[logS$Type2 == "logM - Generation"], mean))
+breaks_seq_logMgen_x <- as.numeric(tapply(logS[logS$Type2 == "logM - Generation",]$logS_nogen, logS$d[logS$Type2 == "logM - Generation"], mean))
+breaks_seq_logMgen_y <- as.numeric(tapply(logS[logS$Type2 == "logM - Generation",]$logS_gen, logS$d[logS$Type2 == "logM - Generation"], mean))
 
 # Plot under logM generation (Note that logScores are represented in the original scale)
-pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",], aes(x = logS_gen, y = logS_nogen, color = d)) +
+pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",], aes(x = logS_nogen, y = logS_gen, color = d)) +
   geom_point(size = 2, show.legend = TRUE)+
   geom_abline(slope = 1, intercept = 0, col = "black") +
   facet_grid(. ~ "logM generation") +
-  xlab("LS - logM fit") + ylab("LS - MCD fit") +
+  xlab("LS - MCD fit") + ylab("LS - logM fit") +
   scale_color_manual(name = "Dimension", values = col_values)+
   theme_bw() +
   scale_y_continuous(breaks = breaks_seq_logMgen_y, labels = scaleFUN2, #labels = scientific,
@@ -537,8 +537,8 @@ pl_logS1 <- ggarrange(pl_MCD_gen,
 
 setwd(root_dir)
 setwd("content/SupplementaryMaterial/Plots")
-ggsave("plot_logScore1.eps", pl_logS1, width = 30, height = 15, units = "cm")
-ggsave("plot_logScore1.pdf", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1_new.eps", pl_logS1, width = 30, height = 15, units = "cm")
+ggsave("plot_logScore1_new.pdf", pl_logS1, width = 30, height = 15, units = "cm")
 
 #############################################
 # Code for reproducing Figure 3 - SECTION 4 #
@@ -751,7 +751,8 @@ pl_comp_Hbeta <- ggarrange(plot_perc_covmod_lpi,
                            pl_Hbeta ,
                            nrow = 1,
                            common.legend = TRUE,
-                           legend = "bottom")
+                           legend = "bottom",
+                           widths = c(1.055, 1))
 #pl_comp_Hbeta
 
 setwd(root_dir)
@@ -865,63 +866,48 @@ data_time <- TIMES$res[which(TIMES$res$d %in% dgrid_sel),]
 data_time_sum <- TIMES$sum_res[which(TIMES$sum_res$d %in% dgrid_sel),]
 
 
-TIMES_sum_efs_bamlss <- data.frame(Value = c(data_time_sum$efs, data_time_sum$efsExact, data_time_sum$efsExact_initalised + data_time_sum$efs, data_time_sum$bamlss),
-                                   d = rep(dgrid, times = 4),
-                                   Type2 = rep(c("FS", "EFS", "EFS - init", "BAMLSS"), each=length(dgrid)))
+TIMES_sum_efs_bamlss <- data.frame(Value = c(data_time_sum$efs, data_time_sum$efsExact, data_time_sum$bamlss),  #data_time_sum$efsExact_initalised + data_time_sum$efs,
+                                   relValue = c(rep(1, length(dgrid)), data_time_sum$efsExact/data_time_sum$efs, data_time_sum$bamlss/data_time_sum$efs),
+                                   d = rep(dgrid, times = 3),
+                                   Type2 = rep(c("FS", "EFS", "BAMLSS"), each=length(dgrid))) #"EFS - init",
 
-TIME_efs_bamlss <- data.frame(Value = c(data_time$time_efs, data_time$time_exact_efs, data_time$time_exact_efs_initialised + data_time$time_efs, data_time$time_bamlss),
-                              d = rep(rep(dgrid, each = nrun), 4),
-                              Type2 = rep(c("FS", "EFS", "EFS - init", "BAMLSS"), each=nrun * length(dgrid)))
+TIME_efs_bamlss <- data.frame(Value = c(data_time$time_efs, data_time$time_exact_efs, data_time$time_bamlss), #data_time$time_exact_efs_initialised + data_time$time_efs,
+                              relValue = c(data_time$time_efs/data_time$time_efs, data_time$time_exact_efs/data_time$time_efs, data_time$time_bamlss/data_time$time_efs),
+                              d = rep(rep(dgrid, each = nrun), 3),
+                              Type2 = rep(c("FS", "EFS", "BAMLSS"), each=nrun * length(dgrid))) #"EFS - init",
 
-TIMES_sum_efs_bfgs <- data.frame(Value = c(data_time_sum$efs, data_time_sum$bfgs, data_time_sum$bfgsinit + data_time_sum$efs),
-                                 d = rep(dgrid, times = 3),
-                                 Type2 = rep(c("FS", "BFGS","BFGS - init"), each=length(dgrid)))
+#TIMES_sum_efs_bfgs <- data.frame(Value = c(data_time_sum$efs, data_time_sum$bfgs, data_time_sum$bfgsinit + data_time_sum$efs),
+#                                 d = rep(dgrid, times = 3),
+#                                 Type2 = rep(c("FS", "BFGS","BFGS - init"), each=length(dgrid)))
 
-TIME_efs_bfgs <- data.frame(Value = c(data_time$time_efs, data_time$time_bfgs, data_time$time_bfgsinit + data_time$time_efs),
-                            d = rep(rep(dgrid, each = nrun), 3),
-                            Type2 = rep(c("FS", "BFGS", "BFGS - init"), each=nrun * length(dgrid)))
+#TIME_efs_bfgs <- data.frame(Value = c(data_time$time_efs, data_time$time_bfgs, data_time$time_bfgsinit + data_time$time_efs),
+#                            d = rep(rep(dgrid, each = nrun), 3),
+#                            Type2 = rep(c("FS", "BFGS", "BFGS - init"), each=nrun * length(dgrid)))
 
 
 TIME_efs_bamlss$d <- factor(TIME_efs_bamlss$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIME_efs_bamlss$Type2 <- factor(TIME_efs_bamlss$Type2, levels=c("FS", "EFS", "EFS - init", "BAMLSS"), labels=c("FS", "EFS", "EFS - init", "BAMLSS"))
+TIME_efs_bamlss$Type2 <- factor(TIME_efs_bamlss$Type2, levels=c("FS", "EFS", "BAMLSS"), # "EFS - init",
+                                labels=c("FS", "EFS", "BAMLSS")) #"EFS - init",
 
 TIMES_sum_efs_bamlss$d <- factor(TIMES_sum_efs_bamlss$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIMES_sum_efs_bamlss$Type2 <- factor(TIMES_sum_efs_bamlss$Type2, levels = c("FS", "EFS", "EFS - init", "BAMLSS"), labels=c("FS", "EFS", "EFS - init", "BAMLSS"))
+TIMES_sum_efs_bamlss$Type2 <- factor(TIMES_sum_efs_bamlss$Type2, levels = c("FS", "EFS", "BAMLSS"), #"EFS - init",
+                                     labels=c("FS", "EFS", "BAMLSS")) #"EFS - init",
 
-TIME_efs_bfgs$d <- factor(TIME_efs_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIME_efs_bfgs$Type2 <- factor(TIME_efs_bfgs$Type2, levels=c("FS", "BFGS", "BFGS - init"), labels=c("FS", "BFGS",  "BFGS - init"))
-TIMES_sum_efs_bfgs$d <- factor(TIMES_sum_efs_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
-TIMES_sum_efs_bfgs$Type2 <- factor(TIMES_sum_efs_bfgs$Type2, levels=c("FS", "BFGS", "BFGS - init"), labels=c("FS", "BFGS", "BFGS - init"))
+#TIME_efs_bfgs$d <- factor(TIME_efs_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+#TIME_efs_bfgs$Type2 <- factor(TIME_efs_bfgs$Type2, levels=c("FS", "BFGS", "BFGS - init"), labels=c("FS", "BFGS",  "BFGS - init"))
+#TIMES_sum_efs_bfgs$d <- factor(TIMES_sum_efs_bfgs$d, levels=as.character(dgrid_sel), labels=as.character(dgrid_sel))
+#TIMES_sum_efs_bfgs$Type2 <- factor(TIMES_sum_efs_bfgs$Type2, levels=c("FS", "BFGS", "BFGS - init"), labels=c("FS", "BFGS", "BFGS - init"))
 
 
 breaks_seq_time1 <- c(2, 10, 25, 50, 100, 200, 400)
-breaks_seq_time2 <- c(2, 10, 25, 50, 100, 150)
+breaks_seq_time2 <- c(1, 2, 5, 10, 25, 50, 75)
 
-pl_Fit_Time_efs_bamlss <- ggplot(TIME_efs_bamlss, aes(x = as.factor(d), y = Value)) +
+pl_Fit_Time_efs_bamlss <- ggplot(TIME_efs_bamlss[TIME_efs_bamlss$Type2 != "FS",], aes(x = as.factor(d), y = relValue)) +
   geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
-  geom_point(data = TIMES_sum_efs_bamlss, aes(x = as.factor(d), y = Value, colour = Type2), size = 3, position = position_dodge(width = 0.1), show.legend = FALSE) +
+  geom_point(data = TIMES_sum_efs_bamlss[TIMES_sum_efs_bamlss$Type2 != "FS",], aes(x = as.factor(d), y = relValue, colour = Type2), size = 3, position = position_dodge(width = 0.1), show.legend = FALSE) +
   facet_grid(. ~ "Fitting times") +
-  geom_line(data = TIMES_sum_efs_bamlss, aes(y = Value, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
-  scale_color_manual(name = "", values = c("FS" = "#E76BF3", "EFS" = "#0072B2", "EFS - init" = "#F8766D", "BAMLSS" = "#7CAE00")) +
-  theme_bw() +
-  scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-                     sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
-                                         breaks = breaks_seq_time)) +
-  scale_x_discrete(breaks = dgrid_sel) +
-  xlab("Dimension") + ylab("") +
-  theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),  text = element_text(size = 15),
-        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-        panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
-
-
-pl_Fit_Time_efs_bfgs <- ggplot(TIME_efs_bfgs, aes(x = as.factor(d), y = Value)) +
-  geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
-  geom_point(data = TIMES_sum_efs_bfgs, aes(x = as.factor(d), y = Value, colour = Type2), size = 3,
-             position = position_dodge(width = 0.1), show.legend = FALSE) +
-  facet_grid(. ~ "Fitting times") +
-  geom_line(data = TIMES_sum_efs_bfgs, aes(y = Value, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
-  scale_color_manual(name = "", values = c("FS" = "#E76BF3",  "BFGS - init" = "#AE4371", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
+  geom_line(data = TIMES_sum_efs_bamlss[TIMES_sum_efs_bamlss$Type2 != "FS",], aes(y = relValue, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
+  scale_color_manual(name = "", values = c("EFS" = "#F8766D", "BAMLSS" = "#0072B2")) + #"FS" = "#E76BF3", "EFS" = "#0072B2",  "BAMLSS" = "#7CAE00","EFS - init" = "#F8766D",
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
@@ -932,30 +918,53 @@ pl_Fit_Time_efs_bfgs <- ggplot(TIME_efs_bfgs, aes(x = as.factor(d), y = Value)) 
         axis.text = element_text(size = 12),  text = element_text(size = 15),
         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+setwd(root_dir)
+setwd("content/Section6/Plots")
+ggsave("pl_Fit_Time_efs_bamlss.eps", pl_Fit_Time_efs_bamlss , width = 15, height = 15, units = "cm")
+ggsave("pl_Fit_Time_efs_bamlss.pdf", pl_Fit_Time_efs_bamlss , width = 15, height = 15, units = "cm")
+
+#
+# pl_Fit_Time_efs_bfgs <- ggplot(TIME_efs_bfgs, aes(x = as.factor(d), y = Value)) +
+#   geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
+#   geom_point(data = TIMES_sum_efs_bfgs, aes(x = as.factor(d), y = Value, colour = Type2), size = 3,
+#              position = position_dodge(width = 0.1), show.legend = FALSE) +
+#   facet_grid(. ~ "Fitting times") +
+#   geom_line(data = TIMES_sum_efs_bfgs, aes(y = Value, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
+#   scale_color_manual(name = "", values = c("FS" = "#E76BF3",  "BFGS - init" = "#AE4371", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
+#   theme_bw() +
+#   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
+#                      sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
+#                                          breaks = breaks_seq_time2)) +
+#   scale_x_discrete(breaks = dgrid_sel) +
+#   xlab("Dimension") + ylab("") +
+#   theme(panel.grid.minor = element_blank(),
+#         axis.text = element_text(size = 12),  text = element_text(size = 15),
+#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
+#
 
 
+#pl_LAML_Times_efs_bamlss <- ggarrange(pl_LAML_rel_diff_fs_efs,
+#                     pl_Fit_Time_efs_bamlss,
+#                     nrow = 1,
+#                     common.legend = FALSE,
+#                     legend = "bottom")
 
-pl_LAML_Times_efs_bamlss <- ggarrange(pl_LAML_rel_diff_fs_efs,
-                     pl_Fit_Time_efs_bamlss,
-                     nrow = 1,
-                     common.legend = FALSE,
-                     legend = "bottom")
-
-pl_LAML_Times_efs_bfgs <- ggarrange(pl_LAML_rel_diff_fs_bfgs,# +  rremove("xlab"),
-                                    pl_Fit_Time_efs_bfgs,# + rremove("xlab"),
-                                      nrow = 1,
-                                      common.legend = FALSE,
-                                      legend = "bottom")
+#pl_LAML_Times_efs_bfgs <- ggarrange(pl_LAML_rel_diff_fs_bfgs,# +  rremove("xlab"),
+#                                    pl_Fit_Time_efs_bfgs,# + rremove("xlab"),
+#                                      nrow = 1,
+#                                      common.legend = FALSE,
+#                                      legend = "bottom")
 #annotate_figure(pl_LAML_Times_efs_bfgs, bottom = textGrob("Common x-axis", gp = gpar(cex = 1.3)))
 
 
-setwd(root_dir)
-setwd("content/Section6/Plots")
-ggsave("plot_LAML_Times_efs_bamlss.eps", pl_LAML_Times_efs_bamlss , width = 30, height = 15, units = "cm")
-ggsave("plot_LAML_Times_efs_bamlss.pdf", pl_LAML_Times_efs_bamlss , width = 30, height = 15, units = "cm")
-
-ggsave("plot_LAML_Times_efs_bfgs.eps", pl_LAML_Times_efs_bfgs , width = 30, height = 15, units = "cm")
-ggsave("plot_LAML_Times_efs_bfgs.pdf", pl_LAML_Times_efs_bfgs , width = 30, height = 15, units = "cm")
+#setwd(root_dir)
+#setwd("content/Section6/Plots")
+#ggsave("plot_LAML_Times_efs_bamlss.eps", pl_LAML_Times_efs_bamlss , width = 30, height = 15, units = "cm")
+#ggsave("plot_LAML_Times_efs_bamlss.pdf", pl_LAML_Times_efs_bamlss , width = 30, height = 15, units = "cm")
+#
+#ggsave("plot_LAML_Times_efs_bfgs.eps", pl_LAML_Times_efs_bfgs , width = 30, height = 15, units = "cm")
+#ggsave("plot_LAML_Times_efs_bfgs.pdf", pl_LAML_Times_efs_bfgs , width = 30, height = 15, units = "cm")
 
 
 ##########################################################################################
@@ -1608,13 +1617,13 @@ fit_mcd_static_reduced_residuals <- fit_model_AllData(data = GEF14_data_residual
                                                      param = "mcd", model_type = "reduced", neff_reduced = 65,
                                                      grid_length = 5, grid_d = grid_d, d = 24)
 
-#fit_mcd_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
-#                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
-#                                                     grid_length = 5, grid_d = grid_d, d = 24)
-#
-#fit_mcd_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
-#                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
-#                                                     grid_length = 5, grid_d = grid_d, d = 24)
+fit_mcd_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
+                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
+                                                     grid_length = 5, grid_d = grid_d, d = 24)
+
+fit_mcd_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
+                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
+                                                     grid_length = 5, grid_d = grid_d, d = 24)
 
 param <- "logm"
 fit_logm_static_reduced_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
@@ -1625,13 +1634,13 @@ fit_logm_static_reduced_residuals <- fit_model_AllData(data = GEF14_data_residua
                                                      param = "logm", model_type = "reduced", neff_reduced = 30,
                                                      grid_length = 5, grid_d = grid_d, d = 24)
 
-#fit_logm_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
-#                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-#                                                   grid_length = 5, grid_d = grid_d, d = 24)
+fit_logm_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
+                                                   param = "logm", model_type = "full", neff_reduced = NULL,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
-#fit_logm_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
-#                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-#                                                   grid_length = 5, grid_d = grid_d, d = 24)
+fit_logm_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
+                                                   param = "logm", model_type = "full", neff_reduced = NULL,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
 
 
@@ -1643,13 +1652,13 @@ plotHM_mcd_static_reduced_residuals <- plot_Heatmap(data = GEF14_data_residuals,
                                                      param = "mcd", model_type = "reduced", neff_reduced = 65,
                                                      grid_length = 5, grid_d = grid_d, d = 24)
 
-#plotHM_mcd_static_full_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
-#                                                   param = "mcd", model_type = "full", neff_reduced = NULL,
-#                                                   grid_length = 5, grid_d = grid_d, d = 24)
+plotHM_mcd_static_full_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
+                                                   param = "mcd", model_type = "full", neff_reduced = NULL,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
-#plotHM_mcd_static_full_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
-#                                                   param = "mcd", model_type = "full", neff_reduced = NULL,
-#                                                   grid_length = 5, grid_d = grid_d, d = 24)
+plotHM_mcd_static_full_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
+                                                   param = "mcd", model_type = "full", neff_reduced = NULL,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
 plotHM_logm_static_reduced_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
                                                      param = "logm", model_type = "reduced", neff_reduced = 40,
@@ -1659,379 +1668,34 @@ plotHM_logm_static_reduced_residuals <- plot_Heatmap(data = GEF14_data_residuals
                                                      param = "logm", model_type = "reduced", neff_reduced = 30,
                                                      grid_length = 5, grid_d = grid_d, d = 24)
 
-#plotHM_logm_static_full_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
-#                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-#                                                   grid_length = 5, grid_d = grid_d, d = 24)
+plotHM_logm_static_full_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
+                                                   param = "logm", model_type = "full", neff_reduced = NULL,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
-#plotHM_logm_static_full_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
-#                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-#                                                   grid_length = 5, grid_d = grid_d, d = 24)
-
-
+plotHM_logm_static_full_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
+                                                   param = "logm", model_type = "full", neff_reduced = NULL,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
 
 
 
 
+####################################
 
 
+plotHM_mcd_logM_static_reduced_response <- plot_Heatmap2(data = GEF14_data, flag_res = FALSE,
+                                                   model_type = "reduced", neff_reduced = 80,
+                                                   grid_length = 5, grid_d = grid_d, d = 24)
 
+plotHM_mcd_logM_static_reduced_residuals <- plot_Heatmap2(data = GEF14_data_residuals, flag_res = TRUE,
+                                                    model_type = "reduced", neff_reduced = 65,
+                                                    grid_length = 5, grid_d = grid_d, d = 24)
 
+plotHM_mcd_logM_static_full_response <- plot_Heatmap2(data = GEF14_data, flag_res = FALSE,
+                                                 model_type = "full", neff_reduced = NULL,
+                                                 grid_length = 5, grid_d = grid_d, d = 24)
 
+plotHM_mcd_logM_static_full_residuals <- plot_Heatmap2(data = GEF14_data_residuals, flag_res = TRUE,
+                                                 model_type = "full", neff_reduced = NULL,
+                                                 grid_length = 5, grid_d = grid_d, d = 24)
 
-
-# if(flag_residuals){
-#   neff_mcd <- 65
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#
-#
-#   jElem_mcd <-  which(neff_mcd == grid_d)
-#   res_mcd_fixed <- gam_scm(res_mcd$foo[[length(grid_d)]], family = mvn_scm(d = d), data = GEF14_data_residuals)
-#
-#   if(model == "full"){
-#     res_mcd_final <- gam_scm(res_mcd$foo[[1]], family = mvn_scm(d = d), data = GEF14_data_residuals)
-#   }
-#   if(model == "reduced"){
-#     res_mcd_final <- gam_scm(res_mcd$foo[[jElem_mcd]], family = mvn_scm(d = d), data = GEF14_data_residuals)
-#   }
-#
-#   Sigma_pred_fitD_MCD_fixed <- predict(res_mcd_fixed, type = "response")
-#   Sigma_predMat_fitD_MCD_fixed <-  Sigma_mat(Sigma_pred_fitD_MCD_fixed[,-c(1 : d)])
-#
-#
-#   Sigma_pred_fitD_MCD <- predict(res_mcd_final, type = "response")
-#   Sigma_predMat_fitD_MCD <-  Sigma_mat(Sigma_pred_fitD_MCD[,-c(1 : d)])
-#
-#   idx_min_CorrD_MCD <- which.min(unlist(lapply(1 : length(Sigma_predMat_fitD_MCD), function(x) unlist(mean(Sigma_predMat_fitD_MCD[[x]][lower.tri(Sigma_predMat_fitD_MCD[[x]])])))))
-#   idx_max_CorrD_MCD <- which.max(unlist(lapply(1 : length(Sigma_predMat_fitD_MCD), function(x) unlist(mean(Sigma_predMat_fitD_MCD[[x]][lower.tri(Sigma_predMat_fitD_MCD[[x]])])))))
-#
-#   col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
-#   col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 10)[1 : 5])
-#
-#   label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
-#   label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
-#
-#   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots")
-#
-#
-#   pl1_MCD_fixed <- heatmap_FitCov(Sigma_predMat_fitD_MCD_fixed[[1]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#   print(pl1_MCD_fixed)
-#   ggsave(paste0("Residuals_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_MCD_fixed, width = 20, height = 20, units = "cm")
-#
-#   pl1_MCD <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#
-#   date <- as.Date(paste(GEF14_data_residuals[idx_min_CorrD_MCD, "year"], GEF14_data_residuals[idx_min_CorrD_MCD, "doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl1_MCD <- pl1_MCD + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-#   print(pl1_MCD)
-#   pl2_MCD <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#   date <- as.Date(paste(GEF14_data_residuals[idx_max_CorrD_MCD,"year"], GEF14_data_residuals[idx_max_CorrD_MCD,"doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl2_MCD <- pl2_MCD +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
-#   print(pl2_MCD)
-#
-#   ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1_MCD, width = 20, height = 20, units = "cm")
-#   ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2_MCD, width = 20, height = 20, units = "cm")
-#
-#
-#   col_cor2 <- rev(colorspace::divergingx_hcl(palette = "Fall", n = 100))
-#   col_var2 <- rev(colorspace::divergingx_hcl(palette = "Spectral", n = 100))
-#
-#
-#   minV <- min((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#   maxV <- max((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#
-#
-#   lowTri <- lower.tri(Sigma_predMat_fitD_MCD_fixed[[1]])
-#   minC <- min((Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#   maxC <- max((Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#   pl1_MCD_diff <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]], PredCov2 = Sigma_predMat_fitD_MCD_fixed[[1]],
-#                                  d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
-#                                  label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
-#
-#   date <- as.Date(paste(GEF14_data_residuals[idx_min_CorrD_MCD, "year"], GEF14_data_residuals[idx_min_CorrD_MCD, "doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl1_MCD_diff  <- pl1_MCD_diff  + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-#   print(pl1_MCD_diff )
-#
-#
-#   minV <- min((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#   maxV <- max((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#
-#
-#   lowTri <- lower.tri(Sigma_predMat_fitD_MCD_fixed[[1]])
-#   minC <- min((Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#   maxC <- max((Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#
-#   pl2_MCD_diff  <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]], PredCov2 = Sigma_predMat_fitD_MCD_fixed[[1]],
-#                                   d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
-#                                   label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
-#
-#   date <- as.Date(paste(GEF14_data_residuals[idx_max_CorrD_MCD,"year"], GEF14_data_residuals[idx_max_CorrD_MCD,"doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl2_MCD_diff <- pl2_MCD_diff +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
-#   print(pl2_MCD_diff)
-#
-#   ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl1_MCD_diff, width = 20, height = 20, units = "cm")
-#   ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl2_MCD_diff, width = 20, height = 20, units = "cm")
-#
-#   setwd(root_dir)
-#   setwd("content/Section7")
-# } else {
-#
-#   neff_mcd <- 80
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
-#
-#   jElem_mcd <-  which(neff_mcd == grid_d)
-#   res_mcd_fixed <- gam_scm(res_mcd$foo[[length(grid_d)]], family = mvn_scm(d = d), data = GEF14_data)
-#
-#   if(model == "full"){
-#     res_mcd_final <- gam_scm(res_mcd$foo[[1]], family = mvn_scm(d = d), data = GEF14_data)
-#   }
-#   if(model == "reduced"){
-#     res_mcd_final <- gam_scm(res_mcd$foo[[jElem_mcd]], family = mvn_scm(d = d), data = GEF14_data)
-#   }
-#
-#
-#   Sigma_pred_fitD_MCD_fixed <- predict(res_mcd_fixed, type = "response")
-#   Sigma_predMat_fitD_MCD_fixed <-  Sigma_mat(Sigma_pred_fitD_MCD_fixed[,-c(1 : d)])
-#
-#
-#   Sigma_pred_fitD_MCD <- predict(res_mcd_final, type = "response")
-#   Sigma_predMat_fitD_MCD <-  Sigma_mat(Sigma_pred_fitD_MCD[,-c(1 : d)])
-#
-#   idx_min_CorrD_MCD <- which.min(unlist(lapply(1 : length(Sigma_predMat_fitD_MCD),
-#                                                function(x) unlist(mean(Sigma_predMat_fitD_MCD[[x]][lower.tri(Sigma_predMat_fitD_MCD[[x]])])))))
-#   idx_max_CorrD_MCD <- which.max(unlist(lapply(1 : length(Sigma_predMat_fitD_MCD),
-#                                                function(x) unlist(mean(Sigma_predMat_fitD_MCD[[x]][lower.tri(Sigma_predMat_fitD_MCD[[x]])])))))
-#
-#   col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
-#   col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 10)[1 : 5])
-#
-#   label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
-#   label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
-#
-#   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots")
-#
-#
-#   pl1_MCD_fixed <- heatmap_FitCov(Sigma_predMat_fitD_MCD_fixed[[1]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#   print(pl1_MCD_fixed)
-#   ggsave(paste0("Response_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_MCD, width = 20, height = 20, units = "cm")
-#
-#   pl1_MCD <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#
-#   date <- as.Date(paste(GEF14_data[idx_min_CorrD_MCD, "year"], GEF14_data[idx_min_CorrD_MCD, "doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl1_MCD <- pl1_MCD + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-#   print(pl1_MCD)
-#   pl2_MCD <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                             label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#   date <- as.Date(paste(GEF14_data[idx_max_CorrD_MCD,"year"], GEF14_data[idx_max_CorrD_MCD,"doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl2_MCD <- pl2_MCD +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
-#   print(pl2_MCD)
-#
-#   ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1_MCD, width = 20, height = 20, units = "cm")
-#   ggsave(paste0("Response_Vcormat_highCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2_MCD, width = 20, height = 20, units = "cm")
-#
-#   col_cor2 <- rev(colorspace::divergingx_hcl(palette = "Fall", n = 100))
-#   col_var2 <- rev(colorspace::divergingx_hcl(palette = "Spectral", n = 100))
-#
-#
-#   minV <- min((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#   maxV <- max((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#
-#
-#   lowTri <- lower.tri(Sigma_predMat_fitD_MCD_fixed[[1]])
-#   minC <- min((Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#   maxC <- max((Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#   pl1_MCD_diff <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_min_CorrD_MCD]], PredCov2 = Sigma_predMat_fitD_MCD_fixed[[1]],
-#                                  d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
-#                                  label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
-#
-#   date <- as.Date(paste(GEF14_data[idx_min_CorrD_MCD, "year"], GEF14_data[idx_min_CorrD_MCD, "doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl1_MCD_diff  <- pl1_MCD_diff  + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-#   print(pl1_MCD_diff )
-#
-#
-#   minV <- min((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#   maxV <- max((sqrt(diag(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]])) - sqrt(diag(Sigma_predMat_fitD_MCD_fixed[[1]]))))
-#
-#
-#   lowTri <- lower.tri(Sigma_predMat_fitD_MCD_fixed[[1]])
-#   minC <- min((Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#   maxC <- max((Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]] - Sigma_predMat_fitD_MCD_fixed[[1]])[lowTri])
-#
-#   pl2_MCD_diff  <- heatmap_FitCov(Sigma_predMat_fitD_MCD[[idx_max_CorrD_MCD]], PredCov2 = Sigma_predMat_fitD_MCD_fixed[[1]],
-#                                   d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
-#                                   label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
-#
-#   date <- as.Date(paste(GEF14_data[idx_max_CorrD_MCD,"year"], GEF14_data[idx_max_CorrD_MCD,"doy"]), format = "%Y %j")
-#   dow <- days[wday(date)]
-#   pl2_MCD_diff <- pl2_MCD_diff +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
-#   print(pl2_MCD_diff)
-#
-#   ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl1_MCD_diff, width = 20, height = 20, units = "cm")
-#   ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl2_MCD_diff, width = 20, height = 20, units = "cm")
-#
-#
-#   setwd(root_dir)
-#   setwd("content/Section7")
-#
-# }
-#
-#
-# ########################
-# # logM parametrisation #
-# ########################
-# param <- "logm"
-#
-# # here you select to visualisize "full", "reduced" or "fixed" cases
-# model <- "reduced"
-#
-#
-# flag_residuals <- TRUE
-# if(flag_residuals){
-#   neff_logm <- 30
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_residuals.RData"))
-#
-#   jElem_logm <-  which(neff_logm == grid_d)
-#
-#   if(model == "full"){
-#     res_logm_final <- gam_scm(res_logm$foo[[1]], family = mvn_scm(d = d, param = param), data = GEF14_data_residuals)
-#   }
-#   if(model == "reduced"){
-#     res_logm_final <- gam_scm(res_logm$foo[[jElem_logm]], family = mvn_scm(d = d, param = param), data = GEF14_data_residuals)
-#   }
-#   if(model == "fixed"){
-#     res_logm_final <- gam_scm(res_logm$foo[[length(grid_d)]], family = mvn_scm(d = d, param = param), data = GEF14_data_residuals)
-#   }
-#
-#   Sigma_pred_fitD_logM <- predict(res_logm_final, type = "response")
-#   Sigma_predMat_fitD_logM <-  Sigma_mat(Sigma_pred_fitD_logM[,-c(1 : d)])
-#
-#   idx_min_CorrD_logM <- which.min(unlist(lapply(1 : length(Sigma_predMat_fitD_logM), function(x) unlist(mean(Sigma_predMat_fitD_logM[[x]][lower.tri(Sigma_predMat_fitD_logM[[x]])])))))
-#   idx_max_CorrD_logM <- which.max(unlist(lapply(1 : length(Sigma_predMat_fitD_logM), function(x) unlist(mean(Sigma_predMat_fitD_logM[[x]][lower.tri(Sigma_predMat_fitD_logM[[x]])])))))
-#
-#   col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
-#   col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 10)[1 : 5])
-#
-#   label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
-#   label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
-#
-#   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots")
-#
-#   if(model == "fixed"){
-#     pl1_logM <- heatmap_FitCov(Sigma_predMat_fitD_logM[[1]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#     print(pl1_logM)
-#     ggsave(paste0("Residuals_Vcormat_param", param, "_model_", model, ".pdf"),  plot =  pl1_logM, width = 20, height = 20, units = "cm")
-#
-#   } else {
-#     pl1_logM <- heatmap_FitCov(Sigma_predMat_fitD_logM[[idx_min_CorrD_logM]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#
-#     date <- as.Date(paste(GEF14_data_residuals[idx_min_CorrD_logM, "year"], GEF14_data_residuals[idx_min_CorrD_logM, "doy"]), format = "%Y %j")
-#     dow <- days[wday(date)]
-#     pl1_logM <- pl1_logM + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-#     print(pl1_logM)
-#     pl2_logM <- heatmap_FitCov(Sigma_predMat_fitD_logM[[idx_max_CorrD_logM]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#     date <- as.Date(paste( GEF14_data_residuals[idx_max_CorrD_logM,"year"],  GEF14_data_residuals[idx_max_CorrD_logM,"doy"]), format = "%Y %j")
-#     dow <- days[wday(date)]
-#     pl2_logM <- pl2_logM +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
-#     print(pl2_logM)
-#     ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1_logM, width = 20, height = 20, units = "cm")
-#     ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2_logM, width = 20, height = 20, units = "cm")
-#   }
-#
-#   setwd(root_dir)
-#   setwd("content/Section7")
-# } else {
-#
-#   neff_logm <- 40
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
-#
-#   jElem_logm <-  which(neff_logm == grid_d)
-#
-#
-#   if(model == "full"){
-#     res_logm_final <- gam_scm(res_logm$foo[[1]], family = mvn_scm(d = d, param = param), data = GEF14_data)
-#   }
-#   if(model == "reduced"){
-#     res_logm_final <- gam_scm(res_logm$foo[[jElem_logm]], family = mvn_scm(d = d, param = param), data = GEF14_data)
-#   }
-#   if(model == "fixed"){
-#     res_logm_final <- gam_scm(res_logm$foo[[length(grid_d)]], family = mvn_scm(d = d, param = param), data = GEF14_data)
-#   }
-#
-#   Sigma_pred_fitD_logM <- predict(res_logm_final, type = "response")
-#   Sigma_predMat_fitD_logM <-  Sigma_mat(Sigma_pred_fitD_logM[,-c(1 : d)])
-#
-#   idx_min_CorrD_logM <- which.min(unlist(lapply(1 : length(Sigma_predMat_fitD_logM),
-#                                                function(x) unlist(mean(Sigma_predMat_fitD_logM[[x]][lower.tri(Sigma_predMat_fitD_logM[[x]])])))))
-#   idx_max_CorrD_logM <- which.max(unlist(lapply(1 : length(Sigma_predMat_fitD_logM),
-#                                                function(x) unlist(mean(Sigma_predMat_fitD_logM[[x]][lower.tri(Sigma_predMat_fitD_logM[[x]])])))))
-#
-#   col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
-#   col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 10)[1 : 5])
-#
-#   label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
-#   label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
-#
-#   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots")
-#
-#
-#   if(model == "fixed"){
-#     pl1_logM <- heatmap_FitCov(Sigma_predMat_fitD_logM[[1]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#     print(pl1_logM)
-#     ggsave(paste0("Response_Vcormat_param", param, "_model_", model, ".pdf"),  plot =  pl1_logM, width = 20, height = 20, units = "cm")
-#   } else {
-#     pl1_logM <- heatmap_FitCov(Sigma_predMat_fitD_logM[[idx_min_CorrD_logM]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#
-#     date <- as.Date(paste(GEF14_data[idx_min_CorrD_logM, "year"], GEF14_data[idx_min_CorrD_logM, "doy"]), format = "%Y %j")
-#     dow <- days[wday(date)]
-#     pl1_logM <- pl1_logM + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-#     print(pl1_logM)
-#     pl2_logM <- heatmap_FitCov(Sigma_predMat_fitD_logM[[idx_max_CorrD_logM]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
-#                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-#     date <- as.Date(paste(GEF14_data[idx_max_CorrD_logM,"year"], GEF14_data[idx_max_CorrD_logM,"doy"]), format = "%Y %j")
-#     dow <- days[wday(date)]
-#     pl2_logM <- pl2_logM +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
-#     print(pl2_logM)
-#     ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1_logM, width = 20, height = 20, units = "cm")
-#     ggsave(paste0("Response_Vcormat_highCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2_logM, width = 20, height = 20, units = "cm")
-#   }
-#
-#
-#   setwd(root_dir)
-#   setwd("content/Section7")
-#
-# }
