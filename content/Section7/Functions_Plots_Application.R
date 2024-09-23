@@ -500,16 +500,193 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
 
   if(flag_res == TRUE){
     ggsave(paste0("Residuals_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_fixed, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
   } else {
     ggsave(paste0("Response_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_fixed, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
-    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl1_diff, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model_type, "_diffStatic.pdf"),  plot =  pl2_diff, width = 20, height = 20, units = "cm")
+  }
+  return(NULL)
+}
+
+
+
+
+plot_Heatmap2 <- function(data, flag_res = TRUE, model_type = c("reduced", "full"),
+                          neff_reduced = NULL, grid_length = 5, grid_d = grid_d, d = 24){
+  model_type <- match.arg(model_type)
+
+  setwd(root_dir)
+  setwd("content/Section7/Results")
+
+  if(flag_res == TRUE){
+    load(paste0("fit_AllData_parammcd_d_", d, "_model_Static_residuals.RData"))
+    load(paste0("fit_AllData_parammcd_d_", d, "_model_", model_type, "_residuals.RData"))
+  } else {
+    load(paste0("fit_AllData_parammcd_d_", d, "_model_Static_response.RData"))
+    load(paste0("fit_AllData_parammcd_d_", d, "_model_", model_type, "_response.RData"))
+  }
+
+
+  Sigma_pred_fixed_MCD <- predict(res_fixed, type = "response")
+  Sigma_predMat_fixed_MCD <-  Sigma_mat(Sigma_pred_fixed_MCD[,-c(1 : d)])
+
+  Sigma_pred_model_MCD <- predict(res_final, type = "response")
+  Sigma_predMat_model_MCD <-  Sigma_mat(Sigma_pred_model_MCD[,-c(1 : d)])
+
+  idx_min_Corr_MCD <- which.min(unlist(lapply(1 : length(Sigma_predMat_model_MCD), function(x) unlist(mean(Sigma_predMat_model_MCD[[x]][lower.tri(Sigma_predMat_model_MCD[[x]])])))))
+  idx_max_Corr_MCD <- which.max(unlist(lapply(1 : length(Sigma_predMat_model_MCD), function(x) unlist(mean(Sigma_predMat_model_MCD[[x]][lower.tri(Sigma_predMat_model_MCD[[x]])])))))
+
+  if(flag_res == TRUE){
+    load(paste0("fit_AllData_paramlogm_d_", d, "_model_Static_residuals.RData"))
+    load(paste0("fit_AllData_paramlogm_d_", d, "_model_", model_type, "_residuals.RData"))
+  } else {
+    load(paste0("fit_AllData_paramlogm_d_", d, "_model_Static_response.RData"))
+    load(paste0("fit_AllData_paramlogm_d_", d, "_model_", model_type, "_response.RData"))
+  }
+
+  Sigma_pred_fixed_logM <- predict(res_fixed, type = "response")
+  Sigma_predMat_fixed_logM <-  Sigma_mat(Sigma_pred_fixed_logM[,-c(1 : d)])
+
+  Sigma_pred_model_logM <- predict(res_final, type = "response")
+  Sigma_predMat_model_logM <-  Sigma_mat(Sigma_pred_model_logM[,-c(1 : d)])
+
+  col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
+  col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 10)[1 : 5])
+
+  label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
+  label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
+  days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+
+  setwd(root_dir)
+  setwd("content/Section7/Plots")
+
+
+  # Min corr using the model predictions
+  pl1_MCD <- heatmap_FitCov(Sigma_predMat_model_MCD[[idx_min_Corr_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
+                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
+
+  date <- as.Date(paste(data[idx_min_Corr_MCD, "year"], data[idx_min_Corr_MCD, "doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl1_MCD <- pl1_MCD + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
+  print(pl1_MCD)
+
+  pl1_logM <- heatmap_FitCov(Sigma_predMat_model_logM[[idx_min_Corr_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
+                             label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
+
+  date <- as.Date(paste(data[idx_min_Corr_MCD, "year"], data[idx_min_Corr_MCD, "doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl1_logM <- pl1_logM + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
+  print(pl1_logM)
+
+
+  # Max corr using the model predictions
+  pl2_MCD <- heatmap_FitCov(Sigma_predMat_model_MCD[[idx_max_Corr_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
+                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
+  date <- as.Date(paste(data[idx_max_Corr_MCD,"year"], data[idx_max_Corr_MCD,"doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl2_MCD <- pl2_MCD +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
+  print(pl2_MCD)
+
+  pl2_logM <- heatmap_FitCov(Sigma_predMat_model_logM[[idx_max_Corr_MCD]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
+                             label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
+  date <- as.Date(paste(data[idx_max_Corr_MCD,"year"], data[idx_max_Corr_MCD,"doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl2_logM <- pl2_logM +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
+  print(pl2_logM)
+
+
+  ############################################################################################################################
+  col_var2 <- rev(colorspace::diverging_hcl(palette = "Blue - Red 2", n = 100))
+  col_cor2 <- rev(colorspace::divergingx_hcl(palette = "RdBu", n = 100))[100:1]
+
+  minV <- min((sqrt(diag(Sigma_predMat_model_MCD[[idx_min_Corr_MCD]])) - sqrt(diag(Sigma_predMat_fixed_MCD[[1]]))))
+  maxV <- max((sqrt(diag(Sigma_predMat_model_MCD[[idx_min_Corr_MCD]])) - sqrt(diag(Sigma_predMat_fixed_MCD[[1]]))))
+
+  lowTri <- lower.tri(Sigma_predMat_fixed_MCD[[1]])
+  minC <- min((Sigma_predMat_model_MCD[[idx_min_Corr_MCD]] - Sigma_predMat_fixed_MCD[[1]])[lowTri])
+  maxC <- max((Sigma_predMat_model_MCD[[idx_min_Corr_MCD]] - Sigma_predMat_fixed_MCD[[1]])[lowTri])
+
+  pl1_diff_MCD <- heatmap_FitCov(Sigma_predMat_model_MCD[[idx_min_Corr_MCD]], PredCov2 = Sigma_predMat_fixed_MCD[[1]],
+                                 d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
+                                 label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
+
+  date <- as.Date(paste(data[idx_min_Corr_MCD, "year"], data[idx_min_Corr_MCD, "doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl1_diff_MCD  <- pl1_diff_MCD  + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
+  print(pl1_diff_MCD )
+
+
+  minV <- min((sqrt(diag(Sigma_predMat_model_logM[[idx_min_Corr_MCD]])) - sqrt(diag(Sigma_predMat_fixed_logM[[1]]))))
+  maxV <- max((sqrt(diag(Sigma_predMat_model_logM[[idx_min_Corr_MCD]])) - sqrt(diag(Sigma_predMat_fixed_logM[[1]]))))
+
+  lowTri <- lower.tri(Sigma_predMat_fixed_logM[[1]])
+  minC <- min((Sigma_predMat_model_logM[[idx_min_Corr_MCD]] - Sigma_predMat_fixed_logM[[1]])[lowTri])
+  maxC <- max((Sigma_predMat_model_logM[[idx_min_Corr_MCD]] - Sigma_predMat_fixed_logM[[1]])[lowTri])
+
+  pl1_diff_logM <- heatmap_FitCov(Sigma_predMat_model_logM[[idx_min_Corr_MCD]], PredCov2 = Sigma_predMat_fixed_logM[[1]],
+                                  d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
+                                  label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
+
+  date <- as.Date(paste(data[idx_min_Corr_MCD, "year"], data[idx_min_Corr_MCD, "doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl1_diff_logM  <- pl1_diff_logM  + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
+  print(pl1_diff_logM )
+
+  ####################################
+  minV <- min((sqrt(diag(Sigma_predMat_model_MCD[[idx_max_Corr_MCD]])) - sqrt(diag(Sigma_predMat_fixed_MCD[[1]]))))
+  maxV <- max((sqrt(diag(Sigma_predMat_model_MCD[[idx_max_Corr_MCD]])) - sqrt(diag(Sigma_predMat_fixed_MCD[[1]]))))
+
+
+  lowTri <- lower.tri(Sigma_predMat_fixed_MCD[[1]])
+  minC <- min((Sigma_predMat_model_MCD[[idx_max_Corr_MCD]] - Sigma_predMat_fixed_MCD[[1]])[lowTri])
+  maxC <- max((Sigma_predMat_model_MCD[[idx_max_Corr_MCD]] - Sigma_predMat_fixed_MCD[[1]])[lowTri])
+
+  pl2_diff_MCD  <- heatmap_FitCov(Sigma_predMat_model_MCD[[idx_max_Corr_MCD]], PredCov2 = Sigma_predMat_fixed_MCD[[1]],
+                                  d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
+                                  label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
+
+  date <- as.Date(paste(data[idx_max_Corr_MCD,"year"], data[idx_max_Corr_MCD,"doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl2_diff_MCD <- pl2_diff_MCD +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
+  print(pl2_diff_MCD)
+
+  lowTri <- lower.tri(Sigma_predMat_fixed_logM[[1]])
+  minC <- min((Sigma_predMat_model_logM[[idx_max_Corr_MCD]] - Sigma_predMat_fixed_logM[[1]])[lowTri])
+  maxC <- max((Sigma_predMat_model_logM[[idx_max_Corr_MCD]] - Sigma_predMat_fixed_logM[[1]])[lowTri])
+
+  pl2_diff_logM  <- heatmap_FitCov(Sigma_predMat_model_logM[[idx_max_Corr_MCD]], PredCov2 = Sigma_predMat_fixed_logM[[1]],
+                                   d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
+                                   label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
+
+  date <- as.Date(paste(data[idx_max_Corr_MCD,"year"], data[idx_max_Corr_MCD,"doy"]), format = "%Y %j")
+  dow <- days[wday(date)]
+  pl2_diff_logM <- pl2_diff_logM +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
+  print(pl2_diff_logM)
+
+  plot1 <- ggarrange(pl1_diff_MCD + ggtitle("MCD"), pl1_diff_logM + ggtitle("logM"), nrow = 1)
+  plot2 <- ggarrange(pl2_diff_MCD + ggtitle("MCD"), pl2_diff_logM + ggtitle("logM"), nrow = 1)
+
+
+  if(flag_res == TRUE){
+    # ggsave(paste0("Residuals_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_fixed, width = 20, height = 20, units = "cm")
+    # ggsave(paste0("Residuals_Vcormat_lowCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
+    # ggsave(paste0("Residuals_Vcormat_HighCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_lowCorr_param_MCDvslogM_model_", model_type, "_diffStatic_FIXDAY.pdf"),  plot = plot1 , width = 40, height = 20, units = "cm")
+    ggsave(paste0("Residuals_Vcormat_lowCorr_param_MCDvslogM_model_", model_type, "_diffStatic_FIXDAY.pdf"),  plot = plot2, width = 40, height = 20, units = "cm")
+
+  } else {
+    # ggsave(paste0("Response_Vcormat_param", param, "_model_fixed.pdf"),  plot =  pl1_fixed, width = 20, height = 20, units = "cm")
+    # ggsave(paste0("Response_Vcormat_lowCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl1, width = 20, height = 20, units = "cm")
+    # ggsave(paste0("Response_Vcormat_HighCorr_param", param, "_model_", model_type, ".pdf"),  plot =  pl2, width = 20, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_lowCorr_param_MCDvslogM_model_", model_type, "_diffStatic_FIXDAY.pdf"),  plot =  plot1, width =40, height = 20, units = "cm")
+    ggsave(paste0("Response_Vcormat_lowCorr_param_MCDvslogM_model_", model_type, "_diffStatic_FIXDAY.pdf"),  plot =  plot2, width = 40, height = 20, units = "cm")
+
   }
   return(NULL)
 }

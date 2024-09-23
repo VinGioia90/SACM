@@ -186,6 +186,21 @@ rm("sim_mcd_fit")
 gc()
 
 
+
+dgrid <- c(15, 20, 25, 30)
+nobs <- 10000
+sg <- FALSE # This avoids saving the gam object
+
+sim_mcd_fit_fs_efs <- sim_est_fs_efs(nobs_train = nobs, nobs_test = nobs, dgrid,  nrun, ncores, param = "mcd",
+                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), save.gam = sg,
+                               root_dir = root_dir)
+
+save(sim_mcd_fit_fs_efs,
+     file = paste0("Results/sim_mcd_fit_fs_efs_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
+rm("sim_mcd_fit_fs_efs")
+gc()
+
+
 #############
 # SECTION 7 #
 #############
@@ -416,3 +431,4 @@ for(outcome in c("residuals", "response")){
                                           grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov, "_", outcome, ".RData" ))
   }
 }
+

@@ -398,4 +398,125 @@ void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, co
 }
 
 
+sim_est_fs_efs <- function(nobs_train, nobs_test, dgrid,
+                           nrun, ncores, param = "mcd", expl_mean, expl_Theta,
+                           save.gam = "TRUE", blockN = rep(1, length(dgrid)),
+                           pint = 0, root_dir){
+
+  res_sim <- function(dgrid, nobs_train, nobs_test, param,  expl_mean, expl_Theta, save.gam, blockN, pint, seq_seed){
+    dss <- lapply(1 : length(dgrid), function(jj){
+      out <- list()
+      out$sim <- datagen(d = dgrid[jj], nobs_train = nobs_train, nobs_test = nobs_test,
+                         pint = pint, seed = 13 * dgrid[jj] * seq_seed, param = param)
+      out$foo <-  mformula(d = dgrid[jj], expl_mean = expl_mean, expl_Theta = expl_Theta, idxcov_int = out$sim$idxint)
+      if(save.gam == "TRUE"){
+        fam <- mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj])
+        fam$exact_fs <- NULL
+        time_efs <- microbenchmark(out$fit_efs <- gam_scm(out$foo,
+                                                          family = fam,
+                                                          optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
+        out$time_efs <- time_efs$time
+        out$outer_efs <- out$fit_efs$iter
+        out$inner_efs <- out$fit_efs$family$getNC() - 1
+
+        fam$exact_fs <- TRUE
+        time_exact_efs <- microbenchmark(out$fit_exact_efs <- gam_scm(out$foo,
+                                                                      family = fam,
+                                                                      optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
+        out$time_exact_efs <- time_exact_efs$time
+        out$outer_exact_efs <- out$fit_exact_efs$iter
+        out$inner_exact_efs <- out$fit_exact_efs$family$getNC() - 1
+      } else {
+        fam <- mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj])
+        fam$exact_fs <- NULL
+        time_efs <- microbenchmark(fit_efs <- gam_scm(out$foo,
+                                                      family = fam,
+                                                      optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
+        out$time_efs <- time_efs$time
+        out$outer_efs<- fit_efs$iter
+        out$inner_efs <- fit_efs$family$getNC() - 1
+        out$LAML_efs <- fit_efs$gcv.ubre
+        out$lpi_pred_efs <- predict(fit_efs)
+        out$lpi_pred_test_efs <- predict(fit_efs, newdata = as.data.frame(out$sim$data_test))
+
+        fam$exact_fs <- TRUE
+        time_exact_efs <- microbenchmark(fit_exact_efs <- gam_scm(out$foo,
+                                                                  family = fam,
+                                                                  optimizer= "efs",
+                                                                  data = as.data.frame(out$sim$data_train)), times = 1L)
+        out$time_exact_efs <- time_exact_efs$time
+        out$outer_exact_efs<- fit_exact_efs$iter
+        out$inner_exact_efs <- fit_exact_efs$family$getNC() - 1
+        out$LAML_exact_efs <- fit_exact_efs$gcv.ubre
+        out$lpi_pred_exact_efs <- predict(fit_exact_efs)
+        out$lpi_pred_test_exact_efs <- predict(fit_exact_efs, newdata = as.data.frame(out$sim$data_test))
+
+
+        time_exact_efs_initialised <- microbenchmark(fit_exact_efs_initialised <- gam_scm(out$foo,
+                                                                                          family = fam,
+                                                                                          optimizer= "efs",
+                                                                                          data = as.data.frame(out$sim$data_train),
+                                                                                          aGam = list(start = fit_efs$coef, in.out = list(sp = fit_efs$sp, scale = 1))), times = 1L)
+        out$time_exact_efs_initialised <- time_exact_efs_initialised$time
+        out$outer_exact_efs_initialised<- fit_exact_efs_initialised$iter
+        out$inner_exact_efs_initialised <- fit_exact_efs_initialised$family$getNC() - 1
+        out$LAML_exact_efs_initialised <- fit_exact_efs_initialised$gcv.ubre
+        out$lpi_pred_exact_efs_initialised <- predict(fit_exact_efs_initialised)
+        out$lpi_pred_test_exact_efs_initialised <- predict(fit_exact_efs_initialised, newdata = as.data.frame(out$sim$data_test))
+      }
+      return(out)
+    })
+    return(dss)
+  }
+
+  seq_seed <- (1:nrun)^2
+
+  cl <- makePSOCKcluster(ncores)
+  setDefaultCluster(cl)
+  clusterExport(NULL, c("nobs_train", "nobs_test", "dgrid", "param", "expl_mean", "expl_Theta",
+                        "save.gam", "blockN", "pint", "datagen", "mformula",
+                        "seq_seed", "res_sim", "root_dir"), envir = environment())
+  clusterEvalQ(NULL, {
+    library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
+    library(SCM)
+    library(microbenchmark)
+    if(packageVersion("mgcv") != "9.0"){
+      stop("Wrong version of mgcv!!")
+    }
+    library(Rcpp)
+    sourceCpp(code = "
+#include <RcppArmadillo.h>
+// [[Rcpp::depends(RcppArmadillo)]]
+
+using namespace Rcpp;
+
+// [[Rcpp::export]]
+void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, const int k_sp) {
+  int kk = k_sp - 1;
+  int dd;
+  for (int i = 0; i < ind.n_elem; ++i) {
+    dd = ind(i) - 1;
+    E(dd, dd) = exp(rho(kk) * 0.5);
+  }
+}
+")
+  })
+
+  out_res_sim <- function(.x){
+    out2 <- res_sim(dgrid = dgrid, nobs_train = nobs_train, nobs_test = nobs_test, param = param,
+                    expl_mean = expl_mean, expl_Theta = expl_Theta,
+                    save.gam = save.gam, blockN = blockN, pint = pint, seq_seed = seq_seed[.x])
+    return(list(gen = out2))
+  }
+
+  environment(out_res_sim) <- .GlobalEnv
+
+  res <- list()
+  res <- parLapply(NULL, 1 : nrun, out_res_sim)
+
+  stopCluster(cl)
+  rm(cl)
+  return(res)
+}
+
 
