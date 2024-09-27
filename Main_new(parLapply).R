@@ -126,39 +126,52 @@ setwd(root_dir)
 setwd("content/Section4")
 source("Functions_Evaluation_Hessian_beta_parLapply.R")
 
+nobs <- 1000
+dgrid <- seq(10, 150, by = 10)
+ncoef <- 10
+pint_type <- c("dm05", "dm1", "dm1c2", "dm2", "const")
+
 ##################################
 # MCD: Not included in the paper #
 ##################################
-nobs <- 1000
-dgrid <- seq(10, 200, by = 10)
-ncoef <- 10
-# S1 and S2 corresponds to dm05 and dm2
-pint_type <- c("dm05", "dm1", "dm2", "const")
-TIME_MCD_beta <- get_time_results(nobs, dgrid,  nrun, ncores, pint = pint_type,
-                                  ncoef = ncoef, nb = 1, param = 1, pint_value = 0.99)
-save(TIME_MCD_beta, file = paste0("Results/TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,".RData"))
-rm("TIME_MCD_beta")
+int.Mean <- FALSE
+TIME_MCD_beta_noMeanInt <- get_time_results(nobs, dgrid,  nrun, ncores, pint = pint_type,
+                                            ncoef = ncoef, nb = 1, param = 1, pint_value = 0.99, int.Mean = int.Mean)
+save(TIME_MCD_beta_noMeanInt, file = paste0("Results/TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,"intMean", int.Mean,".RData"))
+rm("TIME_MCD_beta_noMeanInt")
 gc()
+
+int.Mean <- TRUE
+TIME_MCD_beta_MeanInt <- get_time_results(nobs, dgrid,  nrun, ncores, pint = pint_type,
+                                          ncoef = ncoef, nb = 1, param = 1, pint_value = 0.99, int.Mean = int.Mean)
+save(TIME_MCD_beta_MeanInt, file = paste0("Results/TIME_mcd_beta_d",min(dgrid),"_",max(dgrid),"_nobs",nobs,"intMean", int.Mean,".RData"))
+rm("TIME_MCD_beta_MeanInt")
+gc()
+
+
 
 ###############################
 # logM: included in the paper #
 ###############################
-nobs <- 1000
-dgrid <- seq(5, 100, by = 5)
-ncoef <- 10
-# S1 and S2 corresponds to dm05 and dm2
-pint_type <- c("dm05", "dm1", "dm2", "const")
+int.Mean <- FALSE
+TIME_logM_beta_noMeanInt <- get_time_results(nobs, dgrid,  nrun,ncores,
+                                             pint = pint_type, ncoef = ncoef,
+                                             nb = 1, param = 2, pint_value = 0.99, int.Mean = int.Mean)
 
-TIME_logM_beta <- get_time_results(nobs, dgrid,  nrun,ncores,
-                                   pint = pint_type, ncoef = ncoef,
-                                   nb = 1, param = 2, pint_value = 0.99)
-
-save(TIME_logM_beta,
-     file = paste0("Results/TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs, ".RData"))
-
-rm("TIME_logM_beta")
+save(TIME_logM_beta_noMeanInt,
+     file = paste0("Results/TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs,"intMean", int.Mean,".RData"))
+rm("TIME_logM_beta_noMeanInt")
 gc()
 
+int.Mean <- TRUE
+TIME_logM_beta_MeanInt <- get_time_results(nobs, dgrid,  nrun,ncores,
+                                           pint = pint_type, ncoef = ncoef,
+                                           nb = 1, param = 2, pint_value = 0.99, int.Mean = int.Mean)
+
+save(TIME_logM_beta_MeanInt,
+     file = paste0("Results/TIME_logm_beta_d", min(dgrid), "_", max(dgrid), "_nobs", nobs,"intMean", int.Mean,".RData"))
+rm("TIME_logM_beta_MeanInt")
+gc()
 
 #############
 # SECTION 6 #
