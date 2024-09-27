@@ -200,6 +200,8 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
     library(Rcpp)
   })
 
+  environment(sim_time) <- .GlobalEnv
+
   out_time <- function(.x){
     out2 <- sim_time(dgrid = dgrid, nobs = nobs, param = param,  ncoef = ncoef, nb = nb, int.Mean = int.Mean)
     return(list(time = out2))
