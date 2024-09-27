@@ -18,7 +18,7 @@ source("aux_idx_new.R")
 # block: intercepts block strategy (TRUE) and no block strategy (FALSE)                     #
 # seed: is used to get fixed some quantities during the comparison                          #
 #############################################################################################
-get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
+get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123, int.Mean = FALSE){
 
   # Set of indices for useful for the MCD parametrisation
   z <- w <- t <- rep(0, (d * (d - 1)/2))
@@ -36,8 +36,11 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
 
   # random generation of the intercepts in the covariance matrix model
   intercepts <- sample(0 : 1, d * (d + 1)/2, prob= c(pint, 1 - pint), replace = TRUE)
-  intercepts <- c(rep(1, d), intercepts)
-
+  if(int.Mean == FALSE){
+    intercepts <- c(rep(1, d), intercepts)
+  } else {
+    intercepts <- c(rep(0, d), intercepts)
+  }
   # X generation: here we filled with random values but it could be filled with zeros (or considering ones in the intercept indices)
   dimX <- sum(intercepts == 0) + ncoef * sum(intercepts == 1)
   X <- matrix(rnorm(nobs * dimX), nobs, dimX)
@@ -123,17 +126,18 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123){
 #########################################################################################################################
 
 time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
-                              pint = c("dm05", "dm1", "dm2", "const"),
-                              ncoef = 10, nb = 1, param = 1, pint_value = 1){
+                              pint = c("dm05", "dm1", "dm1c2", "dm2", "const"),
+                              ncoef = 10, nb = 1, param = 1, pint_value = 1, int.Mean = FALSE){
   pint <- match.arg(pint)
   # Setting the scenario of interest (in the paper we just reported dm05 and dm2)
   pint_function <- switch(pint,
                           const = function(d) pint_value,
                           dm05 = function(d) 1 - 1/sqrt(d),
-                          dm1 = function(d) 1 - 1/d,
+                          dm1 = function(d) 1-1/d, #1 - 1/d,
+                          dm1c2 = function(d) 1-2/d,
                           dm2 = function(d) 1 - 1/(d ^ 2) )
 
-  sim_time <- function(dgrid, nobs, param, ncoef, nb){
+  sim_time <- function(dgrid, nobs, param, ncoef, nb, int.Mean){
     sourceCpp("idx_zwGt.cpp")         # Indices z,w,G
     sourceCpp("d2_beta_noeta.cpp")    # Cpp code for computing the derivatives w.r.t. beta
 
@@ -143,13 +147,17 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
     out$thessian_noblock <- rep(0,length(dgrid))  # Here, we save the computational times without using the block strategy
 
     for(jj in 1 : length(dgrid)){
-       d <- dgrid[jj]
+       d <-  dgrid[jj]
+       #d <- 150
        seed <- sample(1 : nobs, 1) # We used a seed for generating quantities, despite it could be avoided
        # Get the needed quantities for computing the 2nd  order derivatives w.r.t. beta
        getq1 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                             nb = nb, param = param, block = TRUE, seed = seed) # via intercept blocks
+                             nb = nb, param = param, block = TRUE, seed = seed, int.Mean = int.Mean) # via intercept blocks
+
        getq2 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                             nb = nb, param = param, block = FALSE, seed = seed) # without intercept blocks
+                             nb = nb, param = param, block = FALSE, seed = seed, int.Mean = int.Mean) # without intercept blocks
+
+
        attr(out, "nb1") <- getq1$nb
        p <- ncol(getq1$X)
        lbb <- matrix(0, p, p)
@@ -186,14 +194,14 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
   setDefaultCluster(cl)
   clusterExport(NULL, c("nobs", "dgrid", "pint", "ncoef", "nb",
                         "param", "pint_value", "idxHess_no0", "aux_idx_new",
-                        "pint_function", "sim_time", "get_quantity"), envir = environment())
+                        "pint_function", "sim_time", "get_quantity", "int.Mean"), envir = environment())
   clusterEvalQ(NULL, {
     library(microbenchmark)
     library(Rcpp)
   })
 
   out_time <- function(.x){
-    out2 <- sim_time(dgrid = dgrid, nobs = nobs, param = param,  ncoef = ncoef, nb = nb)
+    out2 <- sim_time(dgrid = dgrid, nobs = nobs, param = param,  ncoef = ncoef, nb = nb, int.Mean = int.Mean)
     return(list(time = out2))
   }
 
@@ -219,13 +227,13 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
 # pint_value: percentage of intercepts for the const scenario                          #
 ########################################################################################
 
-get_time_results <- function(nobs, dgrid,  nrun, ncores, pint = NULL, ncoef = 10, nb = 1, param = 1, pint_value = 1){
+get_time_results <- function(nobs, dgrid,  nrun, ncores, pint = NULL, ncoef = 10, nb = 1, param = 1, pint_value = 1, int.Mean = FALSE){
   out <- list()
   for(j in 1 : length(pint)){
     if(pint[j] != "const"){
-      out[[j]] <-  time_hessian_beta(nobs, dgrid,  nrun, ncores, pint = pint[j], ncoef, nb, param)
+      out[[j]] <-  time_hessian_beta(nobs, dgrid,  nrun, ncores, pint = pint[j], ncoef, nb, param, int.Mean = int.Mean)
     } else {
-      out[[j]] <-  time_hessian_beta(nobs, dgrid,  nrun, ncores, pint = pint[j], ncoef, nb, param, pint_value)
+      out[[j]] <-  time_hessian_beta(nobs, dgrid,  nrun, ncores, pint = pint[j], ncoef, nb, param, pint_value, int.Mean = int.Mean)
     }
   }
   return(out)
