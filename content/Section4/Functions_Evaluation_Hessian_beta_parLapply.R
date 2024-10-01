@@ -71,15 +71,22 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123, int
   idx_aux <- aux_idx_new(jj, idx_jk, no_eta, block)
 
   # Set the number of blocks if the allocation of the 2nd derivatives matrix is more than 1GB
-  check.size <- ((nobs %/% nb) * (nHel - idx_aux$llls) * 8/1e9) < 1
-  while(check.size == FALSE){
-    nb <- nb + 1
-    check.size <- ((nobs %/% nb) * (nHel - idx_aux$llls) * 8/1e9) < 1
+  nset_max <- floor(1e9 / (8 * (nHel - idx_aux$llls))) # Max nobs for each block
+  nset <- min(nset_max, nobs)                          # Actual number of obs per block
+  if(nset < 1){
+    stop("Can not allocate lets that 1GB of memory!")
   }
-  if(check.size == FALSE) print(nb)
 
-  nlast <- nobs %% nb
-  nset <- nobs %/% nb
+  while(TRUE){
+    nb <- nobs %/% nset
+    nlast <- nobs %% (nb * nset)
+    if(nlast < nset_max){
+      if( !(nb == 1 && nlast != 0) ){ # Dirty solution
+        break
+      }
+    }
+    nset <- nset - 1
+  }
 
   # Derivatives w.r.t. eta: initialization
   if(nb > 1){
@@ -147,45 +154,45 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
     out$thessian_noblock <- rep(0,length(dgrid))  # Here, we save the computational times without using the block strategy
 
     for(jj in 1 : length(dgrid)){
-       d <-  dgrid[jj]
-       #d <- 150
-       seed <- sample(1 : nobs, 1) # We used a seed for generating quantities, despite it could be avoided
-       # Get the needed quantities for computing the 2nd  order derivatives w.r.t. beta
-       getq1 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                             nb = nb, param = param, block = TRUE, seed = seed, int.Mean = int.Mean) # via intercept blocks
+      d <-  dgrid[jj]
+      #d <- 150
+      seed <- sample(1 : nobs, 1) # We used a seed for generating quantities, despite it could be avoided
+      # Get the needed quantities for computing the 2nd  order derivatives w.r.t. beta
+      getq1 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
+                            nb = nb, param = param, block = TRUE, seed = seed, int.Mean = int.Mean) # via intercept blocks
 
-       getq2 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                             nb = nb, param = param, block = FALSE, seed = seed, int.Mean = int.Mean) # without intercept blocks
+      getq2 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
+                            nb = nb, param = param, block = FALSE, seed = seed, int.Mean = int.Mean) # without intercept blocks
 
 
-       attr(out, "nb1") <- getq1$nb
-       p <- ncol(getq1$X)
-       lbb <- matrix(0, p, p)
+      attr(out, "nb1") <- getq1$nb
+      p <- ncol(getq1$X)
+      lbb <- matrix(0, p, p)
 
-       #  Get the computational times (the only difference between the followings is related to use getq1 and getq2)
-       time<- microbenchmark({
-          d2_beta_noeta(getq1$X, getq1$eta, getq1$y, getq1$lpi, getq1$K,
-                        lbb, getq1$l2, getq1$l2_v, getq1$l2_l, getq1$l2_v_l,
-                        getq1$idx_b, getq1$z, getq1$w, getq1$Gm, getq1$t,
-                        getq1$idx_aux$b1_eta, getq1$idx_aux$b1, getq1$idx_aux$b2,
-                        getq1$idx_aux$b3, getq1$idx_aux$idx_b1_eta, getq1$idx_aux$idx_b3,
-                        getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
+      #  Get the computational times (the only difference between the followings is related to use getq1 and getq2)
+      time<- microbenchmark({
+        d2_beta_noeta(getq1$X, getq1$eta, getq1$y, getq1$lpi, getq1$K,
+                      lbb, getq1$l2, getq1$l2_v, getq1$l2_l, getq1$l2_v_l,
+                      getq1$idx_b, getq1$z, getq1$w, getq1$Gm, getq1$t,
+                      getq1$idx_aux$b1_eta, getq1$idx_aux$b1, getq1$idx_aux$b2,
+                      getq1$idx_aux$b3, getq1$idx_aux$idx_b1_eta, getq1$idx_aux$idx_b3,
+                      getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
 
-       }, times = 1L)
-       out$thessian_block[jj] <- time$time # computational times using the block strategy
+      }, times = 1L)
+      out$thessian_block[jj] <- time$time # computational times using the block strategy
 
-       lbb <- matrix(0, p, p)
-       time<- microbenchmark({
-         d2_beta_noeta(getq2$X, getq2$eta, getq2$y, getq2$lpi, getq2$K,
-                       lbb, getq2$l2, getq2$l2_v, getq2$l2_l, getq2$l2_v_l,
-                       getq2$idx_b, getq2$z, getq2$w, getq2$Gm, getq2$t,
-                       getq2$idx_aux$b1_eta, getq2$idx_aux$b1, getq2$idx_aux$b2,
-                       getq2$idx_aux$b3, getq2$idx_aux$idx_b1_eta, getq2$idx_aux$idx_b3,
-                       getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
+      lbb <- matrix(0, p, p)
+      time<- microbenchmark({
+        d2_beta_noeta(getq2$X, getq2$eta, getq2$y, getq2$lpi, getq2$K,
+                      lbb, getq2$l2, getq2$l2_v, getq2$l2_l, getq2$l2_v_l,
+                      getq2$idx_b, getq2$z, getq2$w, getq2$Gm, getq2$t,
+                      getq2$idx_aux$b1_eta, getq2$idx_aux$b1, getq2$idx_aux$b2,
+                      getq2$idx_aux$b3, getq2$idx_aux$idx_b1_eta, getq2$idx_aux$idx_b3,
+                      getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
 
-       } ,times = 1L)
-       out$thessian_noblock[jj] <- time$time # computational times without using the block strategy
-     }
+      } ,times = 1L)
+      out$thessian_noblock[jj] <- time$time # computational times without using the block strategy
+    }
     return(out)
   }
 

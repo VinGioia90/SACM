@@ -127,7 +127,7 @@ setwd("content/Section4")
 source("Functions_Evaluation_Hessian_beta_parLapply.R")
 
 nobs <- 1000
-dgrid <- seq(10, 150, by = 10)
+dgrid <- seq(10, 120, by = 10)
 ncoef <- 10
 pint_type <- c("dm05", "dm1", "dm1c2", "dm2", "const")
 
