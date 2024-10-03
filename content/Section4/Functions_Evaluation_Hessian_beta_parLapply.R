@@ -4,7 +4,7 @@
 
 # The following codes return the indices used for sparsity handling
 source("idxHess_no0.R")
-#new version: an ifelse statement allows to consider the intercepts' blocks strategy (as implemented in the family) or not
+#new version: an ifelse statement allows to consider the intercepts' parsimonious strategy (as implemented in the family) or not
 source("aux_idx_new.R")
 
 #############################################################################################
@@ -13,12 +13,12 @@ source("aux_idx_new.R")
 # pint: percentage of intercepts involved in covariance matrix modelling                    #
 # nobs: number of rows                                                                      #
 # ncoef: number of coefficients for each linear predictor (excluding the intercepts' case)  #
-# nb: number of observations' block (for chuncking strategy)                                #
+# nb: number of observations' block (for chunking strategy)                                #
 # param: mcd (1) and logm (2)                                                               #
-# block: intercepts block strategy (TRUE) and no block strategy (FALSE)                     #
+# parsimonious: intercepts parsimonious strategy (TRUE) and no parsimonious strategy (FALSE) #
 # seed: is used to get fixed some quantities during the comparison                          #
 #############################################################################################
-get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123, int.Mean = FALSE){
+get_quantity <- function(d, pint, nobs, ncoef, nb, param, parsimonious, seed = 123, int.Mean = FALSE){
 
   # Set of indices for useful for the MCD parametrisation
   z <- w <- t <- rep(0, (d * (d - 1)/2))
@@ -35,21 +35,22 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123, int
   y <- matrix(rnorm(nobs * d), nobs, d)
 
   # random generation of the intercepts in the covariance matrix model
-  intercepts <- sample(0 : 1, d * (d + 1)/2, prob= c(pint, 1 - pint), replace = TRUE)
+  # TRUE means intercept!
+  intercepts <- sample(c(TRUE, FALSE), d * (d + 1)/2, prob = c(pint, 1 - pint), replace = TRUE)
   if(int.Mean == FALSE){
-    intercepts <- c(rep(1, d), intercepts)
+    intercepts <- c(rep(FALSE, d), intercepts)
   } else {
-    intercepts <- c(rep(0, d), intercepts)
+    intercepts <- c(rep(TRUE, d), intercepts)
   }
   # X generation: here we filled with random values but it could be filled with zeros (or considering ones in the intercept indices)
-  dimX <- sum(intercepts == 0) + ncoef * sum(intercepts == 1)
+  dimX <- sum(intercepts == TRUE) + ncoef * sum(intercepts == FALSE)
   X <- matrix(rnorm(nobs * dimX), nobs, dimX)
 
   # Build lpi indices
   jj <- list()
   count <- 1
   for(j in 1 : no_eta){
-    if(intercepts[j] == 0){
+    if( intercepts[j] ){ # if TRUE, j-th lin pred modelled only via intercept
       jj[[j]] <- count
       #X[,count]<-rep(1,nobs) # We avoid to place intercepts and we retain the generated X
       count <- count + 1
@@ -68,7 +69,7 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123, int
 
   # Get the indices of the derivatives different from zero
   idx_jk <- idxHess_no0(no_eta, z, w, param)
-  idx_aux <- aux_idx_new(jj, idx_jk, no_eta, block)
+  idx_aux <- aux_idx_new(jj, idx_jk, no_eta, parsimonious)
 
   # Set the number of blocks if the allocation of the 2nd derivatives matrix is more than 1GB
   nset_max <- floor(1e9 / (8 * (nHel - idx_aux$llls))) # Max nobs for each block
@@ -120,7 +121,7 @@ get_quantity <- function(d, pint, nobs, ncoef, nb, param, block, seed = 123, int
 
 #########################################################################################################################
 # This function calls the generated quantities function and then evaluate the derivatives w.r.t. beta for each scenario #
-# (intercepts block strategy vs the standard one). Arguments:                                                           #
+# (intercepts parsimonious strategy vs the standard one). Arguments:                                                    #
 # nobs: number of rows                                                                                                  #
 # dgrid: grid of outcome vector dimensions                                                                              #
 # nrun: number of runs                                                                                                  #
@@ -150,8 +151,8 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
 
     out <- list()
 
-    out$thessian_block <- rep(0,length(dgrid))    # Here, we save the computational times leveraging the block strategy
-    out$thessian_noblock <- rep(0,length(dgrid))  # Here, we save the computational times without using the block strategy
+    out$thessian_block <- rep(0,length(dgrid))    # Here, we save the computational times leveraging the parsimonious strategy
+    out$thessian_noblock <- rep(0,length(dgrid))  # Here, we save the computational times without using the parsimonious strategy
 
     for(jj in 1 : length(dgrid)){
       d <-  dgrid[jj]
@@ -159,10 +160,10 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
       seed <- sample(1 : nobs, 1) # We used a seed for generating quantities, despite it could be avoided
       # Get the needed quantities for computing the 2nd  order derivatives w.r.t. beta
       getq1 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                            nb = nb, param = param, block = TRUE, seed = seed, int.Mean = int.Mean) # via intercept blocks
+                            nb = nb, param = param, parsimonious = TRUE, seed = seed, int.Mean = int.Mean) # via parsimonious
 
       getq2 <- get_quantity(d = d, pint = pint_function(d), nobs = nobs, ncoef = ncoef,
-                            nb = nb, param = param, block = FALSE, seed = seed, int.Mean = int.Mean) # without intercept blocks
+                            nb = nb, param = param, parsimonious = FALSE, seed = seed, int.Mean = int.Mean) # without parsimonious
 
 
       attr(out, "nb1") <- getq1$nb
@@ -179,7 +180,7 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
                       getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
 
       }, times = 1L)
-      out$thessian_block[jj] <- time$time # computational times using the block strategy
+      out$thessian_block[jj] <- time$time # computational times using the parsimonious strategy
 
       lbb <- matrix(0, p, p)
       time<- microbenchmark({
@@ -191,7 +192,7 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
                       getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
 
       } ,times = 1L)
-      out$thessian_noblock[jj] <- time$time # computational times without using the block strategy
+      out$thessian_noblock[jj] <- time$time # computational times without using the parsimonious strategy
     }
     return(out)
   }
