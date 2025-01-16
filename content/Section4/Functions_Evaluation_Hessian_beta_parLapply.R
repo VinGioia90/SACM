@@ -148,6 +148,7 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
   sim_time <- function(dgrid, nobs, param, ncoef, nb, int.Mean){
     sourceCpp("idx_zwGt.cpp")         # Indices z,w,G
     sourceCpp("d2_beta_noeta.cpp")    # Cpp code for computing the derivatives w.r.t. beta
+    sourceCpp("d2_beta_noeta_overheads.cpp")    # Needed to quantify the time needed to allocate matrices etc in the previous part
 
     out <- list()
 
@@ -180,7 +181,16 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
                       getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
 
       }, times = 1L)
-      out$thessian_block[jj] <- time$time # computational times using the parsimonious strategy
+      time_over <- microbenchmark({
+        d2_beta_noeta_overheads(getq1$X, getq1$eta, getq1$y, getq1$lpi, getq1$K,
+                      lbb, getq1$l2, getq1$l2_v, getq1$l2_l, getq1$l2_v_l,
+                      getq1$idx_b, getq1$z, getq1$w, getq1$Gm, getq1$t,
+                      getq1$idx_aux$b1_eta, getq1$idx_aux$b1, getq1$idx_aux$b2,
+                      getq1$idx_aux$b3, getq1$idx_aux$idx_b1_eta, getq1$idx_aux$idx_b3,
+                      getq1$idx_aux$l2_el, getq1$idx_aux$l2_el2 , getq1$param)
+
+      }, times = 1L)
+      out$thessian_block[jj] <- time$time - time_over$time # computational times using the parsimonious strategy
 
       lbb <- matrix(0, p, p)
       time<- microbenchmark({
@@ -192,7 +202,16 @@ time_hessian_beta <- function(nobs, dgrid,  nrun, ncores,
                       getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
 
       } ,times = 1L)
-      out$thessian_noblock[jj] <- time$time # computational times without using the parsimonious strategy
+      time_over <- microbenchmark({
+        d2_beta_noeta_overheads(getq2$X, getq2$eta, getq2$y, getq2$lpi, getq2$K,
+                      lbb, getq2$l2, getq2$l2_v, getq2$l2_l, getq2$l2_v_l,
+                      getq2$idx_b, getq2$z, getq2$w, getq2$Gm, getq2$t,
+                      getq2$idx_aux$b1_eta, getq2$idx_aux$b1, getq2$idx_aux$b2,
+                      getq2$idx_aux$b3, getq2$idx_aux$idx_b1_eta, getq2$idx_aux$idx_b3,
+                      getq2$idx_aux$l2_el, getq2$idx_aux$l2_el2, getq2$param)
+
+      } ,times = 1L)
+      out$thessian_noblock[jj] <- time$time - time_over$time # computational times without using the parsimonious strategy
     }
     return(out)
   }
