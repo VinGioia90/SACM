@@ -1516,7 +1516,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       x <- Sl.repara(rp$rp,x) ## apply re-parameterization to x
       Eb <- Sl.repara(rp$rp,Eb) ## root balanced penalty
       TMP <- as(rp$E, "sparseMatrix")
-      TMP <- Matrix:::crossprod(TMP)
+      TMP <- Matrix::crossprod(TMP)
       St <- as.matrix(TMP)
       #St <- crossprod(rp$E) ## total penalty matrix
       E <- rp$E ## root total penalty
@@ -1649,7 +1649,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       # tic <- Sys.time()
       sparse_calls <- 1
       Hp_sparse <- as(Hp, "sparseMatrix")
-      cdec <- Matrix:::Cholesky(Hp_sparse, perm = TRUE)
+      cdec <- Matrix::Cholesky(Hp_sparse, perm = TRUE)
       flag_OK <- TRUE
       while( flag_OK ){
         L2 <- try(expand(cdec, "L")$L, TRUE)
@@ -1657,7 +1657,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
           L <- t(L2)
           flag_OK <- FALSE
         } else {
-          cdec <- Matrix:::Cholesky(Hp_sparse + Ip, perm = TRUE)
+          cdec <- Matrix::Cholesky(Hp_sparse + Ip, perm = TRUE)
           Ip <- Ip * 100 ## increase regularization penalty
           sparse_calls <- sparse_calls + 1
         }
@@ -2106,7 +2106,7 @@ gam.fit5 <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,deriv=2,family,scoreTyp
       x <- Sl.repara(rp$rp,x) ## apply re-parameterization to x
       Eb <- Sl.repara(rp$rp,Eb) ## root balanced penalty
       TMP <- as(rp$E, "sparseMatrix")
-      TMP <- Matrix:::crossprod(TMP)
+      TMP <- Matrix::crossprod(TMP)
       St <- as.matrix(TMP)
       #St <- crossprod(rp$E) ## total penalty matrix
       E <- rp$E ## root total penalty
@@ -2656,7 +2656,7 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
     TL <- t(as(fit$L, "sparseMatrix")) # as(fit$L, "dtTMatrix")
     DD <- diag(fit$D, nrow = p)[piv, ]
     Vb <- as(forwardsolve(TL, DD), "sparseMatrix")[ipiv, , drop = FALSE]
-    Vb <- Matrix:::crossprod(Vb)
+    Vb <- Matrix::crossprod(Vb)
     Vb <- as.matrix(Vb)
     #print(max(abs(Vb - crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE]))))
   } else {
@@ -2776,7 +2776,7 @@ efsud <- function(x,y,lsp,Sl,weights=NULL,offset=NULL,family,
         TL <- t(as(fit$L, "sparseMatrix")) # as(fit$L, "dtTMatrix")
         DD <- diag(fit$D, nrow = p)[piv, ]
         Vb <- as(forwardsolve(TL, DD), "sparseMatrix")[ipiv, , drop = FALSE]
-        Vb <- Matrix:::crossprod(Vb)
+        Vb <- Matrix::crossprod(Vb)
         Vb <- as.matrix(Vb)
         #print(max(abs(Vb - crossprod(forwardsolve(t(fit$L),diag(fit$D,nrow=p)[piv,,drop=FALSE])[ipiv,,drop=FALSE]))))
       } else {
