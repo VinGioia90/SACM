@@ -7,7 +7,7 @@ instload_packages <- function(){
   neededPackages <- c("parallel", "Rcpp", "TMB", "microbenchmark",
                       "bamlss",  "scoringRules", "boot", "devtools",
                       "mgcViz", "stringr", "BMisc", "electBook",
-                      "Gmisc", "glue",
+                      "Gmisc", "glue", "fields", "mvnfast",
                       "htmlTable", "grid", "magrittr",
                       "ggpubr", "gridExtra", "ggplot2", "lattice",
                       "dplyr", "plyr", "tidyr", "scales", "ggh4x")#, "geojsonio",
