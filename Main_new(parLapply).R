@@ -200,7 +200,7 @@ gc()
 
 
 
-dgrid <- c(15, 20, 25, 30)
+dgrid <- c(15, 20)
 nobs <- 10000
 sg <- FALSE # This avoids saving the gam object
 
