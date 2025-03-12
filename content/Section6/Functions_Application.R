@@ -613,4 +613,3 @@ void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, co
 
 
 
-

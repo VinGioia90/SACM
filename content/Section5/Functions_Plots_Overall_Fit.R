@@ -62,6 +62,40 @@ fit_time <- function(obj, param = "mcd", dgrid = NULL, nrun){
               res = data.frame(res)))
 }
 
+
+
+fit_time_red <- function(obj, param = "mcd", dgrid = NULL, nrun){
+  if(param == "mcd") param2 <- "MCD"
+
+
+  ###################
+  # Time in minutes #
+  ###################
+  data_time_efs <-  data.frame(unlist(lapply(1 : length(dgrid),
+                                             function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_efs / (1e9 * 60))))),
+                               rep(dgrid, each = nrun))
+  data_time_exact_efs <-  data.frame(unlist(lapply(1 : length(dgrid),
+                                                   function(z) unlist(lapply(1 : nrun, function(x) obj[[x]]$gen[[z]]$time_exact_efs / (1e9 * 60))))),
+                                     rep(dgrid, each = nrun))
+
+
+  res <- cbind(data_time_efs[,1], data_time_exact_efs[,1], data_time_efs[,2])
+  colnames(res) <- c("time_efs", "time_exact_efs",  "d")
+  res <- as.data.frame(res)
+
+  ###################
+  # Summary indices #
+  ###################
+  mean_efs_time <- aggregate(res$time_efs, list(res$d), FUN = mean)[,2]
+  mean_exact_efs_time <- aggregate(res$time_exact_efs, list(res$d), FUN = mean)[,2]
+
+  out <- cbind(mean_efs_time, mean_exact_efs_time,  dgrid)
+  colnames(out) <- c("efs", "efsExact",  "d")
+  sum_res <- as.data.frame(out)
+
+  return(list(sum_res = data.frame(sum_res),
+              res = data.frame(res)))
+}
 ########################################################
 # The idx_bamlss() function allows to get the indices  #
 # of bamlss in the ordering used in our implementation #

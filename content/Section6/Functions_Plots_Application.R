@@ -335,15 +335,15 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
 
   gg1 <- ggplot(sDf, aes(X1, X2)) +
     geom_tile(aes(fill = Corr)) +
-    scale_fill_gradientn(colors =  col_cor, limits = range_corr, na.value = "white") +
+    scale_fill_gradientn(colors =  col_cor, limits = range_corr, na.value = "white", rescaler = ~ scales::rescale_mid(.x, mid = 0)) +
     new_scale_fill() +
     geom_tile(data = diagDf, aes(var1, var2, fill = Stdev)) +
-    scale_fill_gradientn(colors = col_var) +
+    scale_fill_gradientn(colors = col_var,  limits = range_var, rescaler = ~ scales::rescale_mid(.x, mid = 0)) +
     theme(aspect.ratio = 1,
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
-          axis.text.x=element_text(size=10, angle = 90, vjust = 0.5, hjust=1),
-          axis.text.y=element_text(size=10),
+          axis.text.x=element_text(size=12, angle = 90, vjust = 0.5, hjust=1),
+          axis.text.y=element_text(size=12),
           legend.key.width  = unit(1, "lines"),
           legend.key.height = unit(1, "lines"),
           legend.text=element_text(size=12),
@@ -465,37 +465,40 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
   col_var2 <- rev(colorspace::diverging_hcl(palette = "Blue - Red 2", n = 100))
   col_cor2 <- rev(colorspace::divergingx_hcl(palette = "RdBu", n = 100))[100:1]
 
-  minV <- min((sqrt(diag(Sigma_predMat_model[[idx_min_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
-  maxV <- max((sqrt(diag(Sigma_predMat_model[[idx_min_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
+  minV_min_Corr <- min((sqrt(diag(Sigma_predMat_model[[idx_min_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
+  maxV_min_Corr <- max((sqrt(diag(Sigma_predMat_model[[idx_min_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
 
   lowTri <- lower.tri(Sigma_predMat_fixed[[1]])
-  minC <- min((Sigma_predMat_model[[idx_min_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
-  maxC <- max((Sigma_predMat_model[[idx_min_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
+  minC_min_Corr <- min((Sigma_predMat_model[[idx_min_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
+  maxC_min_Corr <- max((Sigma_predMat_model[[idx_min_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
 
-  pl1_diff <- heatmap_FitCov(Sigma_predMat_model[[idx_min_Corr]], PredCov2 = Sigma_predMat_fixed[[1]],
-                             d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
+
+  minV_max_Corr <- min((sqrt(diag(Sigma_predMat_model[[idx_max_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
+  maxV_max_Corr <- max((sqrt(diag(Sigma_predMat_model[[idx_max_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
+
+
+  lowTri <- lower.tri(Sigma_predMat_fixed[[1]])
+  minC_max_Corr <- min((Sigma_predMat_model[[idx_max_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
+  maxC_max_Corr <- max((Sigma_predMat_model[[idx_max_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
+
+  pl1_diff <- heatmap_FitCov(PredCov = Sigma_predMat_model[[idx_min_Corr]], PredCov2 = Sigma_predMat_fixed[[1]],
+                             d = d, range_var = c(min(minV_min_Corr, minV_max_Corr) , max(maxV_min_Corr ,   maxV_max_Corr )),
+                             range_corr = c(min(minC_min_Corr, minC_max_Corr) , max(maxC_min_Corr ,   maxC_max_Corr )), label = "h",
                              label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
 
-  date <- as.Date(paste(data[idx_min_Corr, "year"], data[idx_min_Corr, "doy"]), format = "%Y %j")
-  dow <- days[wday(date)]
-  pl1_diff  <- pl1_diff  + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
-  print(pl1_diff )
-
-  minV <- min((sqrt(diag(Sigma_predMat_model[[idx_max_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
-  maxV <- max((sqrt(diag(Sigma_predMat_model[[idx_max_Corr]])) - sqrt(diag(Sigma_predMat_fixed[[1]]))))
-
-
-  lowTri <- lower.tri(Sigma_predMat_fixed[[1]])
-  minC <- min((Sigma_predMat_model[[idx_max_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
-  maxC <- max((Sigma_predMat_model[[idx_max_Corr]] - Sigma_predMat_fixed[[1]])[lowTri])
+  date_min_Corr <- as.Date(paste(data[idx_min_Corr, "year"], data[idx_min_Corr, "doy"]), format = "%Y %j")
+  dow_min_Corr <- days[wday(date_min_Corr)]
+  pl1_diff  <- pl1_diff  + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow_min_Corr, date_min_Corr), vjust=1, hjust=1, cex = 7)
+  print(pl1_diff)
 
   pl2_diff  <- heatmap_FitCov(Sigma_predMat_model[[idx_max_Corr]], PredCov2 = Sigma_predMat_fixed[[1]],
-                              d = d, range_var = c(minV,maxV), range_corr = c(minC, maxC), label = "h",
+                              d = d,range_var = c(min(minV_min_Corr, minV_max_Corr) , max(maxV_min_Corr ,   maxV_max_Corr )),
+                              range_corr = c(min(minC_min_Corr, minC_max_Corr) , max(maxC_min_Corr ,   maxC_max_Corr )), label = "h",
                               label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var2, col_cor = col_cor2)
 
-  date <- as.Date(paste(data[idx_max_Corr,"year"], data[idx_max_Corr,"doy"]), format = "%Y %j")
-  dow <- days[wday(date)]
-  pl2_diff <- pl2_diff +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
+  date_max_Corr <- as.Date(paste(data[idx_max_Corr,"year"], data[idx_max_Corr,"doy"]), format = "%Y %j")
+  dow_max_Corr <- days[wday(date_max_Corr)]
+  pl2_diff <- pl2_diff +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow_max_Corr, date_max_Corr), vjust = 1, hjust = 1, cex = 7)
   print(pl2_diff)
 
   if(flag_res == TRUE){

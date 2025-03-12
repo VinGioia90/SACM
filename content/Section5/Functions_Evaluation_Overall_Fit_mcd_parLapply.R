@@ -403,7 +403,7 @@ sim_est_fs_efs <- function(nobs_train, nobs_test, dgrid,
                            save.gam = "TRUE", blockN = rep(1, length(dgrid)),
                            pint = 0, root_dir){
 
-  res_sim <- function(dgrid, nobs_train, nobs_test, param,  expl_mean, expl_Theta, save.gam, blockN, pint, seq_seed){
+    res_sim2 <- function(dgrid, nobs_train, nobs_test, param,  expl_mean, expl_Theta, save.gam, blockN, pint, seq_seed){
     dss <- lapply(1 : length(dgrid), function(jj){
       out <- list()
       out$sim <- datagen(d = dgrid[jj], nobs_train = nobs_train, nobs_test = nobs_test,
@@ -429,6 +429,7 @@ sim_est_fs_efs <- function(nobs_train, nobs_test, dgrid,
       } else {
         fam <- mvn_scm(d = dgrid[jj], param = param, nb = blockN[jj])
         fam$exact_fs <- NULL
+
         time_efs <- microbenchmark(fit_efs <- gam_scm(out$foo,
                                                       family = fam,
                                                       optimizer= "efs",  data = as.data.frame(out$sim$data_train)), times = 1L)
@@ -473,9 +474,10 @@ sim_est_fs_efs <- function(nobs_train, nobs_test, dgrid,
 
   cl <- makePSOCKcluster(ncores)
   setDefaultCluster(cl)
+
   clusterExport(NULL, c("nobs_train", "nobs_test", "dgrid", "param", "expl_mean", "expl_Theta",
                         "save.gam", "blockN", "pint", "datagen", "mformula",
-                        "seq_seed", "res_sim", "root_dir"), envir = environment())
+                        "seq_seed", "res_sim2", "root_dir"), envir = environment())
   clusterEvalQ(NULL, {
     library("mgcv", lib.loc=paste0(root_dir, "/my_library"))
     library(SCM)
@@ -503,7 +505,7 @@ void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, co
   })
 
   out_res_sim <- function(.x){
-    out2 <- res_sim(dgrid = dgrid, nobs_train = nobs_train, nobs_test = nobs_test, param = param,
+    out2 <- res_sim2(dgrid = dgrid, nobs_train = nobs_train, nobs_test = nobs_test, param = param,
                     expl_mean = expl_mean, expl_Theta = expl_Theta,
                     save.gam = save.gam, blockN = blockN, pint = pint, seq_seed = seq_seed[.x])
     return(list(gen = out2))
@@ -518,5 +520,6 @@ void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, co
   rm(cl)
   return(res)
 }
+
 
 
