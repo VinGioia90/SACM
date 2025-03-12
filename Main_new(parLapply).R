@@ -174,14 +174,14 @@ rm("TIME_logM_beta_MeanInt")
 gc()
 
 #############
-# SECTION 6 #
+# SECTION 5 #
 #############
 
-###################################################################################################
-# Performance Comparison inside the MCD parametrisation (FS, BFGS, BFGS initialised EFS, BAMLSS)  #
-###################################################################################################
+############################################################################
+# Performance Comparison inside the MCD parametrisation (FS, EFS, BAMLSS)  #
+############################################################################
 setwd(root_dir)
-setwd("content/Section6")
+setwd("content/Section5")
 source("Functions_Evaluation_Overall_Fit_mcd_parLapply.R")
 
 
@@ -199,8 +199,9 @@ rm("sim_mcd_fit")
 gc()
 
 
-
-dgrid <- c(15, 20)
+nrun = 1
+ncores = 1
+dgrid <- c(15, 20) #c(15, 20, 25, 30)
 nobs <- 10000
 sg <- FALSE # This avoids saving the gam object
 
@@ -215,10 +216,10 @@ gc()
 
 
 #############
-# SECTION 7 #
+# SECTION 6 #
 #############
 setwd(root_dir)
-setwd("content/Section7")
+setwd("content/Section6")
 source("Functions_Application.R")
 
 
