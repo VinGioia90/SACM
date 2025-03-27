@@ -1417,7 +1417,7 @@ if(flag_residuals){
 ###############################################
 # Produce Figure 4 (right plot)
 ###############################################
-flag_residuals <- TRUE
+flag_residuals <- FALSE
 if(flag_residuals){
   setwd(root_dir)
   setwd("content/Section6/Results")
