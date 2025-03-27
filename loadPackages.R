@@ -10,7 +10,8 @@ instload_packages <- function(){
                       "Gmisc", "glue", "fields", "mvnfast",
                       "htmlTable", "grid", "magrittr",
                       "ggpubr", "gridExtra", "ggplot2", "lattice",
-                      "dplyr", "plyr", "tidyr", "scales", "ggh4x")#, "geojsonio",
+                      "dplyr", "plyr", "tidyr", "scales", "ggh4x",
+                      "ggnewscale", "lubridate")#, "geojsonio",
                      # "rgeos", "maptools", "gdata")
 
   inst_pack <- installed.packages()

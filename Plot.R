@@ -6,34 +6,10 @@ library(rstudioapi)
 root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
-# RESTART R session before running this!!
-library("mgcv", lib.loc="./my_library")
-if(packageVersion("mgcv") != "9.0"){
-  stop("Wrong version of mgcv!!")
-}
-
 # Load the needed packages
 # (it might be required to install some packages manually)
 source("loadPackages.R")
 instload_packages()
-
-# Cpp function to speed up computations
-sourceCpp(code = "
-#include <RcppArmadillo.h>
-// [[Rcpp::depends(RcppArmadillo)]]
-
-using namespace Rcpp;
-
-// [[Rcpp::export]]
-void over_writediag(arma::mat& E, const arma::vec& rho, const arma::vec& ind, const int k_sp) {
-  int kk = k_sp - 1;
-  int dd;
-  for (int i = 0; i < ind.n_elem; ++i) {
-    dd = ind(i) - 1;
-    E(dd, dd) = exp(rho(kk) * 0.5);
-  }
-}
-")
 
 nrun <- 10   # Set the number of runs
 ncores <- 10 # Set the number of cores
@@ -46,6 +22,9 @@ myscale_trans2 <- function(){
   trans_new("myscale", function(x) sqrt(x),
             function(x) x^2, domain = c(0, Inf))
 }
+
+to_keep <- ls()
+to_keep <- c(to_keep, "to_keep")
 
 #####################
 #####################
@@ -65,7 +44,6 @@ dgrid <- seq(5, 50, by = 5)
 setwd(root_dir)
 setwd("content/Section3/Results")
 
-###############################################
 load(file = paste0("TIME_mcd_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
 load(file = paste0("TIME_logm_D2eta_dgrid_min_", min(dgrid), "_max_", max(dgrid), "nobs", nobs, ".RData"))
 
@@ -209,6 +187,8 @@ setwd("content/Section3/Plots")
 ggsave("plot_TIME_hessian_eta_new.eps", pl_Heta, width = 30, height = 15, units = "cm")
 ggsave("plot_TIME_hessian_eta_new.pdf", pl_Heta, width = 30, height = 15, units = "cm")
 
+rm(list = setdiff(ls(), to_keep))
+
 ############################################################################
 ############################################################################
 ## Computational times for fitting under the MCD and logM parametrisation ##
@@ -227,8 +207,11 @@ setwd(root_dir)
 setwd("content/Section3/Comp_logM_MCD_Fit")
 source("Functions_Plots_Overall_Fit.R") # Here the is the fit_time() function
 
+to_keep_tmp <- setdiff(ls(), to_keep)
+to_keep_tmp <- c(to_keep_tmp, "to_keep_tmp")
+
 ######################################
-# only MCD - generation in the paper #
+# Data generated from MCD ()
 ######################################
 setwd(root_dir)
 setwd("content/Section3/Results")
@@ -370,16 +353,63 @@ ggsave("plot_TIME_ITER_sqrtscale_genMCD.eps", pl_Fit_Time_Iter,
 ggsave("plot_TIME_ITER_sqrtscale_genMCD.pdf", pl_Fit_Time_Iter,
        width = 30, height = 15, units = "cm")
 
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
+
 ################################################
 ################################################
 #### SUPPLEMENTARY MATERIAL FOR SECTION 3.3 ####
 ################################################
 ################################################
 
+## Figure B.1
+# Function to obtain the number of elements different from zero for
+# the Hessian matrix under the MCD parameterisation
+spars_hess <- function(d) {
+  nhel_no0 <- nhel <- ratio <- rep(0, length(d))
+  nhel_no0[1] <- d[1] * (d[1] ^ 2 + 15 * d[1] + 2)/6
+  nhel[1] <- d[1] * (d[1] + 1) * (d[1] + 2) * (d[1] + 3)/8
+  ratio[1] <-  nhel_no0[1]/nhel[1]
+  for(i in 2:length(d)){
+    nhel_no0[i] <- d[i] * (d[i] ^ 2 + 15 * d[i] + 2)/6 + d[i] * (d[i] - 1) * (d[i] - 2)/3
+    nhel[i] <- d[i] * (d[i] + 1) * (d[i] + 2) * (d[i] + 3)/8
+    ratio[i] <- nhel_no0[i]/ nhel[i]
+  }
+  return(ratio)
+}
+
+# Function to obtain the number of elements different from zero for
+# the third-derivatives array under the MCD parameterisation
+spars_3d <- function(d){
+  nhel_no0 <- d * (4 * d ^ 2 + 3 * d + 2)/3
+  nhel <- d * (d + 3) * (d ^ 4 + 6 * d^3 + 15 * d^2 + 18 * d + 8)/48
+  return(nhel_no0/nhel)
+}
+
+d <- 2 : 100
+data <- data.frame(x = d)
+
+spars_hess(d)
+round(spars_3d(d),3)
+
+pl <- ggplot(data,aes(x)) +
+  geom_function(fun = spars_hess, aes(col = "D2"), linewidth=1) +
+  geom_function(fun = spars_3d, aes(col = "D3"), linewidth=1) +
+  ylab("Ratio") +
+  xlab("Dimension") +
+  theme_bw() +
+  scale_x_continuous(breaks = c(2,10,20,30,40,50,60,70,80,90,100)) +
+  scale_colour_manual(name = "", values = c("#619CFF", "#F8766D")) +
+  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank())+
+  theme(legend.position = "bottom", legend.text=element_text(size=13), axis.text=element_text(size=9),
+        axis.title=element_text(size=13))
+pl
+
+ggsave("sparsity_ratio2.eps",pl,width=18, height=15,  units = "cm")
+
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
+
 ##############################################################################################
-# SUPPLEMENTARY MATERIAL: decide whether  including the results under logM generation        #
-# !!! I think it's redundant reporting computational times and iterations                    #
-# Now it corresponds to Figure B.1 of the Supplementary Material                             #
+# SUPPLEMENTARY MATERIAL: code for Figure B.1 of the Supplementary Material
 ##############################################################################################
 setwd(root_dir)
 setwd("content/Section3/Results")
@@ -523,15 +553,13 @@ ggsave("plot_TIME_ITER_sqrtscale_genLOGM.eps", pl_Fit_Time_Iter,
 ggsave("plot_TIME_ITER_sqrtscale_genLOGM.pdf", pl_Fit_Time_Iter,
        width = 30, height = 15, units = "cm")
 
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
+
 ################################################################################################
 ################################################################################################
 ## SUPPLEMENTARY MATERIALS: Figure B.2 - comparison of performance MCD vs logM using logScore ##
 ################################################################################################
 ################################################################################################
-setwd(root_dir)
-setwd("content/Section3/Comp_logM_MCD_Fit")
-source("Functions_Plots_Overall_Fit.R") #here there is the log_score() function
-
 setwd(root_dir)
 setwd("content/Section3/Results")
 
@@ -675,6 +703,8 @@ ggsave("plot_logScore1_new.eps", pl_logS1,
 ggsave("plot_logScore1_new.pdf", pl_logS1,
        width = 30, height = 15, units = "cm")
 
+rm(list = setdiff(ls(), to_keep))
+
 #####################
 #####################
 ##### SECTION 4 #####
@@ -695,6 +725,9 @@ nobs <- 1000
 dgrid <- seq(10, 120, by = 10)
 step_length <- 10
 pint_type <- c("dm05", "dm1", "dm1_c2", "dm2", "const")
+
+to_keep_tmp <- setdiff(ls(), to_keep)
+to_keep_tmp <- c(to_keep_tmp, "to_keep_tmp")
 
 ##################
 setwd(root_dir)
@@ -846,6 +879,8 @@ ggsave("plot_rel_TIME_hessian_beta_logM_and_Sparsity.eps", pl_comp_Hbeta,
 ggsave("plot_rel_TIME_hessian_beta_logM_and_Sparsity.pdf", pl_comp_Hbeta,
        width = 30, height = 15, units = "cm")
 
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
+
 ################################################
 ################################################
 ##### SUPPLEMENTARY MATERIAL FOR SECTION 4 #####
@@ -859,10 +894,6 @@ ggsave("plot_rel_TIME_hessian_beta_logM_and_Sparsity.pdf", pl_comp_Hbeta,
 #####################################
 setwd(root_dir)
 setwd("content/Section4/Results")
-pint_type <- c("dm05", "dm1", "dm1_c2", "dm2", "const")
-step_length <- 10
-dgrid <- seq(10, 120,10)
-nobs <- 1000
 
 load(file = paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, "intMeanTRUE.RData"))
 
@@ -1036,6 +1067,8 @@ ggsave("plot_rel_TIME_hessian_beta_MCD_and_Sparsity.eps", pl_comp_Hbeta,
 ggsave("plot_rel_TIME_hessian_beta_MCD_and_Sparsity.pdf", pl_comp_Hbeta,
        width = 30, height = 15, units = "cm")
 
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
+
 #####################################
 #####################################
 ## Code for reproducing Figure B.4 ##
@@ -1125,7 +1158,7 @@ ggsave("plot_rel_TIME_hessian_beta_logM_NoMeanModelling.eps", pl_Hbeta,
 ggsave("plot_rel_TIME_hessian_beta_logM_NoMeanModelling.pdf", pl_Hbeta,
        width = 15, height = 15, units = "cm")
 
-
+rm(list = setdiff(ls(), to_keep))
 
 #####################
 #####################
@@ -1145,26 +1178,13 @@ dgrid2 <- c(15, 20)
 nrun <- 10
 nobs <- 10000
 
+to_keep_tmp <- setdiff(ls(), to_keep)
+to_keep_tmp <- c(to_keep_tmp, "to_keep_tmp")
+
 setwd(root_dir)
 setwd("content/Section5/Results")
 load(paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
 load(paste0("sim_mcd_fit_fs_efs_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid2, collapse = "_"), ".RData"))
-
-# logS_extr <- log_Score_test(obj = sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
-# LAML_extr <- LAML_extraction(obj = sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
-# LAML_efs <- as.numeric(LAML_extr[[1]])
-# LAML_exact_efs <- as.numeric(LAML_extr[[2]])
-# LAML_exact_efs_initialised <- as.numeric(LAML_extr[[3]])
-# LAML_bfgs <- as.numeric(LAML_extr[[4]])
-# LAML_bfgsinit <- as.numeric(LAML_extr[[5]])
-#
-# LAML_fsVSefs <- data.frame(LAML_efs = rep(LAML_efs, 2),
-#                    LAML_other = c(LAML_exact_efs, LAML_exact_efs_initialised),
-#                    diff_LAML_other_efs = c(LAML_exact_efs - LAML_efs, LAML_exact_efs_initialised - LAML_efs),
-#                    rel_diff_LAML_other_efs = c((LAML_exact_efs - LAML_efs)/abs(LAML_exact_efs),
-#                                                (LAML_exact_efs_initialised - LAML_efs)/abs(LAML_exact_efs)),
-#                    d =  rep(factor(rep(dgrid, each = nrun ), levels = dgrid),2),
-#                    init = c(rep("EFS", length(LAML_efs)), rep("EFS - init", length(LAML_efs))))
 
 # Comparison EFS v s BAMLSS in terms of computational times
 TIMES <- fit_time(sim_mcd_fit, param = "mcd", dgrid, nrun)
@@ -1232,254 +1252,12 @@ with(TIME_efs_bamlss, tapply(relValue, list(d, Type2), max))
 # 15  1 1.771970       NA
 # 20  1 1.817909       NA
 
-
-# breaks_seq_time1 <- c(2, 10, 25, 50, 100, 200, 400)
-# breaks_seq_time2 <- c(1, 2, 5, 10, 25, 50, 75)
-#
-# pl_Fit_Time_efs_bamlss <- ggplot(TIME_efs_bamlss[TIME_efs_bamlss$Type2 != "FS",], aes(x = as.factor(d), y = relValue)) +
-#   geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
-#   geom_point(data = TIMES_sum_efs_bamlss[TIMES_sum_efs_bamlss$Type2 != "FS",], aes(x = as.factor(d), y = relValue, colour = Type2), size = 3, position = position_dodge(width = 0.1), show.legend = FALSE) +
-#   facet_grid(. ~ "Fitting times") +
-#   geom_line(data = TIMES_sum_efs_bamlss[TIMES_sum_efs_bamlss$Type2 != "FS",], aes(y = relValue, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
-#   scale_color_manual(name = "", values = c("EFS" = "#F8766D", "BAMLSS" = "#0072B2")) + #"FS" = "#E76BF3", "EFS" = "#0072B2",  "BAMLSS" = "#7CAE00","EFS - init" = "#F8766D",
-#   theme_bw() +
-#   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-#                      sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
-#                                          breaks = breaks_seq_time2)) +
-#   scale_x_discrete(breaks = c(dgrid_sel,dgrid_sel2)) +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
-# setwd(root_dir)
-# setwd("content/Section6/Plots")
-# ggsave("pl_Fit_Time_efs_bamlss_new.eps", pl_Fit_Time_efs_bamlss , width = 15, height = 15, units = "cm")
-# ggsave("pl_Fit_Time_efs_bamlss_new.pdf", pl_Fit_Time_efs_bamlss , width = 15, height = 15, units = "cm")
-
-
-# pl_Fit_Time_efs_bfgs <- ggplot(TIME_efs_bfgs, aes(x = as.factor(d), y = Value)) +
-#   geom_point(aes(colour = Type2), size = 1, show.legend = TRUE, position = position_dodge(width = 0.1)) +
-#   geom_point(data = TIMES_sum_efs_bfgs, aes(x = as.factor(d), y = Value, colour = Type2), size = 3,
-#              position = position_dodge(width = 0.1), show.legend = FALSE) +
-#   facet_grid(. ~ "Fitting times") +
-#   geom_line(data = TIMES_sum_efs_bfgs, aes(y = Value, group = Type2, col = Type2), position = position_dodge(width = 0.1)) +
-#   scale_color_manual(name = "", values = c("FS" = "#E76BF3",  "BFGS - init" = "#AE4371", "BFGS" = "#00A9FF", "BAMLSS" = "#7CAE00")) +
-#   theme_bw() +
-#   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
-#                      sec.axis = sec_axis(~ . * 1,#labels = scaleFUN,
-#                                          breaks = breaks_seq_time2)) +
-#   scale_x_discrete(breaks = dgrid_sel) +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
-#
-
-
-#pl_LAML_Times_efs_bamlss <- ggarrange(pl_LAML_rel_diff_fs_efs,
-#                     pl_Fit_Time_efs_bamlss,
-#                     nrow = 1,
-#                     common.legend = FALSE,
-#                     legend = "bottom")
-
-#pl_LAML_Times_efs_bfgs <- ggarrange(pl_LAML_rel_diff_fs_bfgs,# +  rremove("xlab"),
-#                                    pl_Fit_Time_efs_bfgs,# + rremove("xlab"),
-#                                      nrow = 1,
-#                                      common.legend = FALSE,
-#                                      legend = "bottom")
-#annotate_figure(pl_LAML_Times_efs_bfgs, bottom = textGrob("Common x-axis", gp = gpar(cex = 1.3)))
-
-
-#setwd(root_dir)
-#setwd("content/SupplementaryMaterial/Plots")
-#ggsave("plot_LAML_Times_efs_bamlss.eps", pl_LAML_Times_efs_bamlss,
-#        width = 30, height = 15, units = "cm")
-#ggsave("plot_LAML_Times_efs_bamlss.pdf", pl_LAML_Times_efs_bamlss,
-#       width = 30, height = 15, units = "cm")
-#
-#ggsave("plot_LAML_Times_efs_bfgs.eps", pl_LAML_Times_efs_bfgs,
-#       width = 30, height = 15, units = "cm")
-#ggsave("plot_LAML_Times_efs_bfgs.pdf", pl_LAML_Times_efs_bfgs,
-#        width = 30, height = 15, units = "cm")
-
-
-##########################################################################################
-# Code for reproducing Figure XXX - SUPPLEMENTARY MATERIAL - comparison in terms of logS #
-##########################################################################################
-
-##########################################################################################
-# Decide whether including the comparison in terms of logScore on the test set in the SM #
-# If so, I will improve the graphical aspects                                            #
-##########################################################################################
-# setwd(root_dir)
-# setwd("content/Section6")
-# source("Functions_Plots_Overall_Fit.R")
-#
-# dgrid <- c(2, 5, 10)
-# nrun <- 10
-# nobs <- 10000
-#
-# setwd(root_dir)
-# setwd("content/Section6/Results")
-# load(paste0("sim_mcd_fit_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
-
-# logS_mcd_test <- log_Score_test(sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
-# logS_gen_test <- as.numeric(logS_mcd_test[[1]])
-# logS_efs_test <- as.numeric(logS_mcd_test[[2]])
-# logS_bfgs_test <- as.numeric(logS_mcd_test[[3]])
-# logS_bfgsinit_test <- as.numeric(logS_mcd_test[[4]])
-# logS_bamlss_test <- as.numeric(logS_mcd_test[[5]])
-
-# logS_test <- data.frame(logS_efs = logS_efs_test,
-#                         logS_bfgs = logS_bfgs_test,
-#                         logS_bfgsinit = logS_bfgsinit_test,
-#                         logS_bamlss = logS_bamlss_test,
-#                         diff_logS_bfgs_efs = logS_bfgs_test - logS_efs_test,
-#                         diff_logS_bfgsinit_efs = logS_bfgsinit_test - logS_efs_test,
-#                         diff_logS_bamlss_efs = logS_bamlss_test - logS_efs_test,
-#                         rel_diff_bfgs_efs_gen = (logS_bfgs_test - logS_efs_test)/abs(logS_gen_test),
-#                         rel_diff_bfgsinit_efs_gen = (logS_bfgsinit_test - logS_efs_test)/abs(logS_gen_test),
-#                         rel_diff_bamlss_efs_gen = (logS_bamlss_test - logS_efs_test)/abs(logS_gen_test),
-#                         d =  factor(rep(dgrid, each = nrun ), levels = dgrid))
-
-# logS_mcd_test <- log_Score_test(sim_mcd_fit, nrun, dgrid, nobs,  param = "mcd")
-# logS_gen_test <- as.numeric(logS_mcd_test[[1]])
-# logS_efs_test <- as.numeric(logS_mcd_test[[2]])
-# logS_exact_efs_test <- as.numeric(logS_mcd_test[[3]])
-# logS_exact_efs_initialised_test <- as.numeric(logS_mcd_test[[4]])
-# logS_bfgs_test <- as.numeric(logS_mcd_test[[5]])
-# logS_bfgsinit_test <- as.numeric(logS_mcd_test[[6]])
-# logS_bamlss_test <- as.numeric(logS_mcd_test[[7]])
-#
-# logS_test <- data.frame(logS_efs = logS_efs_test,
-#                         logS_exact_efs = logS_exact_efs_test,
-#                         logS_exact_efs_initialised = logS_exact_efs_initialised_test,
-#                         logS_bfgs = logS_bfgs_test,
-#                         logS_bfgsinit = logS_bfgsinit_test,
-#                         logS_bamlss = logS_bamlss_test,
-#                         diff_logS_Eefs_efs = logS_exact_efs_test - logS_efs_test,
-#                         diff_logS_EIefs_efs = logS_exact_efs_initialised_test - logS_efs_test,
-#                         diff_logS_bfgs_efs = logS_bfgs_test - logS_efs_test,
-#                         diff_logS_bfgsinit_efs = logS_bfgsinit_test - logS_efs_test,
-#                         diff_logS_bamlss_efs = logS_bamlss_test - logS_efs_test,
-#                         rel_diff_Eefs_efs_gen = (logS_exact_efs_test - logS_efs_test)/abs(logS_gen_test),
-#                         rel_diff_EIefs_efs_gen = (logS_exact_efs_initialised_test - logS_efs_test)/abs(logS_gen_test),
-#                         rel_diff_bfgs_efs_gen = (logS_bfgs_test - logS_efs_test)/abs(logS_gen_test),
-#                         rel_diff_bfgsinit_efs_gen = (logS_bfgsinit_test - logS_efs_test)/abs(logS_gen_test),
-#                         rel_diff_bamlss_efs_gen = (logS_bamlss_test - logS_efs_test)/abs(logS_gen_test),
-#                         d =  factor(rep(dgrid, each = nrun ), levels = dgrid))
-
-# y axis:  (Log-score(BAMLSS) - Log-score (EFS))/(|log-Score(Generation)|)
-# pl_MCD_rel_diff_bamlss_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bamlss_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(BAMLSS) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 15),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-# pl_MCD_rel_diff_bfgsinit_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bfgsinit_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(BFGS - init) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-# pl_MCD_logS_test <- ggarrange(pl_MCD_rel_diff_bamlss_efs_gen,
-#                               pl_MCD_rel_diff_bfgsinit_efs_gen,
-#                               nrow = 1,
-#                               common.legend = FALSE,
-#                               legend = "bottom")
-#
-# setwd(root_dir)
-# setwd("content/SupplementaryMaterial/Plots")
-# ggsave("pl_MCD_logS_test.eps", pl_MCD_logS_test , width = 30, height = 15, units = "cm")
-# ggsave("pl_MCD_logS_test.pdf", pl_MCD_logS_test , width = 30, height = 15, units = "cm")
-
-# pl_MCD_rel_diff_bamlss_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bamlss_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(BAMLSS) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 15),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-# pl_MCD_rel_diff_Eefs_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_Eefs_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(Exact FS) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-# pl_MCD_rel_diff_EIefs_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_EIefs_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(Exact FS - init) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-#
-# pl_MCD_rel_diff_bfgs_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bfgs_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(BFGS) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-#
-# pl_MCD_rel_diff_bfgsinit_efs_gen <- ggplot(logS_test, aes(x = d, y = rel_diff_bfgsinit_efs_gen)) +
-#   geom_point(size = 1, show.legend = TRUE)+
-#   geom_hline(yintercept = 0, col = "black", lty = "dashed") +
-#   theme_bw() +
-#   facet_grid(. ~ "(LS(BFGS - init) - LS(FS)) / |LS(gen)|") +
-#   xlab("Dimension") + ylab("") +
-#   theme(panel.grid.minor = element_blank(),
-#         axis.text = element_text(size = 12),  text = element_text(size = 15),
-#         legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
-#         panel.grid.major = element_blank(),legend.position="bottom",panel.spacing = unit(0.1, "lines"))
-#
-# pl_MCD_logS_test <- ggarrange(#pl_MCD_rel_diff_bamlss_efs_gen,
-#   #pl_MCD_rel_diff_Eefs_efs_gen,
-#   #pl_MCD_rel_diff_EIefs_efs_gen,
-#   pl_MCD_rel_diff_bfgsinit_efs_gen,
-#   pl_MCD_rel_diff_bfgs_efs_gen,
-#   nrow = 2,
-#   common.legend = FALSE,
-#   legend = "bottom")
-#
-# setwd(root_dir)
-# setwd("content/SupplementaryMaterial/Plots")
-# ggsave("pl_MCD_logS_test.eps", pl_MCD_logS_test , width = 30, height = 15, units = "cm")
-# ggsave("pl_MCD_logS_test.pdf", pl_MCD_logS_test , width = 30, height = 15, units = "cm")
+rm(list = setdiff(ls(), to_keep))
 
 
 ############################
 ############################
-##### SECTION 6 and SM #####
+##### SECTION 6 and SM B.4 #####
 ############################
 ###########################
 
@@ -1490,6 +1268,7 @@ setwd(root_dir)
 setwd("content/Section6")
 source("Functions_Plots_Application.R")
 source("DataPreprocessing.R")
+load("GEF14_data_residuals.RData")
 
 # Set the train set also here (reply what is done in Main_new(par_Lapply))
 n_train <- which(GEF14_data$year==2011)[1]-1 # (2005 - 2010 year)
@@ -1503,19 +1282,20 @@ ndat <- which(GEF14_data$year == 2011)[1] - 1
 ndat2 <- dim(GEF14_data)[1]
 sets <- floor(seq(ndat , ndat2, length.out = 12))
 
+low_neff_vcov <- 0
+upp_neff_vcov <- 150  # Here must be set according to the maximum value of the explored grid
+
+flag_residuals <- FALSE
+
+to_keep_tmp <- setdiff(ls(), to_keep)
+to_keep_tmp <- c(to_keep_tmp, "to_keep_tmp")
 
 ##############################
-# Plots for validation steps #
+# Get data for figure 4
 ##############################
 setwd(root_dir)
 setwd("content/Section6")
-load("GEF14_data_residuals.RData")
 
-low_neff_vcov <- 0
-upp_neff_vcov <- 150  # Here must be setted according to the maximum value of the explored grid
-
-
-flag_residuals <- FALSE
 if(flag_residuals){
   param <- "mcd"
   # MCD
@@ -1541,20 +1321,6 @@ if(flag_residuals){
   data_logScore_residuals <- data.frame("logS" = c(logScore_mcd_residuals[length(logScore_mcd_residuals):1], logScore_logm_residuals[length(logScore_logm_residuals):1]),
                                         "Param" = c(rep("MCD", length(logScore_mcd_residuals)), rep("logM", length(ncov_el_logm))),
                                         "Eff" = c(sort(ncov_el_mcd)[1:length(logScore_mcd_residuals)], sort(ncov_el_logm)))
-
-  with(data_logScore_residuals[data_logScore_residuals$Param == "MCD", ],{
-    plot(Eff, logS, xaxt= "n", xlab = "Number of effects (MCD)", main = "Residuals" )
-    axis(1, at = Eff, labels = factor(Eff, levels = Eff))
-    points(Eff[which.min(logS)], logS[which.min(logS)], col = "red", pch = 19)
-  }
-  )
-
-  with(data_logScore_residuals[data_logScore_residuals$Param == "logM",],{
-    plot(Eff, logS, xaxt= "n", xlab = "Number of effects (logM)", main = "Residuals" )
-    axis(1, at = Eff, labels = factor(Eff, levels = Eff))
-    points(Eff[which.min(logS)], logS[which.min(logS)], col = "red", pch = 19)
-  }
-  )
 } else {
   param <- "mcd"
   load(paste0("Results/cv_res_stepwise_param", param, "_d_", d, "_lstep_",
@@ -1578,28 +1344,12 @@ if(flag_residuals){
   data_logScore <- data.frame("logS" = c(logScore_mcd[length(logScore_mcd):1], logScore_logm[length(logScore_logm):1]),
                               "Param" = c(rep("MCD", length(logScore_mcd)), rep("logM", length(ncov_el_logm))),
                               "Eff" = c(sort(ncov_el_mcd)[1:length(logScore_mcd)], sort(ncov_el_logm)))
-
-
-  with(data_logScore[data_logScore$Param == "MCD", ],{
-    plot(Eff, logS, xaxt= "n", xlab = "Number of effects (MCD)", main = "Response" )
-    axis(1, at = Eff, labels = factor(Eff, levels = Eff))
-    points(Eff[which.min(logS)], logS[which.min(logS)], col = "red", pch = 19)
-  }
-  )
-  with(data_logScore[data_logScore$Param == "logM", ],{
-    plot(Eff, logS, xaxt= "n", xlab = "Number of effects (logM)", main = "Response" )
-    axis(1, at = Eff, labels = factor(Eff, levels = Eff))
-    points(Eff[which.min(logS)], logS[which.min(logS)], col = "red", pch = 19)
-  }
-  )
-
 }
 
-# Here we select the number of effects (minimum or elbow point)
-
+############ Produce Figure 4 (left plot)
+# Number of effect to be selected is fixed below
 setwd(root_dir)
 setwd("content/Section6/Plots")
-
 
 flag_residuals <- FALSE
 if(flag_residuals){
@@ -1664,15 +1414,8 @@ if(flag_residuals){
   ggsave(paste0("logS_MCDandlogM_response.eps"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
 }
 
-
-
 ###############################################
-# Plots for showing the model selection steps #
-###############################################
-
-
-###############################################
-# Both MCD and logM in the same plot          #
+# Produce Figure 4 (right plot)
 ###############################################
 flag_residuals <- TRUE
 if(flag_residuals){
@@ -1683,7 +1426,6 @@ if(flag_residuals){
   # the MCD and logM covariance matrix model
   neff_mcd <- 65 #ncov_el_mcd_sel
   neff_logm <- 30 #ncov_el_logm_sel
-
 
   param <- "mcd"
   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_residuals.RData"))
@@ -1715,14 +1457,9 @@ if(flag_residuals){
 } else {
   setwd(root_dir)
   setwd("content/Section6/Results")
-
-
   #According to the previous results you must select the number of effects for the MCD and logM covariance matrix model
-
   neff_mcd <- 80 #ncov_el_mcd_sel
   neff_logm <- 40 #ncov_el_logm_sel
-
-
   param <- "mcd"
   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
 
@@ -1752,118 +1489,11 @@ if(flag_residuals){
 
 }
 
-
-#################################################################################
-# FULL MODEL SELECTION PROCESS:                                                 #
-# uncomment below if you want see the evolution of the model selection process  #
-# !!! You must create the folders to save the results                           #
-# "content/Section7/Plots/SelectionProcess/MCD"                                 #
-# content/Section7/Plots/SelectionProcess/logM#                                 #
-#################################################################################
-
-#######################
-# MCD parametrisation #
-#######################
-# param <- "mcd"
-#
-# flag_residuals <- TRUE
-# if(flag_residuals){
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_residuals.RData"))
-#
-#   ncov_el_mcd <- sapply(1: length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots/SelectionProcess/MCD")
-#
-#   pl_list <- get_plots(obj = res_mcd,
-#                        name_eff = name_eff,
-#                        d = d,
-#                       grid_length = grid_length,
-#                       param = param)
-#   for(j in 1:length(pl_list)){
-#     ggsave(paste0("Residuals_Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-#   }
-#   setwd(root_dir)
-#   setwd("content/Section7")
-# } else {
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
-#
-#   ncov_el_mcd <- sapply(1: length(res_mcd[[1]]), function(x) length(res_mcd$foo[[x]]) - d)
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots/SelectionProcess/MCD")
-#
-#   pl_list <- get_plots(obj = res_mcd,
-#                        name_eff = name_eff,
-#                        d = d,
-#                        grid_length = grid_length,
-#                        param = param)
-#   for(j in 1:length(pl_list)){
-#     ggsave(paste0("Response_Covmod_", param, "param_with", length(res_mcd$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-#   }
-#   setwd(root_dir)
-#   setwd("content/Section7")
-# }
-#
-# ########################
-# # logM parametrisation #
-# ########################
-# param <- "logm"
-#
-# flag_residuals <- TRUE
-# if(flag_residuals){
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_residuals.RData"))
-#
-#   ncov_el_logm <- sapply(1: length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots/SelectionProcess/logM")
-#
-#   pl_list <- get_plots(obj = res_logm,
-#                        name_eff = name_eff,
-#                        d = d,
-#                        grid_length = grid_length,
-#                        param = param)
-#   for(j in 1:length(pl_list)){
-#     ggsave(paste0("Residuals_Covmod_", param, "param_with", length(res_logm$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-#   }
-#   setwd(root_dir)
-#   setwd("content/Section7")
-# } else {
-#   setwd(root_dir)
-#   setwd("content/Section7/Results")
-#   load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_response.RData"))
-#
-#   ncov_el_logm <- sapply(1: length(res_logm[[1]]), function(x) length(res_logm$foo[[x]]) - d)
-#
-#   setwd(root_dir)
-#   setwd("content/Section7/Plots/SelectionProcess/logM")
-#
-#   pl_list <- get_plots(obj = res_logm,
-#                        name_eff = name_eff,
-#                        d = d,
-#                        grid_length = grid_length,
-#                        param = param)
-#   for(j in 1:length(pl_list)){
-#     ggsave(paste0("Response_Covmod_", param, "param_with", length(res_logm$foo[[j+1]])-d, "Effects.pdf"),  plot=pl_list[[j]], width = 20, height = 20, units = "cm")
-#   }
-#   setwd(root_dir)
-#   setwd("content/Section7")
-# }
-
-
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 
 ############################################################################
-#Computational times
+# Code for Figure B.5 in SM
 ############################################################################
-
-
 
 flag_residuals <- FALSE
 if(flag_residuals){
@@ -1951,301 +1581,69 @@ if(flag_residuals){
   setwd("content/Section6")
 }
 
+rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 
-
-#################################################
-# Plot stdev and correlations of the selected model
-#################################################
-library(ggnewscale)
-library(lubridate)
-
-grid_d <- seq(d*(d+1)/2,  0, by = -grid_length)
-grid_length <- 5
-########################
-# MCD parametrisation  #
-########################
-param <- "mcd"
-
-# here you select to visualisize "full" or "reduced"
-model <- "reduced"
-#flag_residuals <- FALSE
-
-fit_mcd_static_reduced_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
-                                                     param = "mcd", model_type = "reduced", neff_reduced = 80,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
-fit_mcd_static_reduced_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
-                                                     param = "mcd", model_type = "reduced", neff_reduced = 65,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
-fit_mcd_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
-                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
-fit_mcd_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
-                                                     param = "mcd", model_type = "full", neff_reduced = NULL,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
+###################
+# Figure 5 (main text), B.6 and B.7 (Supplementary Material)
+###################
 
 setwd(root_dir)
-setwd("content/Section7/Results")
-save(fit_mcd_static_reduced_response, file = "fit_mcd_static_reduced_response.RData")
-save(fit_mcd_static_reduced_residuals, file = "fit_mcd_static_reduced_residuals.RData")
-save(fit_mcd_static_full_response, file = "fit_mcd_static_full_response.RData" )
-save(fit_mcd_static_full_residuals, file = "fit_mcd_static_full_residuals.RData" )
+setwd("content/Section6")
 
-param <- "logm"
-fit_logm_static_reduced_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
-                                                     param = "logm", model_type = "reduced", neff_reduced = 40,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
+# Get training set
+train_dat <- GEF14_data[-(1:ndat), ]
 
-fit_logm_static_reduced_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
-                                                     param = "logm", model_type = "reduced", neff_reduced = 30,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
+neff_mcd <- 80
+neff_logm <- 40
 
-fit_logm_static_full_response <- fit_model_AllData(data = GEF14_data, flag_res = FALSE,
-                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
+#### MCD ####
+# Get out-of-sample prediction
+load(paste0("Results/cv_res_stepwise_param", "mcd", "_d_", d, "_lstep_",
+            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,"_response.RData"))
 
-fit_logm_static_full_residuals <- fit_model_AllData(data = GEF14_data_residuals, flag_res = TRUE,
-                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
+mu_sigma <- get_data_4_heat(cv_mcd, neff = 80, tot_eff = upp_neff_vcov, grid_step = grid_length, param = "mcd")
 
-save(fit_logm_static_reduced_response, file = "fit_logm_static_reduced_response.RData")
-save(fit_logm_static_reduced_residuals, file = "fit_logm_static_reduced_residuals.RData")
-save(fit_logm_static_full_response, file = "fit_logm_static_full_response.RData" )
-save(fit_logm_static_full_residuals, file = "fit_logm_static_full_residuals.RData" )
-
-
-plotHM_mcd_static_reduced_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
-                                               param = "mcd", model_type = "reduced", neff_reduced = 80,
-                                               grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_mcd_static_reduced_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
-                                                     param = "mcd", model_type = "reduced", neff_reduced = 65,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_mcd_static_full_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
-                                                   param = "mcd", model_type = "full", neff_reduced = NULL,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_mcd_static_full_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
-                                                   param = "mcd", model_type = "full", neff_reduced = NULL,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_logm_static_reduced_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
-                                                     param = "logm", model_type = "reduced", neff_reduced = 40,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_logm_static_reduced_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
-                                                     param = "logm", model_type = "reduced", neff_reduced = 30,
-                                                     grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_logm_static_full_response <- plot_Heatmap(data = GEF14_data, flag_res = FALSE,
-                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_logm_static_full_residuals <- plot_Heatmap(data = GEF14_data_residuals, flag_res = TRUE,
-                                                   param = "logm", model_type = "full", neff_reduced = NULL,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
-
-
-
-
-
-####################################
-
-
-plotHM_mcd_logM_static_reduced_response <- plot_Heatmap2(data = GEF14_data, flag_res = FALSE,
-                                                   model_type = "reduced", neff_reduced = 80,
-                                                   grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_mcd_logM_static_reduced_residuals <- plot_Heatmap2(data = GEF14_data_residuals, flag_res = TRUE,
-                                                    model_type = "reduced", neff_reduced = 65,
-                                                    grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_mcd_logM_static_full_response <- plot_Heatmap2(data = GEF14_data, flag_res = FALSE,
-                                                 model_type = "full", neff_reduced = NULL,
-                                                 grid_length = 5, grid_d = grid_d, d = 24)
-
-plotHM_mcd_logM_static_full_residuals <- plot_Heatmap2(data = GEF14_data_residuals, flag_res = TRUE,
-                                                 model_type = "full", neff_reduced = NULL,
-                                                 grid_length = 5, grid_d = grid_d, d = 24)
-
-
-##################################### NEW
-
-heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_corr = c(0, 1), label = "h",
-                           label_xaxis, label_yaxis, col_var, col_cor){
-
-  diagDf <- data.frame(
-    var1 = c(paste0("h0", 1:9), paste0("h", 10:d)),
-    var2 = c(paste0("h", (d):10), paste0("h0", 9:1)),
-    if(is.null(PredCov2)){
-      Stdev =  sqrt(diag(PredCov))
-    } else {
-      Stdev =  sqrt(diag(PredCov )) - sqrt(diag(PredCov2))
-    }
-
-  )
-
-  sDf <- data.frame(X1 = rep(NA, d ^ 2), X2 = rep(NA, d ^ 2), Corr = rep(NA, d ^ 2))
-
-  count <- 1
-  for(i in 1 : d){
-    for(j in 1 : d){
-      if(i >= 10 & ((d - j) + 2>= 10)){
-        sDf$X1[count] <- paste0(label, i)
-        sDf$X2[count] <- paste0(label, (d - j) + 1)
-      }
-      if(i >= 10 & ((d - j) + 2 <= 10)){
-        sDf$X1[count] <- paste0(label, i)
-        sDf$X2[count] <- paste0(label, "0", (d - j) + 1)
-      }
-
-      if(i < 10 & ((d - j) + 2  >= 10)){
-        sDf$X1[count] <- paste0(label, "0", i)
-        sDf$X2[count] <- paste0(label, (d - j) + 1)
-      }
-
-      if(i < 10 & ((d - j) + 2  <= 10)){
-        sDf$X1[count] <- paste0(label, "0", i)
-        sDf$X2[count] <- paste0(label, "0", (d - j) + 1)
-      }
-
-      if(i == j){
-        sDf$Corr[count] <- 0
-      }
-      if(j < i){
-        sDf$Corr[count] <- NA
-      }
-      if(j > i){
-        if(is.null(PredCov2)){
-          sDf$Corr[count] <- PredCov[j, i]
-        } else {
-          sDf$Corr[count] <- PredCov[j, i] - PredCov2[j, i]
-        }
-      }
-      count <- count + 1
-    }
-  }
-
-
-  gg1 <- ggplot(sDf, aes(X1, X2)) +
-    geom_tile(aes(fill = Corr)) +
-    scale_fill_gradientn(colors =  col_cor, limits = range_corr, na.value = "white") +
-    new_scale_fill() +
-    geom_tile(data = diagDf, aes(var1, var2, fill = Stdev)) +
-    scale_fill_gradientn(colors = col_var, limits = range_var) +
-    theme(aspect.ratio = 1,
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.x=element_text(size=10, angle = 90, vjust = 0.5, hjust=1),
-          axis.text.y=element_text(size=10),
-          legend.key.width  = unit(1, "lines"),
-          legend.key.height = unit(1, "lines"),
-          legend.text=element_text(size=12),
-          legend.title=element_text(size=15))+
-    scale_x_discrete(labels = label_xaxis)+
-    scale_y_discrete(labels = label_yaxis)
-
-  return(invisible(gg1))
-
-}
-
-plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
-
-  # Extract dates
-  date1 <- format(as.Date(paste(dat[idx1, "doy"], dat[idx1, "year"]), format = "%j %Y"), format="%d-%m-%Y")
-  date2 <- format(as.Date(paste(dat[idx2, "doy"], dat[idx2, "year"]), format = "%j %Y"), format="%d-%m-%Y")
-
-  # Convert to MW
-  d <- ncol(yobs)
-  conv_fact <- 0.1
-  mu_sigma[ , 1:d] <- mu_sigma[ , 1:d] * conv_fact
-  mu_sigma[ , (d+1):(2*d)] <- mu_sigma[ , (d+1):(2*d)] * conv_fact^2
-  yobs <- yobs * conv_fact
-
-  # Get covariance matrices
-  Sigma_list <-  Sigma_mat(mu_sigma[,-c(1 : d)])
-
-  # Simulate trajetories for each date
-  set.seed(5151)
-  COV <- Sigma_list[[idx1]]
-  sdev <- sqrt(diag(COV))
-  COV <- diag(sdev) %*% COV %*% diag(sdev)
-  diag(COV) <- sdev^2
-  X <- rmvn(nsim, rep(0, 24), COV)
-  my_dat <- data.frame("hour" = rep(1:24, nsim), "y" = as.vector(t(X)))
-
-  set.seed(5151)
-  COV <- Sigma_list[[idx2]]
-  sdev <- sqrt(diag(COV))
-  COV <- diag(sdev) %*% COV %*% diag(sdev)
-  diag(COV) <- sdev^2
-  X2 <- rmvn(nsim, rep(0, 24), COV)
-
-  # Created data frame for ggplot
-  my_dat <- rbind(my_dat,
-                  data.frame("hour" = rep(1:24, nsim), "y" = as.vector(t(X2))))
-  my_dat$day <- rep(c(1, 2), each = 24 * nsim)
-  my_dat$ID <- rep(1:(2*nsim), each = 24)
-  my_dat$Day <- as.character(my_dat$day)
-  my_dat$Day[my_dat$day == "1"] <- date1
-  my_dat$Day[my_dat$day == "2"] <- date2
-  my_dat$Day <- as.factor(my_dat$Day)
-
-  # Heatmap for first date
-  plt <- list()
-  col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
-  col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 100)[1:90])
-  label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
-  label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
-  days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-  range_var <- NULL #range(c(sqrt(diag(Sigma_list[[idx1]])), sqrt(diag(Sigma_list[[idx2]]))))
-  pl1_MCD <- heatmap_FitCov(Sigma_list[[idx1]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
-                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-  pl1_MCD <- pl1_MCD +
-    annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = date1, vjust=1, hjust=1, cex = 7) +
-    theme(legend.position=c(.9,.55))
-  plt[[1]] <- pl1_MCD
-
-  # Heatmap for 2nd date
-  pl1_MCD <- heatmap_FitCov(Sigma_list[[idx2]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
-                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-  pl1_MCD <- pl1_MCD + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = date2,
-                                vjust=1, hjust=1, cex = 7) +
-    theme(legend.position=c(.9,.55))
-  plt[[2]] <- pl1_MCD
-
-  # Trajectories plot
-  cols <- c("blue", "red")
-  names(cols) <- as.character(c(date1, date2))
-  plt[[3]] <-  ggplot(my_dat, mapping = aes(y = y, x = hour, group = ID, colour=Day, linetype = Day)) +
-    geom_line(alpha = 0.3) +
-    scale_color_manual(values=cols) +
-    theme_bw() +
-    geom_line(data = data.frame(hour = 1:24, y = (yobs[idx1, ] - mu_sigma[idx1, 1:24])),
-              aes(y = y, x = hour), inherit.aes = FALSE, colour = "blue", linewidth = 1.5) +
-    geom_line(data = data.frame(hour = 1:24, y = (yobs[idx2, ] - mu_sigma[idx2, 1:24])),
-              aes(y = y, x = hour), inherit.aes = FALSE, colour = "red", linewidth = 1.5) +
-    ylab("Residuals (GW)") + xlab("Hour") +
-    theme(legend.position = c(.1,.1)) +
-    guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 1.5, linetype = 1))) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) #+
-
-  return( plt )
-
-}
-
-library(mvnfast)
-
-setwd(root_dir)
-setwd("content/Section7/Results")
-
-load(paste0("fit_AllData_parammcd_d_", 24, "_model_", "reduced", "_response.RData"))
-mu_sigma <- predict(res_final, type = "response")
-
-plts <- plot_heat_and_traj(mu_sigma = mu_sigma, yobs = res_final$y, idx1 = 77, idx2 = 238, dat = GEF14_data, nsim = 500)
-
+# Figure 5
+grDevices::pdf(file = "Plots/Heatmap_MCD_reduced_response.pdf", width = 22, height = 7)
+plts <- plot_heat_and_traj(mu_sigma = mu_sigma, yobs = train_dat[ , 1:24],
+                           idx1 = 67, idx2 = 236, dat = train_dat, nsim = 500)
 grid.arrange(grobs = plts, ncol = 3)
+dev.off()
 
+# Figure B.7
+heat_list <- list()
+days <- seq(1, 365, by = 60)[1:6]
+heat_list <- lapply(days, function(x){
+  plot_heat_and_traj(mu_sigma = mu_sigma, yobs = train_dat[ , 1:24], idx1 = x, idx2 = 1, dat = train_dat, nsim = 5)[[1]]
+})
+
+grDevices::pdf(file = "Plots/Heats_MCD.pdf", width = 22, height = 35)
+grid.arrange(grobs = heat_list, ncol = 2)
+dev.off()
+
+#### logM ####
+# Get out-of-sample prediction
+load(paste0("Results/cv_res_stepwise_param", "logm", "_d_", d, "_lstep_",
+            grid_length, "_low_thresh_", low_neff_vcov, "_upp_thresh_", upp_neff_vcov,"_response.RData"))
+
+mu_sigma <- get_data_4_heat(cv_logm, neff = 40, tot_eff = upp_neff_vcov, grid_step = grid_length, param = "logm")
+
+# Equivalent to Figure 5 (but not shown in the paper)
+grDevices::pdf(file = "Plots/Heatmap_logM_reduced_response.pdf", width = 22, height = 7)
+plts <- plot_heat_and_traj(mu_sigma = mu_sigma, yobs = train_dat[ , 1:24],
+                           idx1 = 67, idx2 = 236, dat = train_dat, nsim = 500)
+grid.arrange(grobs = plts, ncol = 3)
+dev.off()
+
+# Figure B.6
+heat_list <- list()
+days <- seq(1, 365, by = 60)[1:6]
+heat_list <- lapply(days, function(x){
+  plot_heat_and_traj(mu_sigma = mu_sigma, yobs = train_dat[ , 1:24], idx1 = x, idx2 = 1, dat = train_dat, nsim = 5)[[1]]
+})
+
+grDevices::pdf(file = "Plots/Heats_logM.pdf", width = 22, height = 35)
+grid.arrange(grobs = heat_list, ncol = 2)
+dev.off()
+
+rm(list = setdiff(ls(), to_keep))

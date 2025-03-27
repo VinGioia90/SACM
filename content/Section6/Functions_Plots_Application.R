@@ -281,17 +281,14 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
     var1 = c(paste0("h0", 1:9), paste0("h", 10:d)),
     var2 = c(paste0("h", (d):10), paste0("h0", 9:1)),
     if(is.null(PredCov2)){
-     Stdev =  sqrt(diag(PredCov)[d : 1])
+      Stdev =  sqrt(diag(PredCov))
     } else {
-      Stdev =  sqrt(diag(PredCov )[d : 1]) - sqrt(diag(PredCov2)[d : 1])
+      Stdev =  sqrt(diag(PredCov )) - sqrt(diag(PredCov2))
     }
 
   )
 
-
-
   sDf <- data.frame(X1 = rep(NA, d ^ 2), X2 = rep(NA, d ^ 2), Corr = rep(NA, d ^ 2))
-
 
   count <- 1
   for(i in 1 : d){
@@ -316,7 +313,7 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
       }
 
       if(i == j){
-         sDf$Corr[count] <- 0
+        sDf$Corr[count] <- 0
       }
       if(j < i){
         sDf$Corr[count] <- NA
@@ -335,15 +332,15 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
 
   gg1 <- ggplot(sDf, aes(X1, X2)) +
     geom_tile(aes(fill = Corr)) +
-    scale_fill_gradientn(colors =  col_cor, limits = range_corr, na.value = "white", rescaler = ~ scales::rescale_mid(.x, mid = 0)) +
+    scale_fill_gradientn(colors =  col_cor, limits = range_corr, na.value = "white") +
     new_scale_fill() +
     geom_tile(data = diagDf, aes(var1, var2, fill = Stdev)) +
-    scale_fill_gradientn(colors = col_var,  limits = range_var, rescaler = ~ scales::rescale_mid(.x, mid = 0)) +
+    scale_fill_gradientn(colors = col_var, limits = range_var) +
     theme(aspect.ratio = 1,
           axis.title.x = element_blank(),
           axis.title.y = element_blank(),
-          axis.text.x=element_text(size=12, angle = 90, vjust = 0.5, hjust=1),
-          axis.text.y=element_text(size=12),
+          axis.text.x=element_text(size=10, angle = 90, vjust = 0.5, hjust=1),
+          axis.text.y=element_text(size=10),
           legend.key.width  = unit(1, "lines"),
           legend.key.height = unit(1, "lines"),
           legend.text=element_text(size=12),
@@ -356,13 +353,14 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
 }
 
 # At first we fit the model and save the results
-fit_model_AllData <- function(data, flag_res = FALSE, param = c("mcd", "logm"), model_type = c("reduced", "full"), neff_reduced = NULL,
+fit_model_AllData <- function(data, flag_res = FALSE, param = c("mcd", "logm"),
+                              model_type = c("reduced", "full"), neff_reduced = NULL,
                               grid_length = 5, grid_d = grid_d, d = 24){
   param <- match.arg(param)
   model_type <- match.arg(model_type)
 
   setwd(root_dir)
-  setwd("content/Section7/Results")
+  setwd("content/Section6/Results")
   if(flag_res == TRUE){
     load( paste0("res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_residuals.RData"))
   } else {
@@ -409,7 +407,7 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
   model_type <- match.arg(model_type)
 
   setwd(root_dir)
-  setwd("content/Section7/Results")
+  setwd("content/Section6/Results")
 
   if(flag_res == TRUE){
     load(paste0("fit_AllData_param", param, "_d_", d, "_model_Static_residuals.RData"))
@@ -437,7 +435,7 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
   setwd(root_dir)
-  setwd("content/Section7/Plots")
+  setwd("content/Section6/Plots")
 
   # Static
   pl1_fixed <- heatmap_FitCov(Sigma_predMat_fixed[[1]], d = d, range_var = NULL, range_corr = c(0, 1), label = "h",
@@ -525,7 +523,7 @@ plot_Heatmap2 <- function(data, flag_res = TRUE, model_type = c("reduced", "full
   model_type <- match.arg(model_type)
 
   setwd(root_dir)
-  setwd("content/Section7/Results")
+  setwd("content/Section6/Results")
 
   if(flag_res == TRUE){
     load(paste0("fit_AllData_parammcd_d_", d, "_model_Static_residuals.RData"))
@@ -567,7 +565,7 @@ plot_Heatmap2 <- function(data, flag_res = TRUE, model_type = c("reduced", "full
   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
 
   setwd(root_dir)
-  setwd("content/Section7/Plots")
+  setwd("content/Section6/Plots")
 
 
   # Min corr using the model predictions
@@ -693,4 +691,112 @@ plot_Heatmap2 <- function(data, flag_res = TRUE, model_type = c("reduced", "full
   }
   return(NULL)
 }
+
+plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
+
+  # Extract dates
+  date1 <- format(as.Date(paste(dat[idx1, "doy"], dat[idx1, "year"]), format = "%j %Y"), format="%d-%m-%Y")
+  date2 <- format(as.Date(paste(dat[idx2, "doy"], dat[idx2, "year"]), format = "%j %Y"), format="%d-%m-%Y")
+
+  # Convert to MW
+  d <- ncol(yobs)
+  conv_fact <- 0.1
+  mu_sigma[ , 1:d] <- mu_sigma[ , 1:d] * conv_fact
+  mu_sigma[ , (d+1):(2*d)] <- mu_sigma[ , (d+1):(2*d)] * conv_fact^2
+  yobs <- yobs * conv_fact
+
+  # Get covariance matrices: note SIGMA decomposed in SD and correlation hence these matrices
+  # are not positive definite but that's OK here!!
+  Sigma_list <-  Sigma_mat(mu_sigma[,-c(1 : d)])
+
+  # Simulate trajectories for each date
+  set.seed(5151)
+  COV <- Sigma_list[[idx1]]
+  sdev <- sqrt(diag(COV))
+  COV <- diag(sdev) %*% COV %*% diag(sdev)
+  diag(COV) <- sdev^2
+  X <- rmvn(nsim, rep(0, 24), COV)
+  my_dat <- data.frame("hour" = rep(1:24, nsim), "y" = as.vector(t(X)))
+
+  set.seed(5151)
+  COV <- Sigma_list[[idx2]]
+  sdev <- sqrt(diag(COV))
+  COV <- diag(sdev) %*% COV %*% diag(sdev)
+  diag(COV) <- sdev^2
+  X2 <- rmvn(nsim, rep(0, 24), COV)
+
+  # Created data frame for ggplot
+  my_dat <- rbind(my_dat,
+                  data.frame("hour" = rep(1:24, nsim), "y" = as.vector(t(X2))))
+  my_dat$day <- rep(c(1, 2), each = 24 * nsim)
+  my_dat$ID <- rep(1:(2*nsim), each = 24)
+  my_dat$Day <- as.character(my_dat$day)
+  my_dat$Day[my_dat$day == "1"] <- date1
+  my_dat$Day[my_dat$day == "2"] <- date2
+  my_dat$Day <- as.factor(my_dat$Day)
+
+  # Heatmap for first date
+  plt <- list()
+  col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
+  col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 100)[1:90])
+  label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
+  label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
+  days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+  range_var <- NULL #range(c(sqrt(diag(Sigma_list[[idx1]])), sqrt(diag(Sigma_list[[idx2]]))))
+  pl1_MCD <- heatmap_FitCov(Sigma_list[[idx1]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
+                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
+  pl1_MCD <- pl1_MCD +
+    annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = date1, vjust=1, hjust=1, cex = 7) +
+    theme(legend.position=c(.9,.55))
+  plt[[1]] <- pl1_MCD
+
+  # Heatmap for 2nd date
+  pl1_MCD <- heatmap_FitCov(Sigma_list[[idx2]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
+                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
+  pl1_MCD <- pl1_MCD + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = date2,
+                                vjust=1, hjust=1, cex = 7) +
+    theme(legend.position=c(.9,.55))
+  plt[[2]] <- pl1_MCD
+
+  # Trajectories plot
+  my_dat$hour <- my_dat$hour - 1
+  cols <- c("blue", "red")
+  names(cols) <- as.character(c(date1, date2))
+  plt[[3]] <-  ggplot(my_dat, mapping = aes(y = y, x = hour, group = ID, colour=Day, linetype = Day)) +
+    geom_line(alpha = 0.3) +
+    scale_color_manual(values=cols) +
+    theme_bw() +
+    geom_line(data = data.frame(hour = 0:23, y = unlist(yobs[idx1, ] - mu_sigma[idx1, 1:24])),
+              aes(y = y, x = hour), inherit.aes = FALSE, colour = "blue", linewidth = 1.5) +
+    geom_line(data = data.frame(hour = 0:23, y = unlist(yobs[idx2, ] - mu_sigma[idx2, 1:24])),
+              aes(y = y, x = hour), inherit.aes = FALSE, colour = "red", linewidth = 1.5) +
+    ylab("Residuals (GW)") + xlab("Hour") +
+    theme(legend.position = c(.1,.1)) +
+    guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 1.5, linetype = 1))) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) #+
+
+  return( plt )
+
+}
+
+
+get_data_4_heat <- function(cv_results, neff, tot_eff, grid_step, param, d = 24){
+
+  index <- (tot_eff - neff) / grid_step + 1
+
+  if( sum(apply(cv_results[[1]][[1]][[index]]$lpi_pred_out, 2, sd) > 1e-6) != (neff + d) ){
+    stop("Wrong number of modelled effects")
+  }
+
+  eta <- do.call("rbind", sapply(cv_results, function(o) o[[1]][[index]]$lpi_pred_out))
+  mu <- eta * NA
+
+  if(param == "mcd") pred_fun <- internal()$pred_mcd
+  if(param == "logm") pred_fun <- internal()$pred_logm
+
+  pred_fun(eta = eta, pred = mu, d = d, cor_flag = TRUE)
+
+  return(mu)
+}
+
 
