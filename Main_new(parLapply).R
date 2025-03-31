@@ -290,13 +290,18 @@ for(outcome in c("residuals", "response")){
   gc()
 }
 
+toc5 <- proc.time() - tic
+print(toc5)
+
 
 ########################
 # logM parametrisation #
 ########################
+tic <- proc.time()
+
 param <- "logm"
 for(outcome in c("residuals", "response")){
-
+  print(outcome)
   res_logm <- stepw_res(param = param, d = d, grid_length = grid_length, mean_model_formula = mean_formula,
                         data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
                         metric = "p",  save.gam = save.gam, outcome = outcome)
@@ -310,8 +315,10 @@ for(outcome in c("residuals", "response")){
 
 }
 
-toc5 <- proc.time() - tic
-print(toc5)
+toc6 <- proc.time() - tic
+print(toc6)
+
+
 
 ###########################################################################
 # Validation procedure to select the number of effects to keep in the model
@@ -390,11 +397,13 @@ ndat <- which(GEF14_data$year == 2011)[1] - 1
 ndat2 <- dim(GEF14_data)[1]
 sets <- floor(seq(ndat , ndat2, length.out = 12))
 
-tic <- proc.time()
+
 
 #######################
 # MCD parametrisation #
 #######################
+tic <- proc.time()
+
 ncores <- 11 # It should be 11 due to the number of sets involved in rolling origin forecasting
 
 param <- "mcd"
@@ -424,10 +433,13 @@ for(outcome in c("residuals", "response")){
   }
 }
 
+toc7 <- proc.time() - tic
 
 ########################
 # logM parametrisation #
 ########################
+tic <- proc.time()
+
 param <- "logm"
 low_neff_vcov <- 0
 upp_neff_vcov <- 150
@@ -452,7 +464,7 @@ for(outcome in c("residuals", "response")){
   }
 }
 
-toc6 <- proc.time() - tic
+toc8 <- proc.time() - tic
 
 print(c(toc1, toc2, toc3, toc4, toc5, toc6))
 
