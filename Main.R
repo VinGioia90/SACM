@@ -480,5 +480,6 @@ run_times <- c(toc1, toc2, toc3, toc4, toc5, toc6)
 
 print(run_times)
 
+setwd(root_dir)
 save(file = "Running_times.RData", run_times)
 
