@@ -7,14 +7,24 @@ rm(list=ls())
 # "Scalable Additive Covariance Matrix Models       #
 #####################################################
 # This code is intended to be run in RStudio
-#
+inst_pack <- installed.packages()
+if ( !require("rstudioapi") ) {
+  install.packages("rstudioapi")
+}
+
+# Needed to install custom version of mgcv
+if ( !require("SparseChol") ) {
+  install.packages("SparseChol")
+}
+
 library(rstudioapi)
 root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
 # Install and load specific version of mgcv (uncomment if needed)
-# system("rm -rf ./my_library/mgcv")
-# install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
+system("rm -rf ./my_library/mgcv")
+system("R CMD build mgcv")
+install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
 library("mgcv", lib.loc="./my_library")
 
 if(packageVersion("mgcv") != "9.0"){
@@ -227,8 +237,8 @@ nobs <- 10000
 sg <- FALSE # This avoids saving the gam object
 
 sim_mcd_fit_fs_efs <- sim_est_fs_efs(nobs_train = nobs, nobs_test = nobs, dgrid,  nrun, ncores, param = "mcd",
-                               expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), save.gam = sg,
-                               root_dir = root_dir)
+                                     expl_mean = c("x1", "x2", "x3"), expl_Theta = c("x1", "x2"), save.gam = sg,
+                                     root_dir = root_dir)
 
 save(sim_mcd_fit_fs_efs,
      file = paste0("Results/sim_mcd_fit_fs_efs_nrun_", nrun, "_n_", nobs, "_d_", paste0(dgrid, collapse = "_"), ".RData"))
@@ -282,7 +292,7 @@ for(outcome in c("residuals", "response")){
                        data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
                        metric = "p",  save.gam = save.gam, outcome = outcome)
   save(res_mcd, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
-
+  
   par(mfrow = c(1, 2))
   plot(rev(unlist(res_mcd$time_fit)))
   plot(rev(unlist(res_mcd$time_fit)/unlist(res_mcd$num_iter)))
@@ -306,13 +316,13 @@ for(outcome in c("residuals", "response")){
                         data_train = GEF14_data[1 : n_train, ], eff_vcov = "s(doy)",
                         metric = "p",  save.gam = save.gam, outcome = outcome)
   save(res_logm, file = paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
-
+  
   par(mfrow = c(1, 2))
   plot(rev(unlist(res_logm$time_fit)))
   plot(rev(unlist(res_logm$time_fit)/unlist(res_logm$num_iter)))
   rm("res_logm")
   gc()
-
+  
 }
 
 toc6 <- proc.time() - tic
@@ -349,17 +359,17 @@ if(flag_residuals){
   clusterEvalQ(NULL, {
     library(mgcv)
   })
-
+  
   mod <- list()
   for( j in 1:(length(sets)-1)){
     clusterExport(NULL, c("j"), envir = environment())
-
+    
     mod[[j]] <- parLapply(NULL, 1:d, function(ii){
       gam(mean_formula[[ii]], family = gaussian,
           data = GEF14_data_residuals[(sets[1]+1):(sets[j+1]),], optimizer = "efs",
           control = list(trace = FALSE))
     })
-
+    
     for(ii in 1:d){
       tmp_nam <- paste0("res_h", ii - 1)
       tmp_ind <- (sets[j]+1):(sets[j+1])
@@ -378,14 +388,14 @@ if(flag_residuals){
   stopCluster(cl)
   rm(list = c("mod"))
   gc()
-
+  
   # Now we need to inflate the marginal variance of the in-sample residuals to match the variance
   # of the out-of-sample residuals. We are using the 2011 data (last year) to compute the inflation factor.
   # The out-of-sample residuals (2011) are left unperturbed, while residuals from previous years are inflated.
-   tmp <- apply(GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_out_h", 0:(d-1))], 2, sd) /
-     apply(GEF14_data_residuals[ GEF14_data_residuals$year == 2011, paste0("res_h", 0:(d-1))], 2, sd)
+  tmp <- apply(GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_out_h", 0:(d-1))], 2, sd) /
+    apply(GEF14_data_residuals[ GEF14_data_residuals$year == 2011, paste0("res_h", 0:(d-1))], 2, sd)
   GEF14_data_residuals[ , paste0("res_h", 0:(d-1))] <- t(t(GEF14_data_residuals[ , paste0("res_h", 0:(d-1))])*tmp)
-
+  
   GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_h", 0:(d-1))] <-  GEF14_data_residuals[GEF14_data_residuals$year == 2011, paste0("res_out_h", 0:(d-1))]
   GEF14_data_residuals[ , paste0("res_out_h", 0:(d-1))] <- NULL
 }
@@ -414,11 +424,11 @@ low_neff_vcov <- 0
 upp_neff_vcov <- 150
 
 for(outcome in c("residuals", "response")){
-
+  
   load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
-
+  
   idx_vcov <- which((unlist(lapply(res_mcd$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
-
+  
   if(outcome == "response"){
     cv_mcd <- cross_val(obj = res_mcd, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
                         sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
@@ -445,11 +455,11 @@ low_neff_vcov <- 0
 upp_neff_vcov <- 150
 
 for(outcome in c("residuals", "response")){
-
+  
   load(paste0("Results/res_stepwise_param", param, "_d_", d, "_lstep_", grid_length, "_", outcome, ".RData"))
-
+  
   idx_vcov <- which((unlist(lapply(res_logm$foo, function(x) length(x)))-d) <= (upp_neff_vcov - low_neff_vcov))
-
+  
   if(outcome == "response"){
     cv_logm <- cross_val(obj = res_logm, param = param, d = d, data = GEF14_data, idx_vcov = idx_vcov,
                          sets_eval = sets, ncores = ncores, save.gam = save.gam, root_dir = root_dir)
@@ -467,4 +477,3 @@ for(outcome in c("residuals", "response")){
 toc8 <- proc.time() - tic
 
 print(c(toc1, toc2, toc3, toc4, toc5, toc6))
-
