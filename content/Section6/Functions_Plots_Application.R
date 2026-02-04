@@ -228,9 +228,9 @@ get_plots <- function(obj, name_eff, d, grid_length, param){
 get_plots2 <- function(obj1_mcd, obj2_logm, name_eff, d, grid_length, neff1_mcd, neff2_logm){
   #removed first (full) and last (static)
   res_plot_mcd <- lapply(2 : (length(obj1_mcd$foo) - 1), function(x) get_eff_idx2(foo_vcov = obj1_mcd$foo[[x]],
-                                                                             name_eff = name_eff, d = d, Param = "MCD"))
+                                                                                  name_eff = name_eff, d = d, Param = "MCD"))
   res_plot_logm <- lapply(2 : (length(obj2_logm$foo) - 1), function(x) get_eff_idx2(foo_vcov = obj2_logm$foo[[x]],
-                                                                              name_eff = name_eff, d = d, Param = "logM"))
+                                                                                    name_eff = name_eff, d = d, Param = "logM"))
 
   segment_data = data.frame(  # for drawing the segments
     x = c(rep(-0.5, d + 1), (seq(0.5, d + 0.5, by = 1))),
@@ -249,28 +249,29 @@ get_plots2 <- function(obj1_mcd, obj2_logm, name_eff, d, grid_length, neff1_mcd,
 
 
   pl <- ggplot(res_plot_mcd[[jElem_mcd]], aes(x = jit_col, y = jit_row, shape = Param, col = Param))+
-      geom_point(size = 3) +
-      geom_point(data = res_plot_logm[[jElem_logm]], aes(x = jit_col, y = jit_row, shape = Param), size = 3) +
-      scale_y_continuous(breaks = 0 : (d - 1), expand = c(0, 0), limits = c(d , -0.5), name = "Hours", trans = reverse_trans()) +
-      scale_x_continuous(breaks = 0 : (d - 1), expand = c(0, 0), limits = c(-1, d), name = "Hours") +
-      geom_segment(data = segment_data, mapping = aes(x = x, y = y, xend = xend, yend = yend),
-                   inherit.aes = FALSE, colour = "gray") +
-      scale_color_manual(name = "Param", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
-      theme_bw() +
-      labs(shape = "Param") +
-      #labs(title=paste("MCD:", neff1_mcd, "effects; logM:", neff2_logm, "effects"))+
-      theme(legend.title = element_text(size = 15),
-            legend.text = element_text(size = 15),
-            panel.grid.major = element_blank(),
-            panel.grid.minor = element_blank(),
-            axis.title.x = element_text(size = 15, colour = "black"),
-            axis.title.y = element_text(size = 15, colour = "black"),
-            axis.text.x = element_text(size = 12, colour = "black"),
-            axis.text.y = element_text(size = 12, colour = "black"),
-            axis.ticks.x = element_blank(),
-            axis.ticks.y = element_blank(),
-            legend.position = "bottom",
-            plot.title = element_text(hjust = 0.5))
+    geom_point(size = 3) +
+    geom_point(data = res_plot_logm[[jElem_logm]], aes(x = jit_col, y = jit_row, shape = Param), size = 3) +
+    scale_y_continuous(breaks = 0 : (d - 1), expand = c(0, 0), limits = c(d , -0.5), name = "Hours", trans = reverse_trans()) +
+    scale_x_continuous(breaks = 0 : (d - 1), expand = c(0, 0), limits = c(-1, d), name = "Hours") +
+    geom_segment(data = segment_data, mapping = aes(x = x, y = y, xend = xend, yend = yend),
+                 inherit.aes = FALSE, colour = "gray") +
+    scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+    scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
+    theme_bw() +
+    labs(shape = "Parametrisation") +
+    #labs(title=paste("MCD:", neff1_mcd, "effects; logM:", neff2_logm, "effects"))+
+    theme(legend.title = element_text(size = 16),
+          legend.text = element_text(size = 16),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.title.x = element_text(size = 16, colour = "black"),
+          axis.title.y = element_text(size = 16, colour = "black"),
+          axis.text.x = element_text(size = 14, colour = "black", angle = 90, vjust = 0.5),
+          axis.text.y = element_text(size = 14, colour = "black"),
+          axis.ticks.x = element_blank(),
+          axis.ticks.y = element_blank(),
+          legend.position = "bottom",
+          plot.title = element_text(hjust = 0.5))
   return(invisible(pl))
 }
 
@@ -337,16 +338,16 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
     geom_tile(data = diagDf, aes(var1, var2, fill = Stdev)) +
     scale_fill_gradientn(colors = col_var, limits = range_var) +
     theme(aspect.ratio = 1,
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank(),
-          axis.text.x=element_text(size=10, angle = 90, vjust = 0.5, hjust=1),
-          axis.text.y=element_text(size=10),
+          axis.title.x = element_text(size=23),
+          axis.title.y = element_text(size=23),
+          axis.text.x=element_text(size=23, angle = 90, vjust = 0.5, hjust=1),
+          axis.text.y=element_text(size=23),
           legend.key.width  = unit(1, "lines"),
           legend.key.height = unit(1, "lines"),
-          legend.text=element_text(size=12),
-          legend.title=element_text(size=15))+
-    scale_x_discrete(labels = label_xaxis)+
-    scale_y_discrete(labels = label_yaxis)
+          legend.text=element_text(size=16),
+          legend.title=element_text(size=16))+
+    scale_x_discrete(labels = label_xaxis,name = "Hours")+
+    scale_y_discrete(labels = label_yaxis,name = "Hours")
 
   return(invisible(gg1))
 
@@ -448,7 +449,7 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
 
   date <- as.Date(paste(data[idx_min_Corr, "year"], data[idx_min_Corr, "doy"]), format = "%Y %j")
   dow <- days[wday(date)]
-  pl1 <- pl1 + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 7)
+  pl1 <- pl1 + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust=1, hjust=1, cex = 15)
   print(pl1)
 
   # Max corr using the model predictions
@@ -456,7 +457,7 @@ plot_Heatmap <- function(data, flag_res = TRUE, model_type = c("reduced", "full"
                         label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
   date <- as.Date(paste(data[idx_max_Corr,"year"], data[idx_max_Corr,"doy"]), format = "%Y %j")
   dow <- days[wday(date)]
-  pl2 <- pl2 +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 7)
+  pl2 <- pl2 +  annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = paste(dow, date), vjust = 1, hjust = 1, cex = 15)
   print(pl2)
 
   ############################################################################################################################
@@ -739,8 +740,8 @@ plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
   plt <- list()
   col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
   col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 100)[1:90])
-  label_xaxis <- c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
-  label_yaxis <- c(paste0("h", (d-1):10), paste0("h0", 9:0))
+  label_xaxis <- c(paste0(0:9), paste0(10:(d-1))) #c(paste0("h0", 0:9), paste0("h", 10:(d-1)))
+  label_yaxis <- c(paste0((d-1):10), paste0(9:0))
   days <- c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
   range_var <- NULL #range(c(sqrt(diag(Sigma_list[[idx1]])), sqrt(diag(Sigma_list[[idx2]]))))
   pl1_MCD <- heatmap_FitCov(Sigma_list[[idx1]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
@@ -771,9 +772,13 @@ plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
     geom_line(data = data.frame(hour = 0:23, y = unlist(yobs[idx2, ] - mu_sigma[idx2, 1:24])),
               aes(y = y, x = hour), inherit.aes = FALSE, colour = "red", linewidth = 1.5) +
     ylab("Residuals (GW)") + xlab("Hour") +
-    theme(legend.position = c(.1,.1)) +
+    theme(legend.position = c(.2,.1)) +
     guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 1.5, linetype = 1))) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) #+
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          axis.text.x = element_text(size = 20, vjust = 0.5),
+          axis.text.y = element_text(size = 20),
+          text = element_text(size = 23),
+          legend.text=element_text(size=20), strip.text.x = element_text(size = 23)) #+
 
   return( plt )
 
@@ -798,5 +803,3 @@ get_data_4_heat <- function(cv_results, neff, tot_eff, grid_step, param, d = 24)
 
   return(mu)
 }
-
-
