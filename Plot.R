@@ -2,6 +2,11 @@
 # Code for reproducing the figures of the manuscript:         #
 # "Scalable Generalized Additive Covariance Matrix Modelling" #
 ###############################################################
+inst_pack <- installed.packages()
+if ( !("rstudioapi" %in% inst_pack[,1]) ) {
+  install.packages("rstudioapi")
+}
+
 library(rstudioapi)
 root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
@@ -97,7 +102,7 @@ row.names(all_time_hessian_logm) <- NULL
 ################################################################
 summary_time_hessian <- rbind(summary_time_hessian_mcd, summary_time_hessian_logm)
 summary_time_hessian$param<-factor(summary_time_hessian$param,
-                                labels = c("logM", "MCD"), level = c("logm", "mcd"))
+                                   labels = c("logM", "MCD"), level = c("logm", "mcd"))
 
 all_time_hessian <- rbind(all_time_hessian_mcd, all_time_hessian_logm)
 all_time_hessian$param<-factor(all_time_hessian$param,
@@ -119,16 +124,17 @@ lab_time_MCD <- c(0, 0.05, 0.25, 0.5, 1, 2, 3.5)
 ################################
 pl_Heta_logM <- ggplot(all_time_hessian[all_time_hessian$param == "logM",],
                        aes(x = as.factor(d), y = time)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = summary_time_hessian[summary_time_hessian$param == "logM",],
-             aes(x = as.factor(d), y = mean_time, colour = Type),
+             aes(x = as.factor(d), y = mean_time, colour = Type, shape = Type),
              size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line(data = summary_time_hessian[summary_time_hessian$param == "logM",],
             aes(y = mean_time, group = Type, col = Type),
             position = position_dodge(width = 0.3))+
   scale_color_manual(name = "Approach", values = c("AD" = "#00A9FF", "EFF" = "#F8766D")) +
+  scale_shape_manual(name = "Approach", values = c("AD" = 16, "EFF" = 17)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(), name = "",
                      sec.axis = sec_axis(~ . * 1, breaks = lab_time_logM, name = "")) +
@@ -146,16 +152,17 @@ pl_Heta_logM <- ggplot(all_time_hessian[all_time_hessian$param == "logM",],
 
 pl_Heta_MCD <- ggplot(all_time_hessian[all_time_hessian$param == "MCD",],
                       aes(x = as.factor(d), y = time)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = summary_time_hessian[summary_time_hessian$param == "MCD",],
-             aes(x = as.factor(d), y = mean_time, colour = Type),
+             aes(x = as.factor(d), y = mean_time, colour = Type, shape = Type),
              size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line(data = summary_time_hessian[summary_time_hessian$param == "MCD",],
             aes(y = mean_time, group = Type, col = Type),
             position = position_dodge(width = 0.3))+
   scale_color_manual(name = "Approach", values = c("AD" = "#00A9FF", "EFF" = "#F8766D")) +
+  scale_shape_manual(name = "Approach", values = c("AD" = 16, "EFF" = 17)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(), name = "",
                      sec.axis = sec_axis(~ . * 1, breaks = lab_time_MCD,
@@ -176,7 +183,7 @@ pl_Heta <- ggarrange(pl_Heta_logM,
                      nrow = 1,
                      common.legend = TRUE,
                      legend = "bottom",
-                     widths = c(1.0, 1.025)) +
+                     widths = c(1.0, 1.0225)) +
   theme(legend.box.spacing = unit(40, "pt"))
 
 pl_Heta <- annotate_figure(pl_Heta,
@@ -276,18 +283,19 @@ label_time <- c(1, 5, 25, 50, 100, 500)
 pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
-                 y = Value, colour = Type), size = 3,
+                 y = Value, colour = Type, shape = Type), size = 3,
              position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
             aes(y = Value, group = Type, col = Type),
             position = position_dodge(width = 0.3)) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1, breaks = label_time,
@@ -304,20 +312,21 @@ pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
         axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 5)))
 
 pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
-                   aes(x = factor(d, labels = as.character(dgrid_sel),
-                                  levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE,
+                      aes(x = factor(d, labels = as.character(dgrid_sel),
+                                     levels = as.character(dgrid_sel)), y = Value)) +
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
-                 y = Value, colour = Type), size = 3,
+                 y = Value, colour = Type, shape = Type), size = 3,
              position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
             aes(y = Value, group = Type, col = Type),
             position = position_dodge(width = 0.3)) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1, breaks=seq(50, 100, by = 10),
@@ -333,14 +342,13 @@ pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
         plot.margin=unit(c(0.5, 0, 1, -0.5), "cm"),
         axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 5)))
 
-
 pl_Fit_Time_Iter <- ggarrange(pl_Fit_Time,
                               pl_Fit_Iter,
                               nrow = 1,
                               common.legend = TRUE,
                               legend = "bottom",
                               widths = c(1.0, 1.0)) +
-                              theme(legend.box.spacing = unit(40, "pt"))
+  theme(legend.box.spacing = unit(40, "pt"))
 
 pl_Fit_Time_Iter <- annotate_figure(pl_Fit_Time_Iter,
                                     bottom = textGrob("Dimension",hjust = 0.7,
@@ -360,6 +368,8 @@ rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 #### SUPPLEMENTARY MATERIAL FOR SECTION 3.3 ####
 ################################################
 ################################################
+setwd(root_dir)
+setwd("content/SupplementaryMaterial")
 
 ## Figure B.1
 # Function to obtain the number of elements different from zero for
@@ -400,11 +410,13 @@ pl <- ggplot(data,aes(x)) +
   scale_x_continuous(breaks = c(2,10,20,30,40,50,60,70,80,90,100)) +
   scale_colour_manual(name = "", values = c("#619CFF", "#F8766D")) +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank())+
-  theme(legend.position = "bottom", legend.text=element_text(size=13), axis.text=element_text(size=9),
-        axis.title=element_text(size=13))
-pl
+  theme(legend.position = "bottom",
+        legend.text=element_text(size=13),
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=13),
+        text = element_text(size = 15))
 
-ggsave("sparsity_ratio2.eps",pl,width=18, height=15,  units = "cm")
+ggsave("Plots/sparsity_ratio2.eps",pl,width=18, height=15,  units = "cm")
 
 rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 
@@ -474,18 +486,19 @@ label_time <- c(1, 5, 25, 50, 100, 500)
 pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
-                 y = Value, colour = Type), size = 3,
+                 y = Value, colour = Type, shape = Type), size = 3,
              position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
             aes(y = Value, group = Type, col = Type),
             position = position_dodge(width = 0.3)) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1,
@@ -505,18 +518,19 @@ pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
 pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
-                 y = Value, colour = Type), size = 3,
+                 y = Value, colour = Type, shape = Type), size = 3,
              position = position_dodge(width = 0.3), show.legend = FALSE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
             aes(y = Value, group = Type, col = Type),
             position = position_dodge(width = 0.3)) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+  scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL, trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1, breaks=seq(50, 100, by = 10),
@@ -604,7 +618,7 @@ dgrid_sel <- as.character(dgrid) # Here, it is possible to remove d=2
 
 # Merge the logScores
 logS_logm <- data.frame(logS_gen = as.vector(logS_logmG_logmF[,dgrid_sel]),
-                         logS_nogen = as.vector(logS_logmG_mcdF[,dgrid_sel]))
+                        logS_nogen = as.vector(logS_logmG_mcdF[,dgrid_sel]))
 
 # Padding with other info
 logS_logm <- cbind(logS_logm, d = c(rep(dgrid_sel, each = nrun)))
@@ -675,7 +689,7 @@ pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",],
   theme_bw() +
   scale_y_continuous(breaks = breaks_seq_logMgen_y, labels = scaleFUN2,
                      sec.axis = sec_axis(~ . * 1,
-                                        labels = scaleFUN, breaks = NULL),) + #breaks_seq_logMgen_y
+                                         labels = scaleFUN, breaks = NULL),) + #breaks_seq_logMgen_y
   scale_x_continuous(breaks=breaks_seq_logMgen_x, labels = scaleFUN2,
                      sec.axis = sec_axis(~ . * 1,
                                          labels = scaleFUN, breaks = NULL),)+ #breaks_seq_logMgen_x
@@ -736,11 +750,11 @@ load(file = paste0("TIME_logm_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, 
 
 # logM - mean modelling
 time_Hbeta_logm_noMeanInt <-  lapply(1 : length(pint_type),
-                           function(x) time_hessian(obj = TIME_logM_beta_noMeanInt[[x]], param = "logm",
-                                                    dgrid = dgrid, nrun = nrun,
-                                                    type = c("block", "noblock"),
-                                                    type1 = c("PARS", "STD"),
-                                                    beta = TRUE))
+                                     function(x) time_hessian(obj = TIME_logM_beta_noMeanInt[[x]], param = "logm",
+                                                              dgrid = dgrid, nrun = nrun,
+                                                              type = c("block", "noblock"),
+                                                              type1 = c("PARS", "STD"),
+                                                              beta = TRUE))
 
 # Select Scenario 1 (dm05) and Scenario 2 (dm1_c2)
 summary_time_hessianB_logm_noMeanInt <- rbind(time_Hbeta_logm_noMeanInt[[1]]$sum_res,
@@ -751,20 +765,20 @@ all_time_hessianB_logm_noMeanInt <- rbind(time_Hbeta_logm_noMeanInt[[1]]$res, ti
 row.names(all_time_hessianB_logm_noMeanInt) <- NULL
 
 rel_mean_time_hessianB_logm_noMeanInt <- data.frame(d = rep(dgrid, 2),
-                                          rel_time = summary_time_hessianB_logm_noMeanInt[summary_time_hessianB_logm_noMeanInt$Type == "STD",2]/
-                                                     summary_time_hessianB_logm_noMeanInt[summary_time_hessianB_logm_noMeanInt$Type == "PARS",2],
-                                          param = rep("logm", 2 * length(dgrid)),
-                                          Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
-                                                            labels = c("S1", "S2"), level = c("S1", "S2")),
-                                          Ratio = rep("STD/PARS", 2 * length(dgrid)))
+                                                    rel_time = summary_time_hessianB_logm_noMeanInt[summary_time_hessianB_logm_noMeanInt$Type == "STD",2]/
+                                                      summary_time_hessianB_logm_noMeanInt[summary_time_hessianB_logm_noMeanInt$Type == "PARS",2],
+                                                    param = rep("logm", 2 * length(dgrid)),
+                                                    Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
+                                                                      labels = c("S1", "S2"), level = c("S1", "S2")),
+                                                    Ratio = rep("STD/PARS", 2 * length(dgrid)))
 
 rel_all_time_hessianB_logm_noMeanInt <- data.frame(d = rep(dgrid, 2),
-                                         rel_time = all_time_hessianB_logm_noMeanInt[all_time_hessianB_logm_noMeanInt$Type == "STD",1]/
-                                                    all_time_hessianB_logm_noMeanInt[all_time_hessianB_logm_noMeanInt$Type == "PARS",1],
-                                         param = rep("logm",2 * length(dgrid)),
-                                         Scenario = factor(rep(c("S1", "S2"), each = nrun * length(dgrid)),
-                                                           labels=c("S1", "S2"), level = c("S1", "S2")),
-                                         Ratio = rep("STD/PARS", 2 * length(dgrid)))
+                                                   rel_time = all_time_hessianB_logm_noMeanInt[all_time_hessianB_logm_noMeanInt$Type == "STD",1]/
+                                                     all_time_hessianB_logm_noMeanInt[all_time_hessianB_logm_noMeanInt$Type == "PARS",1],
+                                                   param = rep("logm",2 * length(dgrid)),
+                                                   Scenario = factor(rep(c("S1", "S2"), each = nrun * length(dgrid)),
+                                                                     labels=c("S1", "S2"), level = c("S1", "S2")),
+                                                   Ratio = rep("STD/PARS", 2 * length(dgrid)))
 
 # To set manually
 lab_time_logM <- c(1, 2, 4, 8, 16, 24, 36)
@@ -778,12 +792,15 @@ rel_all_time_hessianB_logm_noMeanInt <- rel_all_time_hessianB_logm_noMeanInt[whi
 ##################################################
 pl_Hbeta <- ggplot(rel_all_time_hessianB_logm_noMeanInt,
                    aes(x = as.factor(d), y = rel_time)) +
-  geom_point(aes(colour = Scenario), size = 1, show.legend = FALSE,
+  geom_point(aes(colour = Scenario), size = 1,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_logm_noMeanInt,
              aes(x = as.factor(d), y = rel_time, colour = Scenario),
-             size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
-  geom_line(data = rel_mean_time_hessianB_logm_noMeanInt,
+             size = 2, position = position_dodge(width = 0.3)) +
+  geom_line(data = rel_mean_time_hessianB_logm_noMeanInt[rel_mean_time_hessianB_logm_noMeanInt$Scenario=="S1",],
+            aes(y = rel_time, group = Scenario, col = Scenario),
+            position = position_dodge(width = 0.3), linetype = "dotdash") +
+  geom_line(data = rel_mean_time_hessianB_logm_noMeanInt[rel_mean_time_hessianB_logm_noMeanInt$Scenario=="S2",],
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
@@ -825,6 +842,9 @@ add_point <-  data.frame(d =  rep(seq(min(dgrid), max(dgrid), by = step_length),
                          Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
                                            labels=c("S1", "S2"), level = c("S1", "S2")))
 
+add_point_rel <- transform(add_point, type = "rel")
+add_point_abs <- transform(add_point, type = "abs")
+
 # Setted manually
 scale_function <- function(x){
   return (x/(662.74429/ 0.3162278))
@@ -837,19 +857,28 @@ plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0_rel)) +
   xlab("") + ylab(expression("% of linear predictors modelled")) +
   theme_bw() +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(data = add_point , aes(x = d, y = nelno0_rel, colour = Scenario),
-             shape = 16, size = 2.5, show.legend = F) +
-  geom_point(data = add_point , aes(x = d, y = scale_function(nelno0_abs), colour = Scenario),
-             shape = 17, size = 2.5, show.legend = F) +
-  geom_line(aes(y = nelno0_rel, group = Scenario, col = Scenario), linewidth = 0.05) +
-  geom_line(aes(y = scale_function(nelno0_abs), group = Scenario, col = Scenario),
-            size = 0.05, lty = "dashed") +
-  scale_color_manual(name = "Scenario",
-                     values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  geom_point(data = add_point_rel, aes(x = d, y = nelno0_rel,
+                                       colour = Scenario, fill = Scenario),
+             size = 2, shape = 16) +
+  geom_point(data = add_point_abs, aes(x = d, y = scale_function(nelno0_abs),
+                                       colour = Scenario),
+             size = 2, shape = 17, fill = NA, show.legend = F)+
+  geom_line(aes(y = nelno0_rel, group = Scenario, col = Scenario, linetype = Scenario),
+            linewidth = 0.2) +
+  geom_line(aes(y = scale_function(nelno0_abs),
+                group = Scenario, col = Scenario, linetype = Scenario),
+            linewidth = 0.2) +
+  scale_color_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  scale_fill_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D"))+
+  scale_linetype_manual(
+    name = "Scenario",
+    values = c("S1" = "dotdash", "S2" = "solid")
+  ) +
+  #scale_shape_manual(name = "Scenario", values = c("S1" = 21,  "S2" = 24))+
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         axis.text = element_text(size = 12),  text = element_text(size = 15),
-       axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
-       axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
+        axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
         axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 05)),
         legend.text=element_text(size = 15), strip.text.x = element_text(size = 15),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
@@ -860,13 +889,14 @@ plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0_rel)) +
                                          breaks = seq(0, 700, 100),
                                          name="# of linear predictors modelled"))
 
+
 pl_comp_Hbeta <- ggarrange(plot_perc_covmod_lpi,
                            pl_Hbeta,
                            nrow = 1,
                            common.legend = TRUE,
                            legend = "bottom",
-                           widths = c(1.245, 1.0)) +
-   theme(legend.box.spacing = unit(20, "pt"))
+                           widths = c(1.15, 1.0)) +
+  theme(legend.box.spacing = unit(20, "pt"))
 
 pl_comp_Hbeta <- annotate_figure(pl_comp_Hbeta,
                                  bottom = textGrob("Dimension", hjust = 0.5,
@@ -899,11 +929,11 @@ load(file = paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, "
 
 # MCD - mean modelling
 time_Hbeta_mcd_MeanInt <-  lapply(1 : length(pint_type),
-                           function(x) time_hessian(obj = TIME_MCD_beta_MeanInt[[x]], param = "mcd",
-                                                    dgrid = dgrid, nrun = nrun,
-                                                    type = c("block", "noblock"),
-                                                    type1 = c("PARS", "STD"),
-                                                    beta = TRUE))
+                                  function(x) time_hessian(obj = TIME_MCD_beta_MeanInt[[x]], param = "mcd",
+                                                           dgrid = dgrid, nrun = nrun,
+                                                           type = c("block", "noblock"),
+                                                           type1 = c("PARS", "STD"),
+                                                           beta = TRUE))
 
 # Select Scenario 1 (dm05) and Scenario 2 (dm2)
 summary_time_hessianB_mcd_MeanInt <- rbind(time_Hbeta_mcd_MeanInt[[1]]$sum_res, time_Hbeta_mcd_MeanInt[[3]]$sum_res)
@@ -914,7 +944,7 @@ row.names(all_time_hessianB_mcd_MeanInt) <- NULL
 
 rel_mean_time_hessianB_mcd_MeanInt <- data.frame(d = rep(dgrid, 2),
                                                  rel_time = summary_time_hessianB_mcd_MeanInt[summary_time_hessianB_mcd_MeanInt$Type == "STD",2]/
-                                                 summary_time_hessianB_mcd_MeanInt[summary_time_hessianB_mcd_MeanInt$Type == "PARS",2],
+                                                   summary_time_hessianB_mcd_MeanInt[summary_time_hessianB_mcd_MeanInt$Type == "PARS",2],
                                                  param = rep("mcd", 2 * length(dgrid)),
                                                  Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
                                                                    labels = c("S1", "S2"),
@@ -923,12 +953,12 @@ rel_mean_time_hessianB_mcd_MeanInt <- data.frame(d = rep(dgrid, 2),
 
 
 rel_all_time_hessianB_mcd_MeanInt <- data.frame(d = rep(dgrid, 2),
-                                         rel_time = all_time_hessianB_mcd_MeanInt[all_time_hessianB_mcd_MeanInt$Type == "STD",1]/
-                                         all_time_hessianB_mcd_MeanInt[all_time_hessianB_mcd_MeanInt$Type == "PARS",1],
-                                         param = rep("mcd",2 * length(dgrid)),
-                                         Scenario = factor(rep(c("S1", "S2"), each = nrun * length(dgrid)),
-                                                           labels=c("S1", "S2"), level = c("S1", "S2")),
-                                         Ratio = rep("STD/PARS", 2 * length(dgrid)))
+                                                rel_time = all_time_hessianB_mcd_MeanInt[all_time_hessianB_mcd_MeanInt$Type == "STD",1]/
+                                                  all_time_hessianB_mcd_MeanInt[all_time_hessianB_mcd_MeanInt$Type == "PARS",1],
+                                                param = rep("mcd",2 * length(dgrid)),
+                                                Scenario = factor(rep(c("S1", "S2"), each = nrun * length(dgrid)),
+                                                                  labels=c("S1", "S2"), level = c("S1", "S2")),
+                                                Ratio = rep("STD/PARS", 2 * length(dgrid)))
 
 # Setted manually
 lab_time_MCD <- c(1,5,10,15, 20, 30, 50)
@@ -942,17 +972,18 @@ rel_all_time_hessianB_mcd_MeanInt <- rel_all_time_hessianB_mcd_MeanInt[which(rel
 #################################################
 pl_Hbeta_MeanInt <- ggplot(rel_all_time_hessianB_mcd_MeanInt,
                            aes(x = as.factor(d), y = rel_time)) +
-  geom_point(aes(colour = Scenario), size = 1, show.legend = FALSE,
+  geom_point(aes(colour = Scenario, shape = Scenario), size = 1,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_mcd_MeanInt,
-             aes(x = as.factor(d), y = rel_time, colour = Scenario),
-             size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+             aes(x = as.factor(d), y = rel_time, colour = Scenario, shape = Scenario),
+             size = 2, position = position_dodge(width = 0.3)) +
   geom_line(data = rel_mean_time_hessianB_mcd_MeanInt,
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(name = "Scenario",
                      values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  scale_shape_manual(name = "Scenario", values = c("S1" = 16, "S2" = 17)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL,trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1,  breaks = lab_time_MCD, name = "Relative time")) +
@@ -976,11 +1007,11 @@ load(file = paste0("TIME_mcd_beta_d", min(dgrid),"_",max(dgrid),"_nobs", nobs, "
 
 # MCD - no mean modelling
 time_Hbeta_mcd_noMeanInt <-  lapply(1 : length(pint_type),
-                                  function(x) time_hessian(obj = TIME_MCD_beta_noMeanInt[[x]], param = "mcd",
-                                                           dgrid = dgrid, nrun = nrun,
-                                                           type = c("block", "noblock"),
-                                                           type1 = c("PARS", "STD"),
-                                                           beta = TRUE))
+                                    function(x) time_hessian(obj = TIME_MCD_beta_noMeanInt[[x]], param = "mcd",
+                                                             dgrid = dgrid, nrun = nrun,
+                                                             type = c("block", "noblock"),
+                                                             type1 = c("PARS", "STD"),
+                                                             beta = TRUE))
 
 # Select Scenario 1 (dm05) and Scenario 2 (dm1_c2)
 summary_time_hessianB_mcd_noMeanInt <- rbind(time_Hbeta_mcd_noMeanInt[[1]]$sum_res, time_Hbeta_mcd_noMeanInt[[3]]$sum_res)
@@ -991,19 +1022,19 @@ row.names(all_time_hessianB_mcd_noMeanInt) <- NULL
 
 rel_mean_time_hessianB_mcd_noMeanInt <- data.frame(d = rep(dgrid, 2),
                                                    rel_time = summary_time_hessianB_mcd_noMeanInt[summary_time_hessianB_mcd_noMeanInt$Type == "STD",2]/
-                                                   summary_time_hessianB_mcd_noMeanInt[summary_time_hessianB_mcd_noMeanInt$Type == "PARS",2],
+                                                     summary_time_hessianB_mcd_noMeanInt[summary_time_hessianB_mcd_noMeanInt$Type == "PARS",2],
                                                    param = rep("mcd", 2 * length(dgrid)),
                                                    Scenario = factor(rep(c("S1", "S2"), each = length(dgrid)),
-                                                                   labels = c("S1", "S2"),
-                                                                   level = c("S1", "S2")),
+                                                                     labels = c("S1", "S2"),
+                                                                     level = c("S1", "S2")),
                                                    Ratio = rep("STD/PARS", 2 * length(dgrid)))
 
 rel_all_time_hessianB_mcd_noMeanInt <- data.frame(d = rep(dgrid, 2),
                                                   rel_time = all_time_hessianB_mcd_noMeanInt[all_time_hessianB_mcd_noMeanInt$Type == "STD",1]/
-                                                  all_time_hessianB_mcd_noMeanInt[all_time_hessianB_mcd_noMeanInt$Type == "PARS",1],
+                                                    all_time_hessianB_mcd_noMeanInt[all_time_hessianB_mcd_noMeanInt$Type == "PARS",1],
                                                   param = rep("mcd",2 * length(dgrid)),
                                                   Scenario = factor(rep(c("S1", "S2"),
-                                                                    each = nrun * length(dgrid)),
+                                                                        each = nrun * length(dgrid)),
                                                                     labels = c("S1", "S2"),
                                                                     level = c("S1", "S2")),
                                                   Ratio = rep("STD/PARS", 2 * length(dgrid)))
@@ -1019,17 +1050,18 @@ rel_all_time_hessianB_mcd_noMeanInt <- rel_all_time_hessianB_mcd_noMeanInt[which
 ################################################
 pl_Hbeta_noMeanInt <- ggplot(rel_all_time_hessianB_mcd_noMeanInt,
                              aes(x = as.factor(d), y = rel_time)) +
-  geom_point(aes(colour = Scenario), size = 1, show.legend = FALSE,
+  geom_point(aes(colour = Scenario, shape = Scenario), size = 1,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_mcd_noMeanInt,
-             aes(x = as.factor(d), y = rel_time, colour = Scenario),
-             size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+             aes(x = as.factor(d), y = rel_time, colour = Scenario, shape = Scenario),
+             size = 2, position = position_dodge(width = 0.3)) +
   geom_line(data = rel_mean_time_hessianB_mcd_noMeanInt,
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(name = "Scenario",
                      values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  scale_shape_manual(name = "Scenario", values = c("S1" = 16, "S2" = 17)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL,trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1,  breaks = lab_time_MCD)) +
@@ -1124,17 +1156,18 @@ rel_all_time_hessianB_logm_MeanInt <- rel_all_time_hessianB_logm_MeanInt[which(r
 ################
 pl_Hbeta <- ggplot(rel_all_time_hessianB_logm_MeanInt,
                    aes(x = as.factor(d), y = rel_time)) +
-  geom_point(aes(colour = Scenario), size = 1, show.legend = FALSE,
+  geom_point(aes(colour = Scenario, shape = Scenario), size = 1,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_logm_MeanInt,
-             aes(x = as.factor(d), y = rel_time, colour = Scenario),
-             size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+             aes(x = as.factor(d), y = rel_time, colour = Scenario, shape = Scenario),
+             size = 2, position = position_dodge(width = 0.3)) +
   geom_line(data = rel_mean_time_hessianB_logm_MeanInt,
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(name = "Scenario",
                      values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
+  scale_shape_manual(name = "Scenario", values = c("S1" = 16, "S2" = 17)) +
   theme_bw() +
   scale_y_continuous(breaks = NULL,trans = myscale_trans2(),
                      sec.axis = sec_axis(~ . * 1,  breaks = lab_time_logM,
@@ -1361,26 +1394,27 @@ if(flag_residuals){
                                    "Eff" = c(ncov_el_mcd_sel, ncov_el_logm_sel))
   pl_logS_mcd_logM <- ggplot(data_logScore_residuals,
                              aes(x = Eff, y = logS)) +
-    geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-    geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param),
+    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+    geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param, shape = Param),
                size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
     geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3)) +
     scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+    scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
     theme_bw() +
     xlab("Number of effects") + ylab("LS") +
     theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_blank(),
-          axis.text.y = element_text(size = 12),
-          axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5),
-          text = element_text(size = 15),
-          legend.text=element_text(size=15),
-          strip.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 14),
+          axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5),
+          text = element_text(size = 16),
+          legend.text=element_text(size=16),
+          strip.text.x = element_text(size = 16),
           plot.margin=unit(c(0.25, 0.175, -0.2, 0.0), "cm"),
           legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
   print(pl_logS_mcd_logM)
-  ggsave(paste0("logS_MCDandlogM_residuals.pdf"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
-  ggsave(paste0("logS_MCDandlogM_residuals.eps"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
+  ggsave(paste0("logS_MCDandlogM_residuals.pdf"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
+  ggsave(paste0("logS_MCDandlogM_residuals.eps"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
 } else {
   ncov_el_mcd_sel <- 80
   ncov_el_logm_sel <- 40
@@ -1391,27 +1425,28 @@ if(flag_residuals){
                                    "Eff" = c(ncov_el_mcd_sel, ncov_el_logm_sel))
   pl_logS_mcd_logM <- ggplot(data_logScore,
                              aes(x = Eff, y = logS)) +
-    geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
-    geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param),
+    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+    geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param, shape = Param),
                size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
     geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3)) +
     scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+    scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
     theme_bw() +
     xlab("Number of effects") + ylab("LS") +
     theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_blank(),
-          axis.text.y = element_text(size = 12),
-          axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5),
-          text = element_text(size = 15),
-          legend.text=element_text(size=15),
-          strip.text.x = element_text(size = 15),
+          axis.text.y = element_text(size = 14),
+          axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5),
+          text = element_text(size = 16),
+          legend.text=element_text(size=16),
+          strip.text.x = element_text(size = 16),
           plot.margin=unit(c(0.25, 0.175, -0.2, 0.0), "cm"),
           legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
   print(pl_logS_mcd_logM)
-  ggsave(paste0("logS_MCDandlogM_response.pdf"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
-  ggsave(paste0("logS_MCDandlogM_response.eps"),  plot = pl_logS_mcd_logM, width = 20, height = 20, units = "cm")
+  ggsave(paste0("logS_MCDandlogM_response.pdf"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
+  ggsave(paste0("logS_MCDandlogM_response.eps"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
 }
 
 ###############################################
@@ -1449,8 +1484,8 @@ if(flag_residuals){
   )
   print(pl_MCD_logM)
 
-  ggsave(paste0("Covmod_MCDandlogM_residuals.pdf"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
-  ggsave(paste0("Covmod_MCDandlogM_residuals.eps"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
+  ggsave(paste0("Covmod_MCDandlogM_residuals.pdf"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
+  ggsave(paste0("Covmod_MCDandlogM_residuals.eps"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
   setwd(root_dir)
   setwd("content/Section6")
 
@@ -1482,8 +1517,8 @@ if(flag_residuals){
   )
   print(pl_MCD_logM)
 
-  ggsave(paste0("Covmod_MCDandlogM_response.pdf"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
-  ggsave(paste0("Covmod_MCDandlogM_response.eps"),  plot = pl_MCD_logM, width = 20, height = 20, units = "cm")
+  ggsave(paste0("Covmod_MCDandlogM_response.pdf"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
+  ggsave(paste0("Covmod_MCDandlogM_response.eps"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
   setwd(root_dir)
   setwd("content/Section6")
 
@@ -1521,15 +1556,17 @@ if(flag_residuals){
 
   pl_TIME_mcd_logM <- ggplot(data_time,
                              aes(x = Eff, y = Time)) + #factor(Eff, labels = as.character(Eff), levels = as.character(Eff)), y = logS)) +
-    geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
     geom_line(aes(y = Time, group = Param, col = Param), position = position_dodge(width = 0.3)) +
     scale_x_continuous(breaks = grid_d2) +
     scale_y_continuous(breaks = c(0,seq(0,200,by=50)), trans = myscale_trans2(), name = "") +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+    scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
     theme_bw() +
     xlab("Number of effects") + ylab("Time (minutes)") +
-    theme(panel.grid.minor = element_blank(), axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5),
-          axis.text.y = element_text(size = 12), text = element_text(size = 15),
+    theme(panel.grid.minor = element_blank(), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5),
+          axis.text.y = element_text(size = 14),
+          text = element_text(size = 15),
           legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
           panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
   print(pl_TIME_mcd_logM)
@@ -1563,16 +1600,18 @@ if(flag_residuals){
 
   pl_TIME_mcd_logM <- ggplot(data_time,
                              aes(x = Eff, y = Time)) + #factor(Eff, labels = as.character(Eff), levels = as.character(Eff)), y = logS)) +
-    geom_point(aes(colour = Param), size = 1, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
     geom_line(aes(y = Time, group = Param, col = Param), position = position_dodge(width = 0.3)) +
     scale_x_continuous(breaks = grid_d2) +
     scale_y_continuous(breaks = c(10,50, 100, 200), trans = myscale_trans2()) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
+    scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
     theme_bw() +
     xlab("Number of effects") + ylab("Time (minutes)") +
-    theme(panel.grid.minor = element_blank(), axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5),
-          axis.text.y = element_text(size = 12), text = element_text(size = 15),
-          legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+    theme(panel.grid.minor = element_blank(), axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5),
+          axis.text.y = element_text(size = 14),
+          text = element_text(size = 16),
+          legend.text=element_text(size=16), strip.text.x = element_text(size = 16),
           panel.grid.major = element_blank(), legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
   print(pl_TIME_mcd_logM)
   ggsave(paste0("Time_MCDandlogM_response_VM.pdf"),  plot = pl_TIME_mcd_logM, width = 20, height = 20, units = "cm")
@@ -1586,7 +1625,6 @@ rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 ###################
 # Figure 5 (main text), B.6 and B.7 (Supplementary Material)
 ###################
-
 setwd(root_dir)
 setwd("content/Section6")
 

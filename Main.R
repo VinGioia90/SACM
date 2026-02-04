@@ -1,27 +1,36 @@
-rm(list=ls())
-
-.rs.restartR()
-
 #####################################################
 # Code for reproducing the results of the paper:    #
 # "Scalable Additive Covariance Matrix Models       #
 #####################################################
-# This code is intended to be run in RStudio
-inst_pack <- installed.packages()
+
+rm(list=ls())
+
+###############################
+# Install the relevant packages
+###############################
+# NOTE: This code is intended to be run in RStudio
+
+# De-comment the following line if you want to install packages as binaries
+# (which avoids pop-ups and might be faster)
+# options(pkgType = "binary")
+
 if ( !require("rstudioapi") ) {
   install.packages("rstudioapi")
+  library("rstudioapi")
 }
 
+# Restard session to avoid potential conflicts
+.rs.restartR()
+
 # Needed to install custom version of mgcv
-if ( !require("SparseChol") ) {
+if ( !("SparseChol" %in% rownames(installed.packages()))  ) {
   install.packages("SparseChol")
 }
 
-library(rstudioapi)
 root_dir <- dirname(rstudioapi::getActiveDocumentContext()$path)
 setwd(root_dir)
 
-# Install and load specific version of mgcv (uncomment if needed)
+# Install and load custom version of mgcv
 system("rm -rf ./my_library/mgcv")
 system("R CMD build mgcv")
 install.packages("mgcv_9.0.tar.gz", repos = NULL, type = "source", lib = "./my_library")
