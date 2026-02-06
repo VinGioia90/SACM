@@ -124,15 +124,15 @@ lab_time_MCD <- c(0, 0.05, 0.25, 0.5, 1, 2, 3.5)
 ################################
 pl_Heta_logM <- ggplot(all_time_hessian[all_time_hessian$param == "logM",],
                        aes(x = as.factor(d), y = time)) +
-  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = FALSE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = summary_time_hessian[summary_time_hessian$param == "logM",],
              aes(x = as.factor(d), y = mean_time, colour = Type, shape = Type),
-             size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+             size = 3, position = position_dodge(width = 0.3), show.legend = TRUE) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line(data = summary_time_hessian[summary_time_hessian$param == "logM",],
             aes(y = mean_time, group = Type, col = Type),
-            position = position_dodge(width = 0.3))+
+            position = position_dodge(width = 0.3), show.legend = FALSE)+
   scale_color_manual(name = "Approach", values = c("AD" = "#00A9FF", "EFF" = "#F8766D")) +
   scale_shape_manual(name = "Approach", values = c("AD" = 16, "EFF" = 17)) +
   theme_bw() +
@@ -142,6 +142,7 @@ pl_Heta_logM <- ggplot(all_time_hessian[all_time_hessian$param == "logM",],
   xlab("Dimension") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         legend.position = "bottom",
+        #legend.key.size = unit(1,"line"),
         panel.spacing = unit(0.2, "lines"),
         axis.text = element_text(size = 12),
         text = element_text(size = 15),  legend.text=element_text(size = 15),
@@ -152,15 +153,15 @@ pl_Heta_logM <- ggplot(all_time_hessian[all_time_hessian$param == "logM",],
 
 pl_Heta_MCD <- ggplot(all_time_hessian[all_time_hessian$param == "MCD",],
                       aes(x = as.factor(d), y = time)) +
-  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = FALSE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = summary_time_hessian[summary_time_hessian$param == "MCD",],
              aes(x = as.factor(d), y = mean_time, colour = Type, shape = Type),
-             size = 2, position = position_dodge(width = 0.3), show.legend = FALSE) +
+             size = 3, position = position_dodge(width = 0.3), show.legend = TRUE) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_line(data = summary_time_hessian[summary_time_hessian$param == "MCD",],
             aes(y = mean_time, group = Type, col = Type),
-            position = position_dodge(width = 0.3))+
+            position = position_dodge(width = 0.3), show.legend = FALSE)+
   scale_color_manual(name = "Approach", values = c("AD" = "#00A9FF", "EFF" = "#F8766D")) +
   scale_shape_manual(name = "Approach", values = c("AD" = 16, "EFF" = 17)) +
   theme_bw() +
@@ -283,16 +284,16 @@ label_time <- c(1, 5, 25, 50, 100, 500)
 pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = FALSE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
                  y = Value, colour = Type, shape = Type), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
+             position = position_dodge(width = 0.3), show.legend = TRUE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
             aes(y = Value, group = Type, col = Type),
-            position = position_dodge(width = 0.3)) +
+            position = position_dodge(width = 0.3), show.legend = FALSE) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
@@ -314,16 +315,16 @@ pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
 pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = FALSE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
                  y = Value, colour = Type, shape = Type), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
+             position = position_dodge(width = 0.3), show.legend = TRUE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
             aes(y = Value, group = Type, col = Type),
-            position = position_dodge(width = 0.3)) +
+            position = position_dodge(width = 0.3), show.legend = FALSE) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
@@ -486,16 +487,16 @@ label_time <- c(1, 5, 25, 50, 100, 500)
 pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = FALSE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
                  y = Value, colour = Type, shape = Type), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
+             position = position_dodge(width = 0.3), show.legend = TRUE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Time",],
             aes(y = Value, group = Type, col = Type),
-            position = position_dodge(width = 0.3)) +
+            position = position_dodge(width = 0.3), show.legend = FALSE) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
@@ -518,16 +519,16 @@ pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
 pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
                       aes(x = factor(d, labels = as.character(dgrid_sel),
                                      levels = as.character(dgrid_sel)), y = Value)) +
-  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = TRUE,
+  geom_point(aes(colour = Type, shape = Type), size = 1, show.legend = FALSE,
              position = position_dodge(width = 0.3)) +
   geom_point(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
              aes(x = factor(d, labels = as.character(dgrid_sel),
                             levels = as.character(dgrid_sel)),
                  y = Value, colour = Type, shape = Type), size = 3,
-             position = position_dodge(width = 0.3), show.legend = FALSE) +
+             position = position_dodge(width = 0.3), show.legend = TRUE) +
   geom_line(data = data_time_iter_sum[data_time_iter_sum$Type2 == "Iterations",],
             aes(y = Value, group = Type, col = Type),
-            position = position_dodge(width = 0.3)) +
+            position = position_dodge(width = 0.3), show.legend = FALSE) +
   scale_color_manual(name = "Parametrisation",
                      values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
   scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
@@ -792,17 +793,14 @@ rel_all_time_hessianB_logm_noMeanInt <- rel_all_time_hessianB_logm_noMeanInt[whi
 ##################################################
 pl_Hbeta <- ggplot(rel_all_time_hessianB_logm_noMeanInt,
                    aes(x = as.factor(d), y = rel_time)) +
-  geom_point(aes(colour = Scenario), size = 1,
-             position = position_dodge(width = 0.3)) +
+  geom_point(aes(colour = Scenario), size = 1) +
   geom_point(data = rel_mean_time_hessianB_logm_noMeanInt,
              aes(x = as.factor(d), y = rel_time, colour = Scenario),
-             size = 2, position = position_dodge(width = 0.3)) +
+             size = 3) +
   geom_line(data = rel_mean_time_hessianB_logm_noMeanInt[rel_mean_time_hessianB_logm_noMeanInt$Scenario=="S1",],
-            aes(y = rel_time, group = Scenario, col = Scenario),
-            position = position_dodge(width = 0.3), linetype = "dotdash") +
+            aes(y = rel_time, group = Scenario, col = Scenario), linetype = "dotdash", linewidth = 0.8) +
   geom_line(data = rel_mean_time_hessianB_logm_noMeanInt[rel_mean_time_hessianB_logm_noMeanInt$Scenario=="S2",],
-            aes(y = rel_time, group = Scenario, col = Scenario),
-            position = position_dodge(width = 0.3)) +
+            aes(y = rel_time, group = Scenario, col = Scenario)) +
   geom_hline(yintercept = 1, linetype = "dashed") +
   scale_color_manual(name = "Scenario",
                      values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
@@ -857,38 +855,85 @@ plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0_rel)) +
   xlab("") + ylab(expression("% of linear predictors modelled")) +
   theme_bw() +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  geom_point(data = add_point_rel, aes(x = d, y = nelno0_rel,
-                                       colour = Scenario, fill = Scenario),
-             size = 2, shape = 16) +
-  geom_point(data = add_point_abs, aes(x = d, y = scale_function(nelno0_abs),
-                                       colour = Scenario),
-             size = 2, shape = 17, fill = NA, show.legend = F)+
-  geom_line(aes(y = nelno0_rel, group = Scenario, col = Scenario, linetype = Scenario),
-            linewidth = 0.2) +
-  geom_line(aes(y = scale_function(nelno0_abs),
-                group = Scenario, col = Scenario, linetype = Scenario),
-            linewidth = 0.2) +
-  scale_color_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D")) +
-  scale_fill_manual(name = "Scenario", values = c("S1" = "#00A9FF", "S2" = "#F8766D"))+
+
+  # points
+  geom_point(
+    data = add_point_rel,
+    aes(x = d, y = nelno0_rel, colour = Scenario, fill = Scenario),
+    size = 3, shape = 16, show.legend = FALSE,
+  ) +
+  geom_point(
+    data = add_point_abs,
+    aes(x = d, y = scale_function(nelno0_abs), colour = Scenario),
+    size = 3, shape = 17, fill = NA, show.legend = FALSE,
+  ) +
+
+  # lines (Scenario legend = colour + linetype together)
+  geom_line(
+    aes(y = nelno0_rel, group = Scenario, colour = Scenario, linetype = Scenario),
+    linewidth = 0.8
+  ) +
+  geom_line(
+    aes(y = scale_function(nelno0_abs),
+        group = Scenario, colour = Scenario, linetype = Scenario),
+    linewidth = 0.8
+  ) +
+
+  # merged Scenario legend
+  scale_color_manual(
+    name = "Scenario",
+    values = cols
+  ) +
   scale_linetype_manual(
     name = "Scenario",
     values = c("S1" = "dotdash", "S2" = "solid")
   ) +
-  #scale_shape_manual(name = "Scenario", values = c("S1" = 21,  "S2" = 24))+
-  theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-        axis.text = element_text(size = 12),  text = element_text(size = 15),
-        axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
-        axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
-        axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 05)),
-        legend.text=element_text(size = 15), strip.text.x = element_text(size = 15),
-        legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
-        legend.box.spacing = unit(10, "pt"), plot.margin = unit(c(0.5, 0, 1, 0), "cm"))+
-  scale_x_continuous(breaks = add_point$d) +
-  scale_y_continuous(breaks = seq(0, 0.35, by = 0.05), lim = c(0, 0.35),
-                     sec.axis = sec_axis(~ inv_scale_function(.),
-                                         breaks = seq(0, 700, 100),
-                                         name="# of linear predictors modelled"))
 
+  # remove shape legend only (annotation handles Metric)
+  guides(shape = "none", fill = "none") +
+
+  # ---- Manual SHAPE legend (center–top; black only; no line) ----
+annotate("rect",
+         xmin = xmid - xpad, xmax = xmid + xpad,
+         ymin = y0 - dy*1.2, ymax = y0 + dy*0.9,
+         fill = "white", colour = "grey60", linewidth = 0.3) +
+  annotate("text",
+           x = xmid, y = y0 + dy*0.55,
+           label = "Linear predictors modelled", hjust = 0.5, size = 4.5) +
+
+  # Relative (dot)
+  annotate("point", x = xmid - xpad*0.3, y = y0 + dy*0.55 - dy*2,
+           shape = 16, size = 2.6, colour = "black") +
+  annotate("text",  x = xmid - xpad*0.2, y = y0 + dy*0.55 - dy*2,
+           label = "Percentage %", hjust = 0, size = 4.2) +
+
+  # Absolute (triangle)
+  annotate("point", x = xmid - xpad*0.3, y = y0 + dy*0.55 - dy,
+           shape = 17, size = 2.6, colour = "black") +
+  annotate("text",  x = xmid - xpad*0.2, y = y0 + dy*0.55 - dy,
+           label = "Total #", hjust = 0, size = 4.2) +
+
+  theme(
+    panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
+    axis.text = element_text(size = 12), text = element_text(size = 15),
+    axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
+    axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
+    axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 05)),
+    legend.text = element_text(size = 15),
+    strip.text.x = element_text(size = 15),
+    legend.key.width = unit(1.5, "cm"),
+    legend.position = "bottom",
+    panel.spacing = unit(0.2, "lines"),
+    legend.box.spacing = unit(10, "pt"),
+    plot.margin = unit(c(0.5, 0, 1, 0), "cm")
+  ) +
+  scale_x_continuous(breaks = add_point$d) +
+  scale_y_continuous(
+    breaks = seq(0, 0.35, by = 0.05), limits = c(0, 0.35),
+    sec.axis = sec_axis(~ inv_scale_function(.),
+                        breaks = seq(0, 700, 100),
+                        name = "# of linear predictors modelled")
+  )
 
 pl_comp_Hbeta <- ggarrange(plot_perc_covmod_lpi,
                            pl_Hbeta,
