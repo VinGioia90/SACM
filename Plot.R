@@ -1442,7 +1442,7 @@ if(flag_residuals){
     geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
     geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param, shape = Param),
                size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
-    geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3)) +
+    geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3), show.legend = F) +
     scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
     scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
@@ -1458,8 +1458,8 @@ if(flag_residuals){
           plot.margin=unit(c(0.25, 0.175, -0.2, 0.0), "cm"),
           legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
   print(pl_logS_mcd_logM)
-  ggsave(paste0("logS_MCDandlogM_residuals.pdf"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
-  ggsave(paste0("logS_MCDandlogM_residuals.eps"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("logS_MCDandlogM_residuals.pdf"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("logS_MCDandlogM_residuals.eps"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
 } else {
   ncov_el_mcd_sel <- 80
   ncov_el_logm_sel <- 40
@@ -1473,7 +1473,7 @@ if(flag_residuals){
     geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
     geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param, shape = Param),
                size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
-    geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3)) +
+    geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3), show.legend = FALSE) +
     scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
     scale_shape_manual(name = "Parametrisation", values = c("MCD" = 17, "logM" = 16)) +
@@ -1481,17 +1481,17 @@ if(flag_residuals){
     xlab("Number of effects") + ylab("LS") +
     theme(panel.grid.minor = element_blank(),
           panel.grid.major = element_blank(),
-          axis.text.y = element_text(size = 14),
-          axis.text.x = element_text(size = 14, angle = 90, vjust = 0.5),
-          text = element_text(size = 16),
-          legend.text=element_text(size=16),
-          strip.text.x = element_text(size = 16),
-          plot.margin=unit(c(0.25, 0.175, -0.2, 0.0), "cm"),
+          axis.text.y = element_text(size = 13),
+          axis.text.x = element_text(size = 13, angle = 90, vjust = 0.5),
+          text = element_text(size = 15),
+          legend.text=element_text(size=15),
+          strip.text.x = element_text(size = 15),
+          plot.margin=unit(c(0.25, 0.175, -0.1, 0.0), "cm"),
           legend.position = "bottom", panel.spacing = unit(0.2, "lines"))
 
   print(pl_logS_mcd_logM)
-  ggsave(paste0("logS_MCDandlogM_response.pdf"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
-  ggsave(paste0("logS_MCDandlogM_response.eps"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("logS_MCDandlogM_response.pdf"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("logS_MCDandlogM_response.eps"),  plot = pl_logS_mcd_logM, width = 15, height = 15, units = "cm")
 }
 
 ###############################################
@@ -1529,8 +1529,8 @@ if(flag_residuals){
   )
   print(pl_MCD_logM)
 
-  ggsave(paste0("Covmod_MCDandlogM_residuals.pdf"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
-  ggsave(paste0("Covmod_MCDandlogM_residuals.eps"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("Covmod_MCDandlogM_residuals.pdf"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("Covmod_MCDandlogM_residuals.eps"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
   setwd(root_dir)
   setwd("content/Section6")
 
@@ -1562,12 +1562,22 @@ if(flag_residuals){
   )
   print(pl_MCD_logM)
 
-  ggsave(paste0("Covmod_MCDandlogM_response.pdf"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
-  ggsave(paste0("Covmod_MCDandlogM_response.eps"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("Covmod_MCDandlogM_response.pdf"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
+  #ggsave(paste0("Covmod_MCDandlogM_response.eps"),  plot = pl_MCD_logM, width = 15, height = 15, units = "cm")
   setwd(root_dir)
   setwd("content/Section6")
-
 }
+
+pl_Sec5 <- ggarrange(pl_logS_mcd_logM,
+                     pl_MCD_logM,
+                     nrow = 1,
+                     common.legend = TRUE,
+                     legend = "bottom",
+                     widths = c(1.05, 1.0)) +
+          theme(legend.box.spacing = unit(20, "pt"))
+
+ggsave(paste0("Plots/Figure4_Sec5.pdf"),  plot = pl_Sec5, width = 30, height = 15, units = "cm")
+ggsave(paste0("Plots/Figure4_Sec5.eps"),  plot = pl_Sec5, width = 30, height = 15, units = "cm")
 
 rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 
