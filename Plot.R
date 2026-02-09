@@ -1439,9 +1439,9 @@ if(flag_residuals){
                                    "Eff" = c(ncov_el_mcd_sel, ncov_el_logm_sel))
   pl_logS_mcd_logM <- ggplot(data_logScore_residuals,
                              aes(x = Eff, y = logS)) +
-    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = FALSE, position = position_dodge(width = 0.3)) +
     geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param, shape = Param),
-               size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
+               size = 3, show.legend = TRUE, position = position_dodge(width = 0.3)) +
     geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3), show.legend = F) +
     scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
@@ -1470,9 +1470,9 @@ if(flag_residuals){
                                    "Eff" = c(ncov_el_mcd_sel, ncov_el_logm_sel))
   pl_logS_mcd_logM <- ggplot(data_logScore,
                              aes(x = Eff, y = logS)) +
-    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = TRUE, position = position_dodge(width = 0.3)) +
+    geom_point(aes(colour = Param, shape = Param), size = 1.5, show.legend = FALSE, position = position_dodge(width = 0.3)) +
     geom_point(data = data_logS_selected, aes(x = c(ncov_el_mcd_sel, ncov_el_logm_sel), y = logS, colour = Param, shape = Param),
-               size = 3, show.legend = FALSE, position = position_dodge(width = 0.3)) +
+               size = 3, show.legend = TRUE, position = position_dodge(width = 0.3)) +
     geom_line(aes(y = logS, group = Param, col = Param), position = position_dodge(width = 0.3), show.legend = FALSE) +
     scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length)) +
     scale_color_manual(name = "Parametrisation", values = c("MCD" = "#F8766D", "logM" = "#619CFF")) +
