@@ -346,7 +346,7 @@ heatmap_FitCov <- function(PredCov, PredCov2 = NULL, d, range_var = NULL, range_
           legend.key.height = unit(1, "lines"),
           legend.text=element_text(size=16),
           legend.title=element_text(size=16))+
-    scale_x_discrete(labels = label_xaxis,name = "Hours")+
+    scale_x_discrete(labels = label_xaxis, name = "Hours")+
     scale_y_discrete(labels = label_yaxis,name = "Hours")
 
   return(invisible(gg1))
@@ -737,6 +737,8 @@ plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
   my_dat$Day <- as.factor(my_dat$Day)
 
   # Heatmap for first date
+  var1 = c(paste0("h0", 1:9), paste0("h", 10:d))
+  var2 = c(paste0("h", (d):10), paste0("h0", 9:1))
   plt <- list()
   col_cor <- rev(colorspace::sequential_hcl(palette = "Blues 3", n = 100))
   col_var <- rev(colorspace::sequential_hcl(palette = "Red", n = 100)[1:90])
@@ -747,17 +749,48 @@ plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
   pl1_MCD <- heatmap_FitCov(Sigma_list[[idx1]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
                             label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
   pl1_MCD <- pl1_MCD +
-    annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = date1, vjust=1, hjust=1, cex = 7) +
-    theme(legend.position=c(.9,.55))
-  plt[[1]] <- pl1_MCD
+    annotate("text",  x = d*3/4, y = (d-1) + 0.25, label = date1, vjust=1, hjust=1, cex = 11) +
+    theme(legend.position=c(.9,.6),
+          axis.text.x = element_text(size = 28, vjust = 0.5),
+          axis.text.y = element_text(size = 28),
+          legend.key.height = unit(0.8, 'cm'),
+          legend.spacing.y = unit(0.9, 'cm'),
+          axis.title.x=element_text(size=30),
+          axis.title.y=element_text(size=30),
+          legend.text=element_text(size=23), strip.text.x = element_text(size = 25),
+          legend.title = element_text(size=25, vjust = 0.5))
+  plt[[1]] <- pl1_MCD +
+    scale_x_discrete(labels = label_xaxis[seq(1, 24, by = 2)],
+                     breaks = var1[seq(1, 24, by = 2)],
+                     name = "Hour")+
+    scale_y_discrete(labels = label_yaxis[seq(2, 25, by = 2)],
+                     breaks = var2[seq(23, 1, by = -2)],
+                     name = "Hour")
 
   # Heatmap for 2nd date
   pl1_MCD <- heatmap_FitCov(Sigma_list[[idx2]], d = d, range_var = range_var, range_corr = c(0, 1), label = "h",
-                            label_xaxis = label_xaxis, label_yaxis = label_yaxis,  col_var = col_var, col_cor = col_cor)
-  pl1_MCD <- pl1_MCD + annotate("text",  x = (d-1) + 0.25, y = (d-1) + 0.25, label = date2,
-                                vjust=1, hjust=1, cex = 7) +
-    theme(legend.position=c(.9,.55))
-  plt[[2]] <- pl1_MCD
+                            label_xaxis = label_xaxis,
+                            label_yaxis = label_yaxis[seq(1, 23, by = 2)],  col_var = col_var, col_cor = col_cor)
+  pl1_MCD <- pl1_MCD + annotate("text",  x = d*3/4, y = (d-1) + 0.25, label = date2, vjust=1, hjust=1, cex = 11) +
+    theme(legend.position=c(.9,.6),
+          axis.text.x = element_text(size = 28, vjust = 0.5),
+          axis.text.y = element_text(size = 28),
+          legend.key.height = unit(0.8, 'cm'),
+          legend.spacing.y = unit(0.9, 'cm'),
+          axis.title.x=element_text(size=30),
+          axis.title.y=element_text(size=30),
+          legend.text=element_text(size=23), strip.text.x = element_text(size = 25),
+          legend.title = element_text(size=25, vjust = 0.5))
+
+  plt[[2]] <- pl1_MCD +
+    scale_x_discrete(labels = label_xaxis[seq(1, 24, by = 2)],
+                     breaks = var1[seq(1, 24, by = 2)],
+                     name = "Hour")+
+    scale_y_discrete(labels = label_yaxis[seq(2, 25, by = 2)],
+                     breaks = var2[seq(23, 1, by = -2)],
+                     name = "Hour")
+
+
 
   # Trajectories plot
   my_dat$hour <- my_dat$hour - 1
@@ -772,13 +805,14 @@ plot_heat_and_traj <- function(mu_sigma, yobs, idx1, idx2, dat, nsim){
     geom_line(data = data.frame(hour = 0:23, y = unlist(yobs[idx2, ] - mu_sigma[idx2, 1:24])),
               aes(y = y, x = hour), inherit.aes = FALSE, colour = "red", linewidth = 1.5) +
     ylab("Residuals (GW)") + xlab("Hour") +
-    theme(legend.position = c(.2,.1)) +
+    theme(legend.position = c(.2,.12)) +
     guides(color = guide_legend(override.aes = list(alpha = 1, linewidth = 1.5, linetype = 1))) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          axis.text.x = element_text(size = 20, vjust = 0.5),
-          axis.text.y = element_text(size = 20),
-          text = element_text(size = 23),
-          legend.text=element_text(size=20), strip.text.x = element_text(size = 23)) #+
+          axis.text.x = element_text(size = 28, vjust = 0.5),
+          axis.text.y = element_text(size = 28),
+          axis.title=element_text(size=30),
+          text = element_text(size = 25),
+          legend.text=element_text(size=25), strip.text.x = element_text(size = 28)) #+
 
   return( plt )
 

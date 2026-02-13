@@ -144,8 +144,8 @@ pl_Heta_logM <- ggplot(all_time_hessian[all_time_hessian$param == "logM",],
         legend.position = "bottom",
         #legend.key.size = unit(1,"line"),
         panel.spacing = unit(0.2, "lines"),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),  legend.text=element_text(size = 15),
+        axis.text = element_text(size = 16),
+        text = element_text(size = 18),  legend.text=element_text(size = 18),
         strip.text = element_blank(), strip.background = element_blank(),
         axis.title.x = element_blank(),
         plot.margin=unit(c(0.5, -0.5, 1, 0), "cm"),
@@ -172,9 +172,10 @@ pl_Heta_MCD <- ggplot(all_time_hessian[all_time_hessian$param == "MCD",],
   xlab("Dimension") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
-        axis.text = element_text(size = 12),
+        axis.text = element_text(size = 16),
         axis.title.x = element_blank(),
-        text = element_text(size = 15),  legend.text=element_text(size = 15),
+        axis.title.y = element_text(size = 20),
+        text = element_text(size = 18),  legend.text=element_text(size = 18),
         strip.text = element_blank(), strip.background = element_blank(),
         plot.margin=unit(c(0.5, 0.10, 1, -0.5), "cm"),
         axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 5)))
@@ -189,7 +190,7 @@ pl_Heta <- ggarrange(pl_Heta_logM,
 
 pl_Heta <- annotate_figure(pl_Heta,
                            bottom = textGrob("Dimension",hjust = 0.7,
-                                             vjust = -4, gp = gpar(cex = 1.3)))
+                                             vjust = -3, gp = gpar(cex = 1.8)))
 setwd(root_dir)
 setwd("content/Section3/Plots")
 ggsave("plot_TIME_hessian_eta_new.eps", pl_Heta, width = 30, height = 15, units = "cm")
@@ -304,9 +305,11 @@ pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("") + ylab("")+
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        legend.text=element_text(size = 15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        legend.text=element_text(size = 18),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         panel.grid.major = element_blank(), legend.position = "bottom",
         panel.spacing = unit(0.2, "lines"),
         plot.margin=unit(c(0.5, 0, 1, -0.5), "cm"),
@@ -335,9 +338,11 @@ pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("") + ylab("")+
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        legend.text = element_text(size = 15),
+        axis.text = element_text(size = 15),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
+        text = element_text(size = 18),
+        legend.text = element_text(size = 18),
         panel.grid.major = element_blank(), legend.position = "bottom",
         panel.spacing = unit(0.2, "lines"),
         plot.margin=unit(c(0.5, 0, 1, -0.5), "cm"),
@@ -353,7 +358,7 @@ pl_Fit_Time_Iter <- ggarrange(pl_Fit_Time,
 
 pl_Fit_Time_Iter <- annotate_figure(pl_Fit_Time_Iter,
                                     bottom = textGrob("Dimension",hjust = 0.7,
-                                                      vjust = -4, gp = gpar(cex = 1.3)))
+                                                      vjust = -4, gp = gpar(cex = 1.7)))
 
 setwd(root_dir)
 setwd("content/Section3/Plots")
@@ -412,10 +417,10 @@ pl <- ggplot(data,aes(x)) +
   scale_colour_manual(name = "", values = c("#619CFF", "#F8766D")) +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank())+
   theme(legend.position = "bottom",
-        legend.text=element_text(size=13),
-        axis.text=element_text(size=12),
-        axis.title=element_text(size=13),
-        text = element_text(size = 15))
+        legend.text=element_text(size=18),
+        axis.text=element_text(size=15),
+        axis.title=element_text(size=20),
+        text = element_text(size = 18))
 
 ggsave("Plots/sparsity_ratio2.eps",pl,width=18, height=15,  units = "cm")
 
@@ -507,9 +512,11 @@ pl_Fit_Time <- ggplot(data_time_iter[data_time_iter$Type2 == "Time",],
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("") + ylab("")+
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        legend.text=element_text(size=15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        legend.text=element_text(size=18),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         panel.grid.major = element_blank(),
         legend.position = "bottom",
         panel.spacing = unit(0.2, "lines"),
@@ -539,9 +546,11 @@ pl_Fit_Iter <- ggplot(data_time_iter[data_time_iter$Type2 == "Iterations",],
   scale_x_discrete(breaks = dgrid_sel) +
   xlab("") + ylab("")+
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        legend.text=element_text(size=15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        legend.text=element_text(size=18),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         panel.grid.major = element_blank(),
         legend.position = "bottom",
         panel.spacing = unit(0.2, "lines"),
@@ -559,7 +568,7 @@ pl_Fit_Time_Iter <- ggarrange(pl_Fit_Time,
 pl_Fit_Time_Iter <- annotate_figure(pl_Fit_Time_Iter,
                                     bottom = textGrob("Dimension",
                                                       hjust = 0.7, vjust = -4,
-                                                      gp = gpar(cex = 1.3)))
+                                                      gp = gpar(cex = 1.7)))
 
 setwd(root_dir)
 setwd("content/SupplementaryMaterial/Plots")
@@ -669,10 +678,12 @@ pl_MCD_gen <- ggplot(logS[logS$Type2 == "MCD - Generation",],
                      sec.axis = sec_axis(~ . * 1,
                                          labels = scaleFUN2, breaks = NULL))+  # breaks_seq_MCDgen_x
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        legend.text = element_text(size = 15),
-        strip.text.x = element_text(size = 15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        legend.text = element_text(size = 18),
+        strip.text.x = element_text(size = 18),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         panel.grid.major = element_blank(),
         legend.position = "bottom",
         panel.spacing = unit(0.1, "lines"),
@@ -695,10 +706,12 @@ pl_logM_gen <- ggplot(logS[logS$Type2 == "logM - Generation",],
                      sec.axis = sec_axis(~ . * 1,
                                          labels = scaleFUN, breaks = NULL),)+ #breaks_seq_logMgen_x
   theme(panel.grid.minor = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        legend.text = element_text(size = 15),
-        strip.text.x = element_text(size = 15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        legend.text = element_text(size = 18),
+        strip.text.x = element_text(size = 18),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
         panel.grid.major = element_blank(),
         legend.position = "bottom",
         panel.spacing = unit(0.1, "lines"),
@@ -811,10 +824,10 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm_noMeanInt,
   scale_x_discrete(breaks = dg_sel) +
   xlab("") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-        axis.text = element_text(size = 12),  text = element_text(size = 15),
-        axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
-        axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
-        legend.text=element_text(size=15), strip.text.x = element_text(size = 15),
+        axis.text = element_text(size = 15),  text = element_text(size = 18),
+        axis.title.x = element_text(size = 20, margin = margin(t = 15, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(size = 20, margin = margin(t = 0, r = 05, b = 0, l = 0)),
+        legend.text=element_text(size=18), strip.text.x = element_text(size = 18),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
         legend.box.spacing = unit(10, "pt"),
         plot.margin=unit(c(0.5, 0.15, 1, -0.5), "cm"),
@@ -850,6 +863,15 @@ scale_function <- function(x){
 inv_scale_function <- function(x){
   return (x*(662.74429/ 0.3162278))
 }
+
+# ---- centered top position for the in-panel shape legend (data coordinates) ----
+xmid <- mean(range(add_point$d))
+xpad <- diff(range(add_point$d)) * 0.18
+
+y0 <- 0.33
+dy <- 0.03
+
+cols <- c("S1" = "#00A9FF", "S2" = "#F8766D")
 
 plot_perc_covmod_lpi <- ggplot(data.frame(nspars), aes(x = d, y = nelno0_rel)) +
   xlab("") + ylab(expression("% of linear predictors modelled")) +
@@ -899,28 +921,28 @@ annotate("rect",
          fill = "white", colour = "grey60", linewidth = 0.3) +
   annotate("text",
            x = xmid, y = y0 + dy*0.55,
-           label = "Linear predictors modelled", hjust = 0.5, size = 4.5) +
+           label = "Linear predictors modelled", hjust = 0.5, size = 6) +
 
   # Relative (dot)
   annotate("point", x = xmid - xpad*0.3, y = y0 + dy*0.55 - dy*2,
-           shape = 16, size = 2.6, colour = "black") +
+           shape = 16, size = 3, colour = "black") +
   annotate("text",  x = xmid - xpad*0.2, y = y0 + dy*0.55 - dy*2,
-           label = "Percentage %", hjust = 0, size = 4.2) +
+           label = "Percentage %", hjust = 0, size = 5) +
 
   # Absolute (triangle)
   annotate("point", x = xmid - xpad*0.3, y = y0 + dy*0.55 - dy,
-           shape = 17, size = 2.6, colour = "black") +
+           shape = 17, size = 3, colour = "black") +
   annotate("text",  x = xmid - xpad*0.2, y = y0 + dy*0.55 - dy,
-           label = "Total #", hjust = 0, size = 4.2) +
+           label = "Total #", hjust = 0, size = 5) +
 
   theme(
     panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-    axis.text = element_text(size = 12), text = element_text(size = 15),
-    axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
-    axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
+    axis.text = element_text(size = 15), text = element_text(size = 18),
+    axis.title.y = element_text(size = 20, margin = margin(t = 0, r = 05, b = 0, l = 0)),
+    axis.title.x = element_text(size = 20, margin = margin(t = 15, r = 0, b = 0, l = 0)),
     axis.title.y.right = element_text(margin = margin(t = 0, r = 0, b = 0, l = 05)),
-    legend.text = element_text(size = 15),
-    strip.text.x = element_text(size = 15),
+    legend.text = element_text(size = 18),
+    strip.text.x = element_text(size = 18),
     legend.key.width = unit(1.5, "cm"),
     legend.position = "bottom",
     panel.spacing = unit(0.2, "lines"),
@@ -945,7 +967,7 @@ pl_comp_Hbeta <- ggarrange(plot_perc_covmod_lpi,
 
 pl_comp_Hbeta <- annotate_figure(pl_comp_Hbeta,
                                  bottom = textGrob("Dimension", hjust = 0.5,
-                                                   vjust = -4, gp = gpar(cex = 1.3)))
+                                                   vjust = -4, gp = gpar(cex = 1.7)))
 
 setwd(root_dir)
 setwd("content/Section4/Plots")
@@ -1021,7 +1043,7 @@ pl_Hbeta_MeanInt <- ggplot(rel_all_time_hessianB_mcd_MeanInt,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_mcd_MeanInt,
              aes(x = as.factor(d), y = rel_time, colour = Scenario, shape = Scenario),
-             size = 2, position = position_dodge(width = 0.3)) +
+             size = 3, position = position_dodge(width = 0.3)) +
   geom_line(data = rel_mean_time_hessianB_mcd_MeanInt,
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
@@ -1036,11 +1058,12 @@ pl_Hbeta_MeanInt <- ggplot(rel_all_time_hessianB_mcd_MeanInt,
   xlab("") + ylab("") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        axis.title.y = element_text(margin = margin(t = 0, r = 0, b = 0, l = 5)),
-        legend.text=element_text(size = 15),
-        strip.text.x = element_text(size = 15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        axis.title.y = element_text(size = 20, margin = margin(t = 0, r = 0, b = 0, l = 5)),
+        axis.title.x = element_text(size = 20),
+        legend.text=element_text(size = 18),
+        strip.text.x = element_text(size = 18),
         plot.margin=unit(c(0.5, 0.15, 1, -0.5), "cm"),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
         legend.box.spacing = unit(10, "pt"))
@@ -1099,7 +1122,7 @@ pl_Hbeta_noMeanInt <- ggplot(rel_all_time_hessianB_mcd_noMeanInt,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_mcd_noMeanInt,
              aes(x = as.factor(d), y = rel_time, colour = Scenario, shape = Scenario),
-             size = 2, position = position_dodge(width = 0.3)) +
+             size = 3, position = position_dodge(width = 0.3)) +
   geom_line(data = rel_mean_time_hessianB_mcd_noMeanInt,
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
@@ -1114,11 +1137,12 @@ pl_Hbeta_noMeanInt <- ggplot(rel_all_time_hessianB_mcd_noMeanInt,
   xlab("") + ylab("") +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major = element_blank(),
-        axis.text = element_text(size = 12),
-        text = element_text(size = 15),
-        axis.title.y = element_text(margin = margin(t = 0, r = 0, b = 0, l = 04)),
-        legend.text = element_text(size=15),
-        strip.text.x = element_text(size = 15),
+        axis.text = element_text(size = 15),
+        text = element_text(size = 18),
+        axis.title.y = element_text(size = 20, margin = margin(t = 0, r = 0, b = 0, l = 4)),
+        axis.title.x = element_text(size = 20),
+        legend.text = element_text(size=18),
+        strip.text.x = element_text(size = 18),
         legend.position = "bottom",
         panel.spacing = unit(0.2, "lines"),
         plot.margin=unit(c(0.5, 0.0, 1, -0.5), "cm"),
@@ -1135,7 +1159,7 @@ pl_comp_Hbeta <- ggarrange(pl_Hbeta_noMeanInt ,
 
 pl_comp_Hbeta <- annotate_figure(pl_comp_Hbeta,
                                  bottom = textGrob("Dimension", hjust = 0.7,
-                                                   vjust = -4, gp = gpar(cex = 1.3)))
+                                                   vjust = -4, gp = gpar(cex = 1.7)))
 
 setwd(root_dir)
 setwd("content/SupplementaryMaterial/Plots")
@@ -1205,7 +1229,7 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm_MeanInt,
              position = position_dodge(width = 0.3)) +
   geom_point(data = rel_mean_time_hessianB_logm_MeanInt,
              aes(x = as.factor(d), y = rel_time, colour = Scenario, shape = Scenario),
-             size = 2, position = position_dodge(width = 0.3)) +
+             size = 3, position = position_dodge(width = 0.3)) +
   geom_line(data = rel_mean_time_hessianB_logm_MeanInt,
             aes(y = rel_time, group = Scenario, col = Scenario),
             position = position_dodge(width = 0.3)) +
@@ -1220,10 +1244,10 @@ pl_Hbeta <- ggplot(rel_all_time_hessianB_logm_MeanInt,
   scale_x_discrete(breaks = dg_sel) +
   xlab("") + ylab("") +
   theme(panel.grid.minor = element_blank(), panel.grid.major = element_blank(),
-        axis.text = element_text(size = 12),  text = element_text(size = 15),
-        axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
-        axis.title.y = element_text(margin = margin(t = 0, r = 05, b = 0, l = 0)),
-        legend.text = element_text(size = 15), strip.text.x = element_text(size = 15),
+        axis.text = element_text(size = 15),  text = element_text(size = 18),
+        axis.title.x = element_text(size = 20, margin = margin(t = 15, r = 0, b = 0, l = 0)),
+        axis.title.y = element_text(size = 20, margin = margin(t = 0, r = 5, b = 0, l = 0)),
+        legend.text = element_text(size = 18), strip.text.x = element_text(size = 18),
         legend.position = "bottom", panel.spacing = unit(0.2, "lines"),
         legend.box.spacing = unit(10, "pt"),
         plot.margin = unit(c(0.5, 0.15, 1, -0.5), "cm"),
@@ -1568,6 +1592,21 @@ if(flag_residuals){
   setwd("content/Section6")
 }
 
+pl_logS_mcd_logM <- pl_logS_mcd_logM + scale_x_continuous(breaks = seq(low_neff_vcov, upp_neff_vcov, by = grid_length*2)) +
+                    theme(axis.text.y = element_text(size = 16),
+                          axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5),
+                          axis.title = element_text(size = 18),
+                          legend.text=element_text(size=17))
+
+pl_MCD_logM <- pl_MCD_logM +
+  scale_y_continuous(breaks = seq(0, (d - 1), by = 2), expand = c(0, 0), limits = c(d , -0.5), name = "Hour", trans = reverse_trans()) +
+  scale_x_continuous(breaks = seq(0, (d - 1), by = 2), expand = c(0, 0), limits = c(-1, d), name = "Hour") +
+  theme(axis.text.y = element_text(size = 16),
+        axis.text.x = element_text(size = 16, angle = 90, vjust = 0.5),
+        axis.title.x = element_text(size = 20),
+        axis.title.y = element_text(size = 20),
+        legend.text=element_text(size=17))
+
 pl_Sec5 <- ggarrange(pl_logS_mcd_logM,
                      pl_MCD_logM,
                      nrow = 1,
@@ -1576,8 +1615,8 @@ pl_Sec5 <- ggarrange(pl_logS_mcd_logM,
                      widths = c(1.05, 1.0)) +
           theme(legend.box.spacing = unit(20, "pt"))
 
-ggsave(paste0("Plots/Figure4_Sec5.pdf"),  plot = pl_Sec5, width = 30, height = 15, units = "cm")
-ggsave(paste0("Plots/Figure4_Sec5.eps"),  plot = pl_Sec5, width = 30, height = 15, units = "cm")
+ggsave(paste0("Plots/Figure4_Sec6.pdf"),  plot = pl_Sec5, width = 30, height = 15, units = "cm")
+ggsave(paste0("Plots/Figure4_Sec6.eps"),  plot = pl_Sec5, width = 30, height = 15, units = "cm")
 
 rm(list = setdiff(ls(), c(to_keep, to_keep_tmp)))
 
